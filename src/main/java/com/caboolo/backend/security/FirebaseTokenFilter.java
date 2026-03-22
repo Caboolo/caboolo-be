@@ -37,13 +37,11 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                 FirebaseToken decodedToken = authService.verifyToken(idToken);
                 String uid = decodedToken.getUid();
                 
-                // Create an authentication object and set it in the context
-                UsernamePasswordAuthenticationToken authentication = 
+                UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(uid, idToken, new ArrayList<>());
                 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (FirebaseAuthException e) {
-                // Token is invalid, expired, or missing
                 System.err.println("Firebase token verification failed: " + e.getMessage());
             }
         }
