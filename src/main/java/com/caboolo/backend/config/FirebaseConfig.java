@@ -14,12 +14,14 @@ public class FirebaseConfig {
     @PostConstruct
     public void initialize() {
         try {
-            InputStream serviceAccount = getClass().getClassLoader().getResourceAsStream("firebase-service-account.json");
+            String firebaseConfig = System.getenv("FIREBASE_CREDENTIALS");
             
-            if (serviceAccount == null) {
-                System.err.println("Firebase service account file not found in classpath.");
+            if (firebaseConfig == null || firebaseConfig.trim().isEmpty()) {
+                System.err.println("Firebase credentials not found in environment variable FIREBASE_CREDENTIALS.");
                 return;
             }
+
+            InputStream serviceAccount = new java.io.ByteArrayInputStream(firebaseConfig.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
             FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
