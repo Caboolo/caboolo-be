@@ -1,4 +1,4 @@
-package com.caboolo.backend.dto;
+package com.caboolo.backend.auth.dto;
 
 public class AuthResponse {
     private String message;

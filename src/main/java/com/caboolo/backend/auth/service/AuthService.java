@@ -1,4 +1,4 @@
-package com.caboolo.backend.service;
+package com.caboolo.backend.auth.service;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;

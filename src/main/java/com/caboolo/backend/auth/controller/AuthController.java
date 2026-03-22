@@ -1,10 +1,10 @@
-package com.caboolo.backend.controller;
+package com.caboolo.backend.auth.controller;
 
-import com.caboolo.backend.dto.AuthResponse;
+import com.caboolo.backend.auth.dto.AuthResponse;
 import com.caboolo.backend.dto.LoginRequest;
 import com.caboolo.backend.user.domain.User;
 import com.caboolo.backend.user.service.UserService;
-import com.caboolo.backend.service.AuthService;
+import com.caboolo.backend.auth.service.AuthService;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import org.springframework.http.HttpStatus;

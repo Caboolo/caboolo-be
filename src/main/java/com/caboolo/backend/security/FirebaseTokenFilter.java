@@ -1,6 +1,6 @@
 package com.caboolo.backend.security;
 
-import com.caboolo.backend.service.AuthService;
+import com.caboolo.backend.auth.service.AuthService;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
