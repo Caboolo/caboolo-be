@@ -2,8 +2,8 @@ package com.caboolo.backend.controller;
 
 import com.caboolo.backend.dto.AuthResponse;
 import com.caboolo.backend.dto.LoginRequest;
-import com.caboolo.backend.model.User;
-import com.caboolo.backend.repository.UserRepository;
+import com.caboolo.backend.user.domain.User;
+import com.caboolo.backend.user.service.UserService;
 import com.caboolo.backend.service.AuthService;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -11,18 +11,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService authService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public AuthController(AuthService authService, UserRepository userRepository) {
+    public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @PostMapping("/login")
@@ -37,20 +35,7 @@ public class AuthController {
                 phoneNumber = (String) decodedToken.getClaims().get("phone_number");
             }
 
-            Optional<User> existingUserOpt = userRepository.findByFirebaseUid(uid);
-            User user;
-
-            if (existingUserOpt.isEmpty()) {
-                user = new User(uid, phoneNumber);
-                user = userRepository.save(user);
-            } else {
-                user = existingUserOpt.get();
-                // Update phone number if missing or changed
-                if (phoneNumber != null && !phoneNumber.equals(user.getPhoneNumber())) {
-                    user.setPhoneNumber(phoneNumber);
-                    user = userRepository.save(user);
-                }
-            }
+            User user = userService.handleLogin(uid, phoneNumber);
 
             return ResponseEntity.ok(new AuthResponse("Login successful", user.getPhoneNumber() != null ? user.getPhoneNumber() : "UID: " + uid));
         } catch (FirebaseAuthException e) {

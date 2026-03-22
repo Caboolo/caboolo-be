@@ -1,6 +1,6 @@
-package com.caboolo.backend.repository;
+package com.caboolo.backend.user.repository;
 
-import com.caboolo.backend.model.User;
+import com.caboolo.backend.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

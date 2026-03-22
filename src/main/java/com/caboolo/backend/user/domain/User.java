@@ -1,4 +1,4 @@
-package com.caboolo.backend.model;
+package com.caboolo.backend.user.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
