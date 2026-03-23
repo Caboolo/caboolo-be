@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import com.caboolo.backend.core.domain.GenericIdEntity;
 
 @Entity
-@Table(name = "users")
+@Table(name = "user_login")
 @Data
 @NoArgsConstructor
 public class UserLogin extends GenericIdEntity {
