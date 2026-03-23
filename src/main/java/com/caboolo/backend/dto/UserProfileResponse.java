@@ -18,10 +18,9 @@ public class UserProfileResponse {
     private Long id;
     private String firebaseUid;
     private String phoneNumber;
-    private String displayName;
+    private String name;
     private String email;
-    private String photoUrl;
-    private String role;
+    private String imageUrl;
     private LocalDateTime dateCreated;
     private LocalDateTime lastModified;
 }

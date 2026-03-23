@@ -4,28 +4,26 @@ import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.dto.UserProfileRequest;
 import com.caboolo.backend.dto.UserProfileResponse;
-import com.caboolo.backend.user.service.UserService;
+import com.caboolo.backend.userLogin.service.UserLoginService;
 import com.caboolo.backend.userdetails.domain.UserDetails;
 import com.caboolo.backend.userdetails.dto.UserDetailRequestDto;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.service.UserDetailService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.net.URI;
 
 @RestController
 @RequestMapping("/api/userdetails")
 public class UserDetailsController extends BaseController {
 
     private final UserDetailService userDetailService;
+    private final UserLoginService userLoginService;
 
-    public UserDetailsController(UserDetailService userDetailService) {
+    public UserDetailsController(UserDetailService userDetailService, UserLoginService userLoginService) {
         this.userDetailService = userDetailService;
+        this.userLoginService = userLoginService;
     }
 
     @PostMapping
@@ -49,8 +47,7 @@ public class UserDetailsController extends BaseController {
         }
     }
 
-    @Autowired
-    private UserService userService;
+
 
     /**
      * GET /api/v1/users/profile
@@ -59,7 +56,7 @@ public class UserDetailsController extends BaseController {
     @GetMapping("/profile")
     public RestEntity<UserProfileResponse> getProfile(
             @AuthenticationPrincipal String firebaseUid) {
-        return successResponse(userService.getProfile(firebaseUid), "Profile retrieved successfully");
+        return successResponse(userLoginService.getProfile(firebaseUid), "Profile retrieved successfully");
     }
 
     /**
@@ -71,7 +68,7 @@ public class UserDetailsController extends BaseController {
     public RestEntity<UserProfileResponse> updateProfile(
             @AuthenticationPrincipal String firebaseUid,
             @RequestBody UserProfileRequest request) {
-        return successResponse(userService.updateProfile(firebaseUid, request), "Profile updated successfully");
+        return successResponse(userLoginService.updateProfile(firebaseUid, request), "Profile updated successfully");
     }
 
     /**
@@ -83,7 +80,7 @@ public class UserDetailsController extends BaseController {
     public RestEntity<UserProfileResponse> uploadPhoto(
             @AuthenticationPrincipal String firebaseUid,
             @RequestParam("file") MultipartFile file) {
-        return successResponse(userService.uploadProfilePhoto(firebaseUid, file), "Photo uploaded successfully");
+        return successResponse(userLoginService.uploadProfilePhoto(firebaseUid, file), "Photo uploaded successfully");
     }
 
     /**
@@ -94,7 +91,7 @@ public class UserDetailsController extends BaseController {
     @DeleteMapping("/profile")
     public RestEntity<Void> deleteAccount(
             @AuthenticationPrincipal String firebaseUid) {
-        userService.softDeleteUser(firebaseUid);
+        userLoginService.softDeleteUser(firebaseUid);
         return successResponse("Account deleted successfully");
     }
 
@@ -104,7 +101,7 @@ public class UserDetailsController extends BaseController {
      */
     @GetMapping("/{id}/photo")
     public RestEntity<String> getUserPhoto(@PathVariable Long id) {
-        String photoUrl = userService.getPhotoUrlByUserId(id);
+        String photoUrl = userLoginService.getPhotoUrlByUserId(id);
         if (photoUrl == null || photoUrl.isBlank()) {
             return errorResponse("Not Found", HttpStatus.NOT_FOUND);
         }

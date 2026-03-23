@@ -18,7 +18,7 @@ public class WaitlistService {
         if (waitlistRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email is already on the waitlist");
         }
-        WaitlistEntry entry = new WaitlistEntry(email, LocalDateTime.now());
+        WaitlistEntry entry = new WaitlistEntry(email);
         return waitlistRepository.save(entry);
     }
 }

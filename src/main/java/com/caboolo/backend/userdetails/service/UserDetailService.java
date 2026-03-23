@@ -30,12 +30,11 @@ public class UserDetailService {
             details.setGender(requestDto.getGender());
             details.setImageUrl(requestDto.getImageUrl());
         } else {
-            details = new UserDetails(
-                    requestDto.getName(),
-                    requestDto.getUserId(),
-                    requestDto.getGender(),
-                    requestDto.getImageUrl()
-            );
+            details = new UserDetails();
+            details.setName(requestDto.getName());
+            details.setUserId(requestDto.getUserId());
+            details.setGender(requestDto.getGender());
+            details.setImageUrl(requestDto.getImageUrl());
         }
 
         return userDetailRepository.save(details);

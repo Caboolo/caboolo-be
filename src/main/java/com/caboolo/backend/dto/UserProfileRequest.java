@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserProfileRequest {
 
-    private String displayName;
+    private String name;
     private String email;
 }

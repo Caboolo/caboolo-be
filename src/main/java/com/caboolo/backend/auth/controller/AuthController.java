@@ -2,9 +2,9 @@ package com.caboolo.backend.auth.controller;
 
 import com.caboolo.backend.auth.dto.AuthResponse;
 import com.caboolo.backend.dto.LoginRequest;
-import com.caboolo.backend.user.domain.User;
-import com.caboolo.backend.user.service.UserService;
 import com.caboolo.backend.auth.service.AuthService;
+import com.caboolo.backend.userLogin.domain.UserLogin;
+import com.caboolo.backend.userLogin.service.UserLoginService;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import com.caboolo.backend.core.controller.BaseController;
@@ -17,11 +17,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController extends BaseController {
 
     private final AuthService authService;
-    private final UserService userService;
+    private final UserLoginService userLoginService;
 
-    public AuthController(AuthService authService, UserService userService) {
+    public AuthController(AuthService authService, UserLoginService userLoginService) {
         this.authService = authService;
-        this.userService = userService;
+        this.userLoginService = userLoginService;
     }
 
     @PostMapping("/login")
@@ -36,9 +36,11 @@ public class AuthController extends BaseController {
                 phoneNumber = (String) decodedToken.getClaims().get("phone_number");
             }
 
-            User user = userService.handleLogin(uid, phoneNumber);
+            UserLogin userLogin = userLoginService.handleLogin(uid, phoneNumber);
 
-            AuthResponse responseBody = new AuthResponse("Login successful", user.getPhoneNumber() != null ? user.getPhoneNumber() : "UID: " + uid);
+            AuthResponse responseBody = new AuthResponse("Login successful",
+                    userLogin.getPhoneNumber() != null ? userLogin.getPhoneNumber() : "UID: " + uid);
+
             return successResponse(responseBody, "Login successful");
         } catch (FirebaseAuthException e) {
             return errorResponse("Invalid or expired token", HttpStatus.UNAUTHORIZED);
