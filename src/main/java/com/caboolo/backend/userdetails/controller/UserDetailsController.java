@@ -4,7 +4,6 @@ import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.dto.UserProfileRequest;
 import com.caboolo.backend.dto.UserProfileResponse;
-import com.caboolo.backend.userdetails.domain.UserDetails;
 import com.caboolo.backend.userdetails.dto.UserDetailRequestDto;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.service.UserDetailService;
@@ -26,16 +25,7 @@ public class UserDetailsController extends BaseController {
     @PostMapping
     public RestEntity<UserDetailResponseDto> saveUserDetails(@RequestBody UserDetailRequestDto requestDto) {
         try {
-            UserDetails savedDetails = userDetailService.saveOrUpdateUserDetails(requestDto);
-            
-            UserDetailResponseDto responseDto = new UserDetailResponseDto(
-                    savedDetails.getId(),
-                    savedDetails.getName(),
-                    savedDetails.getUserId(),
-                    savedDetails.getGender(),
-                    savedDetails.getImageUrl()
-            );
-
+            UserDetailResponseDto responseDto = userDetailService.saveOrUpdateUserDetails(requestDto);
             return successResponse(responseDto, "User details saved successfully");
         } catch (IllegalArgumentException e) {
             return errorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);

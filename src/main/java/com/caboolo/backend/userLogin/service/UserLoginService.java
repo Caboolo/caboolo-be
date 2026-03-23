@@ -1,5 +1,7 @@
 package com.caboolo.backend.userLogin.service;
 
+import com.caboolo.backend.auth.dto.AuthResponse;
+import com.caboolo.backend.userLogin.converter.UserLoginConverter;
 import com.caboolo.backend.userLogin.domain.UserLogin;
 import com.caboolo.backend.userLogin.repository.UserLoginRepository;
 import org.springframework.stereotype.Service;
@@ -19,7 +21,7 @@ public class UserLoginService {
     // Auth flow
     // -----------------------------------------------------------------------
 
-    public UserLogin handleLogin(String uid, String phoneNumber) {
+    public AuthResponse handleLogin(String uid, String phoneNumber) {
         Optional<UserLogin> existingUserOpt = userLoginRepository.findByFirebaseUid(uid);
         UserLogin userLogin;
 
@@ -34,6 +36,6 @@ public class UserLoginService {
                 userLogin = userLoginRepository.save(userLogin);
             }
         }
-        return userLogin;
+        return UserLoginConverter.toAuthResponse(userLogin);
     }
 }

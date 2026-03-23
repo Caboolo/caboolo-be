@@ -3,7 +3,6 @@ package com.caboolo.backend.auth.controller;
 import com.caboolo.backend.auth.dto.AuthResponse;
 import com.caboolo.backend.dto.LoginRequest;
 import com.caboolo.backend.auth.service.AuthService;
-import com.caboolo.backend.userLogin.domain.UserLogin;
 import com.caboolo.backend.userLogin.service.UserLoginService;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -36,12 +35,9 @@ public class AuthController extends BaseController {
                 phoneNumber = (String) decodedToken.getClaims().get("phone_number");
             }
 
-            UserLogin userLogin = userLoginService.handleLogin(uid, phoneNumber);
+            AuthResponse authResponse = userLoginService.handleLogin(uid, phoneNumber);
 
-            AuthResponse responseBody = new AuthResponse("Login successful",
-                    userLogin.getPhoneNumber() != null ? userLogin.getPhoneNumber() : "UID: " + uid);
-
-            return successResponse(responseBody, "Login successful");
+            return successResponse(authResponse, "Login successful");
         } catch (FirebaseAuthException e) {
             return errorResponse("Invalid or expired token", HttpStatus.UNAUTHORIZED);
         }

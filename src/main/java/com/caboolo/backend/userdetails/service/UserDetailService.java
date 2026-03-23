@@ -6,8 +6,10 @@ import com.caboolo.backend.storage.StorageService;
 import com.caboolo.backend.storage.StorageUploadResult;
 import com.caboolo.backend.userLogin.domain.UserLogin;
 import com.caboolo.backend.userLogin.repository.UserLoginRepository;
+import com.caboolo.backend.userdetails.converter.UserDetailsConverter;
 import com.caboolo.backend.userdetails.domain.UserDetails;
 import com.caboolo.backend.userdetails.dto.UserDetailRequestDto;
+import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.repository.UserDetailRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +37,7 @@ public class UserDetailService {
         this.storageService = storageService;
     }
 
-    public UserDetails saveOrUpdateUserDetails(UserDetailRequestDto requestDto) {
+    public UserDetailResponseDto saveOrUpdateUserDetails(UserDetailRequestDto requestDto) {
         if (requestDto.getUserId() == null) {
             throw new IllegalArgumentException("User ID must not be null");
         }
@@ -56,7 +58,8 @@ public class UserDetailService {
             details.setImageUrl(requestDto.getImageUrl());
         }
 
-        return userDetailRepository.save(details);
+        UserDetails saved = userDetailRepository.save(details);
+        return UserDetailsConverter.toDetailResponseDto(saved);
     }
 
     // -----------------------------------------------------------------------
@@ -79,7 +82,7 @@ public class UserDetailService {
     public UserProfileResponse getProfile(String firebaseUid) {
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
         UserDetails details = userDetailRepository.findByUserId(userLogin.getId()).orElse(new UserDetails());
-        return toResponse(userLogin, details);
+        return UserDetailsConverter.toProfileResponse(userLogin, details);
     }
 
     /**
@@ -98,7 +101,7 @@ public class UserDetailService {
         }
 
         details = userDetailRepository.save(details);
-        return toResponse(userLogin, details);
+        return UserDetailsConverter.toProfileResponse(userLogin, details);
     }
 
     /**
@@ -124,7 +127,7 @@ public class UserDetailService {
         details.setPhotoPublicId(result.getPublicId());
         details = userDetailRepository.save(details);
 
-        return toResponse(userLogin, details);
+        return UserDetailsConverter.toProfileResponse(userLogin, details);
     }
 
     /**
@@ -160,16 +163,5 @@ public class UserDetailService {
                 .orElseThrow(() -> new RuntimeException("User not found: " + firebaseUid));
     }
 
-    private UserProfileResponse toResponse(UserLogin userLogin, UserDetails details) {
-        UserProfileResponse resp = new UserProfileResponse();
-        resp.setId(userLogin.getId());
-        resp.setFirebaseUid(userLogin.getFirebaseUid());
-        resp.setPhoneNumber(userLogin.getPhoneNumber());
-        resp.setName(details.getName());
-        resp.setEmail(details.getEmail());
-        resp.setImageUrl(details.getImageUrl());
-        resp.setDateCreated(userLogin.getDateCreated());
-        resp.setLastModified(userLogin.getLastModified());
-        return resp;
-    }
+
 }
