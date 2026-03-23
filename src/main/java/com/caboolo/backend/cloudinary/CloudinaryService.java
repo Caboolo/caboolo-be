@@ -1,4 +1,4 @@
-package com.caboolo.backend.service;
+package com.caboolo.backend.cloudinary;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -25,5 +25,9 @@ public class CloudinaryService {
     
     public Map deleteFile(String publicId) throws IOException {
         return cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+    }
+
+    public String resolveImage(String publicId) {
+        return cloudinary.url().generate(publicId);
     }
 }
