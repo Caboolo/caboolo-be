@@ -55,10 +55,6 @@
 		</dependency>
 
 		<!-- Spring Web (if building APIs) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
 
 		<!-- Spring Data JPA (for MySQL) -->
 		<dependency>

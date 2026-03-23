@@ -1,6 +1,8 @@
 package com.caboolo.backend.cloudinary;
 
-import org.springframework.http.ResponseEntity;
+import com.caboolo.backend.core.controller.BaseController;
+import com.caboolo.backend.core.dto.RestEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -8,7 +10,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/cloudinary")
-public class CloudinaryController {
+public class CloudinaryController extends BaseController {
 
     private final CloudinaryService cloudinaryService;
 
@@ -17,24 +19,24 @@ public class CloudinaryController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file, 
-                                              @RequestParam(value = "folder", defaultValue = "caboolo_uploads") String folder) {
+    public RestEntity<String> uploadImage(@RequestParam("file") MultipartFile file, 
+                                          @RequestParam(value = "folder", defaultValue = "caboolo_uploads") String folder) {
         try {
             String url = cloudinaryService.uploadFile(file, folder);
-            return ResponseEntity.ok(url);
+            return successResponse(url, "Image uploaded successfully");
         } catch (IOException e) {
-            return ResponseEntity.internalServerError().body("Failed to upload image: " + e.getMessage());
+            return errorResponse("Failed to upload image: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/resolve")
-    public ResponseEntity<String> resolveImage() {
+    public RestEntity<String> resolveImage() {
         // Since we aren't saving it in a DB yet, we hardcode the publicId here as requested
         String hardcodedPublicId = "caboolo_uploads/sample_upload";
         
         // Fetch/generate the URL from Cloudinary using the SDK
         String resolvedUrl = cloudinaryService.resolveImage(hardcodedPublicId);
         
-        return ResponseEntity.ok(resolvedUrl);
+        return successResponse(resolvedUrl, "Image URL resolved successfully");
     }
 }

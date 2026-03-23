@@ -2,13 +2,15 @@ package com.caboolo.backend.waitlist.controller;
 
 import com.caboolo.backend.waitlist.dto.WaitlistRequest;
 import com.caboolo.backend.waitlist.service.WaitlistService;
-import org.springframework.http.ResponseEntity;
+import com.caboolo.backend.core.controller.BaseController;
+import com.caboolo.backend.core.dto.RestEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/waitlist")
 @CrossOrigin(origins = "*")
-public class WaitlistController {
+public class WaitlistController extends BaseController {
 
     private final WaitlistService waitlistService;
 
@@ -17,17 +19,17 @@ public class WaitlistController {
     }
 
     @PostMapping("/join")
-    public ResponseEntity<?> joinWaitlist(@RequestBody WaitlistRequest request) {
+    public RestEntity<String> joinWaitlist(@RequestBody WaitlistRequest request) {
         try {
             if (request.getEmail() == null || request.getEmail().isBlank()) {
-                return ResponseEntity.badRequest().body("Email is required");
+                return errorResponse("Email is required", HttpStatus.BAD_REQUEST);
             }
             waitlistService.joinWaitlist(request.getEmail());
-            return ResponseEntity.ok("Successfully joined the waitlist");
+            return successResponse(null, "Successfully joined the waitlist");
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return errorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("An error occurred while processing the request");
+            return errorResponse("An error occurred while processing the request", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

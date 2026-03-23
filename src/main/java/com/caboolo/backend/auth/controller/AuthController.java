@@ -7,13 +7,14 @@ import com.caboolo.backend.user.service.UserService;
 import com.caboolo.backend.auth.service.AuthService;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+import com.caboolo.backend.core.controller.BaseController;
+import com.caboolo.backend.core.dto.RestEntity;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-public class AuthController {
+public class AuthController extends BaseController {
 
     private final AuthService authService;
     private final UserService userService;
@@ -24,7 +25,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
+    public RestEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
         try {
             FirebaseToken decodedToken = authService.verifyToken(loginRequest.getIdToken());
             String uid = decodedToken.getUid();
@@ -37,9 +38,10 @@ public class AuthController {
 
             User user = userService.handleLogin(uid, phoneNumber);
 
-            return ResponseEntity.ok(new AuthResponse("Login successful", user.getPhoneNumber() != null ? user.getPhoneNumber() : "UID: " + uid));
+            AuthResponse responseBody = new AuthResponse("Login successful", user.getPhoneNumber() != null ? user.getPhoneNumber() : "UID: " + uid);
+            return successResponse(responseBody, "Login successful");
         } catch (FirebaseAuthException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse("Invalid or expired token", null));
+            return errorResponse("Invalid or expired token", HttpStatus.UNAUTHORIZED);
         }
     }
 }
