@@ -20,13 +20,14 @@ public class UserLoginService {
     private static final String PROFILE_PHOTO_FOLDER = "caboolo/profile_photos";
     private static final long MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
     private static final List<String> ALLOWED_PHOTO_TYPES =
-        List.of("image/jpeg", "image/png", "image/webp", "image/gif");
+            List.of("image/jpeg", "image/png", "image/webp", "image/gif");
 
     private final UserLoginRepository userLoginRepository;
     private final UserDetailRepository userDetailRepository;
     private final StorageService storageService;
 
-    public UserLoginService(UserLoginRepository userLoginRepository, UserDetailRepository userDetailRepository, StorageService storageService) {
+    public UserLoginService(UserLoginRepository userLoginRepository, UserDetailRepository userDetailRepository,
+                            StorageService storageService) {
         this.userLoginRepository = userLoginRepository;
         this.userDetailRepository = userDetailRepository;
         this.storageService = storageService;
@@ -59,13 +60,13 @@ public class UserLoginService {
     // -----------------------------------------------------------------------
 
     /**
-     * Get the precise photo URL for a given UserLogin ID. 
+     * Get the precise photo URL for a given UserLogin ID.
      * Useful for unauthenticated resolve API endpoints.
      */
     public String getPhotoUrlByUserId(Long userId) {
         return userDetailRepository.findByUserId(userId)
-            .map(UserDetails::getImageUrl)
-            .orElseThrow(() -> new RuntimeException("UserLogin profile not found: " + userId));
+                .map(UserDetails::getImageUrl)
+                .orElseThrow(() -> new RuntimeException("UserLogin profile not found: " + userId));
     }
 
     /**
@@ -83,7 +84,7 @@ public class UserLoginService {
     public UserProfileResponse updateProfile(String firebaseUid, UserProfileRequest request) {
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
         UserDetails details = userDetailRepository.findByUserId(userLogin.getId())
-            .orElse(new UserDetails(null, userLogin.getId(), null, null, null, null));
+                .orElse(new UserDetails(null, userLogin.getId(), null, null, null, null));
 
         if (request.getName() != null) {
             details.setName(request.getName());
@@ -106,7 +107,7 @@ public class UserLoginService {
 
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
         UserDetails details = userDetailRepository.findByUserId(userLogin.getId())
-            .orElse(new UserDetails(null, userLogin.getId(), null, null, null, null));
+                .orElse(new UserDetails(null, userLogin.getId(), null, null, null, null));
 
         // Delete old photo from provider if one exists
         if (details.getPhotoPublicId() != null && !details.getPhotoPublicId().isBlank()) {
@@ -141,18 +142,18 @@ public class UserLoginService {
         }
         if (file.getSize() > MAX_PHOTO_SIZE_BYTES) {
             throw new IllegalArgumentException(
-                "Photo exceeds the maximum allowed size of 5 MB.");
+                    "Photo exceeds the maximum allowed size of 5 MB.");
         }
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_PHOTO_TYPES.contains(contentType)) {
             throw new IllegalArgumentException(
-                "Unsupported file type '" + contentType + "'. Allowed types: " + ALLOWED_PHOTO_TYPES);
+                    "Unsupported file type '" + contentType + "'. Allowed types: " + ALLOWED_PHOTO_TYPES);
         }
     }
 
     private UserLogin findActiveUserOrThrow(String firebaseUid) {
         return userLoginRepository.findByFirebaseUidAndIsDeletedFalse(firebaseUid)
-            .orElseThrow(() -> new RuntimeException("UserLogin not found: " + firebaseUid));
+                .orElseThrow(() -> new RuntimeException("UserLogin not found: " + firebaseUid));
     }
 
     private UserProfileResponse toResponse(UserLogin userLogin, UserDetails details) {
