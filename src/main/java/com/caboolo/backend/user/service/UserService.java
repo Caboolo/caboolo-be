@@ -55,6 +55,16 @@ public class UserService {
     // -----------------------------------------------------------------------
 
     /**
+     * Get the precise photo URL for a given user ID. 
+     * Useful for unauthenticated resolve API endpoints.
+     */
+    public String getPhotoUrlByUserId(Long userId) {
+        return userRepository.findById(userId)
+            .map(User::getPhotoUrl)
+            .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+    }
+
+    /**
      * Fetch the profile for the authenticated user.
      */
     public UserProfileResponse getProfile(String firebaseUid) {

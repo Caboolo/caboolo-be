@@ -2,12 +2,21 @@ package com.caboolo.backend.userdetails.controller;
 
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
+import com.caboolo.backend.dto.UserProfileRequest;
+import com.caboolo.backend.dto.UserProfileResponse;
+import com.caboolo.backend.user.service.UserService;
 import com.caboolo.backend.userdetails.domain.UserDetails;
 import com.caboolo.backend.userdetails.dto.UserDetailRequestDto;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.service.UserDetailService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/userdetails")
@@ -38,5 +47,67 @@ public class UserDetailsController extends BaseController {
         } catch (Exception e) {
             return errorResponse("Failed to save user details: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @Autowired
+    private UserService userService;
+
+    /**
+     * GET /api/v1/users/profile
+     * Returns the authenticated user's full profile.
+     */
+    @GetMapping("/profile")
+    public RestEntity<UserProfileResponse> getProfile(
+            @AuthenticationPrincipal String firebaseUid) {
+        return successResponse(userService.getProfile(firebaseUid), "Profile retrieved successfully");
+    }
+
+    /**
+     * PUT /api/v1/users/profile
+     * Updates display name and/or email.
+     * Body: { "displayName": "...", "email": "..." }
+     */
+    @PutMapping("/profile")
+    public RestEntity<UserProfileResponse> updateProfile(
+            @AuthenticationPrincipal String firebaseUid,
+            @RequestBody UserProfileRequest request) {
+        return successResponse(userService.updateProfile(firebaseUid, request), "Profile updated successfully");
+    }
+
+    /**
+     * POST /api/v1/users/profile/photo
+     * Uploads (or replaces) the authenticated user's profile photo.
+     * Content-Type: multipart/form-data  —  field name: "file"
+     */
+    @PostMapping("/profile/photo")
+    public RestEntity<UserProfileResponse> uploadPhoto(
+            @AuthenticationPrincipal String firebaseUid,
+            @RequestParam("file") MultipartFile file) {
+        return successResponse(userService.uploadProfilePhoto(firebaseUid, file), "Photo uploaded successfully");
+    }
+
+    /**
+     * DELETE /api/v1/users/profile
+     * Soft-deletes the authenticated user account (isDeleted = true).
+     * The record remains in the DB.
+     */
+    @DeleteMapping("/profile")
+    public RestEntity<Void> deleteAccount(
+            @AuthenticationPrincipal String firebaseUid) {
+        userService.softDeleteUser(firebaseUid);
+        return successResponse("Account deleted successfully");
+    }
+
+    /**
+     * GET /api/v1/users/{id}/photo
+     * Resolves the user's profile photo.
+     */
+    @GetMapping("/{id}/photo")
+    public RestEntity<String> getUserPhoto(@PathVariable Long id) {
+        String photoUrl = userService.getPhotoUrlByUserId(id);
+        if (photoUrl == null || photoUrl.isBlank()) {
+            return errorResponse("Not Found", HttpStatus.NOT_FOUND);
+        }
+        return successResponse(photoUrl, "Photo URL retrieved successfully");
     }
 }
