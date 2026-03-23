@@ -50,12 +50,14 @@ public class UserDetailService {
             details.setName(requestDto.getName());
             details.setGender(requestDto.getGender());
             details.setImageUrl(requestDto.getImageUrl());
+            details.setEmail(requestDto.getEmail());
         } else {
             details = new UserDetails();
             details.setName(requestDto.getName());
             details.setUserId(requestDto.getUserId());
             details.setGender(requestDto.getGender());
             details.setImageUrl(requestDto.getImageUrl());
+            details.setEmail(requestDto.getEmail());
         }
 
         UserDetails saved = userDetailRepository.save(details);
@@ -91,7 +93,7 @@ public class UserDetailService {
     public UserProfileResponse updateProfile(String firebaseUid, UserProfileRequest request) {
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
         UserDetails details = userDetailRepository.findByUserId(userLogin.getId())
-                .orElse(new UserDetails(null, userLogin.getId(), null, null, null, null));
+                .orElse(new UserDetails(null, userLogin.getId(), null, null, null, null, null));
 
         if (request.getName() != null) {
             details.setName(request.getName());
@@ -114,7 +116,7 @@ public class UserDetailService {
 
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
         UserDetails details = userDetailRepository.findByUserId(userLogin.getId())
-                .orElse(new UserDetails(null, userLogin.getId(), null, null, null, null));
+                .orElse(new UserDetails(null, userLogin.getId(), null, null, null, null, null));
 
         // Delete old photo from provider if one exists
         if (details.getPhotoPublicId() != null && !details.getPhotoPublicId().isBlank()) {

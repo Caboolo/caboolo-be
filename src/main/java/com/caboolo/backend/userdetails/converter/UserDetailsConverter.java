@@ -26,7 +26,9 @@ public final class UserDetailsConverter {
                 details.getName(),
                 details.getUserId(),
                 details.getGender(),
-                details.getImageUrl()
+                details.getImageUrl(),
+                details.getEmail(),
+                details.getPhoneNumber()
         );
     }
 

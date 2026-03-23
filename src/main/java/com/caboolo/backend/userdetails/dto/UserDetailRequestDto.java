@@ -13,4 +13,6 @@ public class UserDetailRequestDto {
     private Long userId;
     private Gender gender;
     private String imageUrl;
+    private String email;
+    private String phoneNumber;
 }

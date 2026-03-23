@@ -28,14 +28,18 @@ public class UserDetails extends GenericIdEntity {
     private String email;
 
     @Column
+    private String phoneNumber;
+
+    @Column
     private String photoPublicId;
 
-    public UserDetails(String name, Long userId, Gender gender, String imageUrl, String email, String photoPublicId) {
+    public UserDetails(String name, Long userId, Gender gender, String imageUrl, String email, String phoneNumber, String photoPublicId) {
         this.name = name;
         this.userId = userId;
         this.gender = gender;
         this.imageUrl = imageUrl;
         this.email = email;
+        this.phoneNumber = phoneNumber;
         this.photoPublicId = photoPublicId;
     }
 }
