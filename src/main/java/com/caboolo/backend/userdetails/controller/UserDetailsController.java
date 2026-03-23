@@ -4,6 +4,7 @@ import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.userdetails.domain.UserDetails;
 import com.caboolo.backend.userdetails.dto.UserDetailRequestDto;
+import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.service.UserDetailService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -19,10 +20,19 @@ public class UserDetailsController extends BaseController {
     }
 
     @PostMapping
-    public RestEntity<UserDetails> saveUserDetails(@RequestBody UserDetailRequestDto requestDto) {
+    public RestEntity<UserDetailResponseDto> saveUserDetails(@RequestBody UserDetailRequestDto requestDto) {
         try {
             UserDetails savedDetails = userDetailService.saveOrUpdateUserDetails(requestDto);
-            return successResponse(savedDetails, "User details saved successfully");
+            
+            UserDetailResponseDto responseDto = new UserDetailResponseDto(
+                    savedDetails.getId(),
+                    savedDetails.getName(),
+                    savedDetails.getUserId(),
+                    savedDetails.getGender(),
+                    savedDetails.getImageUrl()
+            );
+
+            return successResponse(responseDto, "User details saved successfully");
         } catch (IllegalArgumentException e) {
             return errorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
