@@ -9,7 +9,7 @@ import jakarta.persistence.Column;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "waitlist_entries")
+@Table(name = "waitlistEntry")
 public class WaitlistEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
