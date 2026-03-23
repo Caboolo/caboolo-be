@@ -1,65 +1,23 @@
-package com.caboolo.backend.user.domain;
+package com.caboolo.backend.dto;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "users")
-public class User {
+/**
+ * Response payload carrying the user's profile information.
+ */
+public class UserProfileResponse {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false, unique = true)
     private String firebaseUid;
-
-    @Column(unique = true)
     private String phoneNumber;
-
-    @Column(length = 100)
     private String displayName;
-
-    @Column(unique = true)
     private String email;
-
-    /** CDN URL of the profile photo (e.g. Cloudinary secure_url). */
-    @Column(columnDefinition = "TEXT")
     private String photoUrl;
+    private String role;
+    private LocalDateTime dateCreated;
+    private LocalDateTime lastModified;
 
-    /**
-     * Provider-specific public ID used to delete the old photo when a new one is uploaded.
-     * e.g. "caboolo/profile_photos/abc123" for Cloudinary.
-     */
-    @Column
-    private String photoPublicId;
-
-    @Column(nullable = false)
-    private String role = "ROLE_USER";
-
-    /** Soft-delete flag — records are never physically removed. */
-    @Column(nullable = false)
-    private boolean isDeleted = false;
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime dateCreated = LocalDateTime.now();
-
-    @Column(nullable = false)
-    private LocalDateTime lastModified = LocalDateTime.now();
-
-    @PreUpdate
-    public void onUpdate() {
-        this.lastModified = LocalDateTime.now();
-    }
-
-    // --- Constructors ---
-
-    public User() {
-    }
-
-    public User(String firebaseUid, String phoneNumber) {
-        this.firebaseUid = firebaseUid;
-        this.phoneNumber = phoneNumber;
+    public UserProfileResponse() {
     }
 
     // --- Getters and Setters ---
@@ -112,28 +70,12 @@ public class User {
         this.photoUrl = photoUrl;
     }
 
-    public String getPhotoPublicId() {
-        return photoPublicId;
-    }
-
-    public void setPhotoPublicId(String photoPublicId) {
-        this.photoPublicId = photoPublicId;
-    }
-
     public String getRole() {
         return role;
     }
 
     public void setRole(String role) {
         this.role = role;
-    }
-
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        isDeleted = deleted;
     }
 
     public LocalDateTime getDateCreated() {
