@@ -13,17 +13,18 @@ public abstract class GenericIdEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "date_created", nullable = false, updatable = false)
     @CreatedDate
     private LocalDateTime dateCreated;
 
-    @Column(nullable = false)
+    @Column(name = "last_modified", nullable = false)
     @LastModifiedDate
     private LocalDateTime lastModified;
 
-    @Column(nullable = false)
+    @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
     public Long getId() {

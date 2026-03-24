@@ -11,10 +11,10 @@ import com.caboolo.backend.core.domain.GenericIdEntity;
 @NoArgsConstructor
 public class UserLogin extends GenericIdEntity {
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "firebase_uid", nullable = false, unique = true)
     private String firebaseUid;
 
-    @Column(unique = true)
+    @Column(name = "phone_number", unique = true)
     private String phoneNumber;
 
     public UserLogin(String firebaseUid, String phoneNumber) {

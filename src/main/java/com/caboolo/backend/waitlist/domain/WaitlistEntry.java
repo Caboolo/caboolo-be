@@ -7,10 +7,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Column;
 
 @Entity
-@Table(name = "waitlistEntry")
+@Table(name = "waitlist_entry")
 public class WaitlistEntry extends GenericIdEntity {
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
     
     public WaitlistEntry() {}
