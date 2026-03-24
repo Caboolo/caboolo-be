@@ -26,7 +26,11 @@ public class UserLoginService {
         UserLogin userLogin;
 
         if (existingUserOpt.isEmpty()) {
-            userLogin = new UserLogin(uid, phoneNumber);
+            userLogin = UserLogin.Builder.userLogin()
+                    .withFirebaseUid(uid)
+                    .withPhoneNumber(phoneNumber)
+                    .build();
+
             userLogin = userLoginRepository.save(userLogin);
         } else {
             userLogin = existingUserOpt.get();
