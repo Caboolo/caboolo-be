@@ -14,11 +14,13 @@ public class WaitlistService {
         this.waitlistRepository = waitlistRepository;
     }
 
-    public WaitlistEntry joinWaitlist(String email) {
+    public void joinWaitlist(String email) {
         if (waitlistRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email is already on the waitlist");
         }
-        WaitlistEntry entry = new WaitlistEntry(email);
-        return waitlistRepository.save(entry);
+        WaitlistEntry entry = WaitlistEntry.Builder.waitlistEntry()
+                .withEmail(email)
+                .build();
+        waitlistRepository.save(entry);
     }
 }

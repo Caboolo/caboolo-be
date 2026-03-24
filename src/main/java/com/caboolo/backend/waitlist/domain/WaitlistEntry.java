@@ -1,24 +1,52 @@
 package com.caboolo.backend.waitlist.domain;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import com.caboolo.backend.core.domain.GenericIdEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "waitlist_entry")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class WaitlistEntry extends GenericIdEntity {
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
-    
-    public WaitlistEntry() {}
 
-    public WaitlistEntry(String email) {
-        this.email = email;
+    public static interface EmailStep {
+        BuildStep withEmail(String email);
     }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public static interface BuildStep {
+        WaitlistEntry build();
+    }
+
+    public static class Builder implements EmailStep, BuildStep {
+        private String email;
+
+        private Builder() {
+        }
+
+        public static EmailStep waitlistEntry() {
+            return new Builder();
+        }
+
+        @Override
+        public BuildStep withEmail(String email) {
+            this.email = email;
+            return this;
+        }
+
+        @Override
+        public WaitlistEntry build() {
+            return new WaitlistEntry(
+                    this.email
+            );
+        }
+    }
 }
