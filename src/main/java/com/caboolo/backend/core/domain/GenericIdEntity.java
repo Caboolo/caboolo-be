@@ -16,15 +16,15 @@ public abstract class GenericIdEntity {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "dateCreated", nullable = false, updatable = false)
+    @Column(name = "date_created", nullable = false, updatable = false)
     @CreatedDate
     private LocalDateTime dateCreated;
 
-    @Column(name = "lastModified", nullable = false)
+    @Column(name = "last_modified", nullable = false)
     @LastModifiedDate
     private LocalDateTime lastModified;
 
-    @Column(name = "isDeleted", nullable = false)
+    @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
     public Long getId() {
