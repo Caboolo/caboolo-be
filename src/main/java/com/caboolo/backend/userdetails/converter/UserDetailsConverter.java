@@ -1,22 +1,50 @@
 package com.caboolo.backend.userdetails.converter;
 
+import com.caboolo.backend.dto.UserProfileResponse;
+import com.caboolo.backend.userLogin.domain.UserLogin;
 import com.caboolo.backend.userdetails.domain.UserDetails;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
-import org.springframework.stereotype.Component;
 
-@Component
-public class UserDetailsConverter {
+/**
+ * Converts UserDetails domain entities to their corresponding DTOs.
+ */
+public final class UserDetailsConverter {
 
-    public UserDetailResponseDto convertToResponseDto(UserDetails userDetails) {
-        if (userDetails == null) {
+    private UserDetailsConverter() {
+        // utility class
+    }
+
+    /**
+     * Converts a UserDetails domain entity to a UserDetailResponseDto.
+     */
+    public static UserDetailResponseDto toDetailResponseDto(UserDetails details) {
+        if (details == null) {
             return null;
         }
         return new UserDetailResponseDto(
-                userDetails.getId(),
-                userDetails.getName(),
-                userDetails.getUserId(),
-                userDetails.getGender(),
-                userDetails.getImageUrl()
+                details.getId(),
+                details.getName(),
+                details.getUserId(),
+                details.getGender(),
+                details.getImageUrl(),
+                details.getEmail(),
+                details.getPhoneNumber()
         );
+    }
+
+    /**
+     * Converts a UserLogin + UserDetails pair into a full UserProfileResponse.
+     */
+    public static UserProfileResponse toProfileResponse(UserLogin userLogin, UserDetails details) {
+        UserProfileResponse resp = new UserProfileResponse();
+        resp.setId(userLogin.getId());
+        resp.setFirebaseUid(userLogin.getFirebaseUid());
+        resp.setPhoneNumber(userLogin.getPhoneNumber());
+        resp.setName(details.getName());
+        resp.setEmail(details.getEmail());
+        resp.setImageUrl(details.getImageUrl());
+        resp.setDateCreated(userLogin.getDateCreated());
+        resp.setLastModified(userLogin.getLastModified());
+        return resp;
     }
 }

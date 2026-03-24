@@ -14,4 +14,6 @@ public class UserDetailResponseDto {
     private Long userId;
     private Gender gender;
     private String imageUrl;
+    private String email;
+    private String phoneNumber;
 }
