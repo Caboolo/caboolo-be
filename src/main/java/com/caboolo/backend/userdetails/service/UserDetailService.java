@@ -1,7 +1,7 @@
 package com.caboolo.backend.userdetails.service;
 
-import com.caboolo.backend.dto.UserProfileRequest;
-import com.caboolo.backend.dto.UserProfileResponse;
+import com.caboolo.backend.dto.UserProfileRequestDto;
+import com.caboolo.backend.dto.UserProfileResponseDto;
 import com.caboolo.backend.storage.StorageService;
 import com.caboolo.backend.storage.StorageUploadResult;
 import com.caboolo.backend.userLogin.domain.UserLogin;
@@ -52,12 +52,15 @@ public class UserDetailService {
             details.setImageUrl(requestDto.getImageUrl());
             details.setEmail(requestDto.getEmail());
         } else {
-            details = new UserDetails();
-            details.setName(requestDto.getName());
-            details.setUserId(requestDto.getUserId());
-            details.setGender(requestDto.getGender());
-            details.setImageUrl(requestDto.getImageUrl());
-            details.setEmail(requestDto.getEmail());
+            details = UserDetails.Builder.userDetails()
+                    .withName(requestDto.getName())
+                    .withUserId(requestDto.getUserId())
+                    .withGender(requestDto.getGender())
+                    .withImageUrl(requestDto.getImageUrl())
+                    .withEmail(requestDto.getEmail())
+                    .withPhoneNumber(null)
+                    .withPhotoPublicId(null)
+                    .build();
         }
 
         UserDetails saved = userDetailRepository.save(details);
@@ -81,19 +84,37 @@ public class UserDetailService {
     /**
      * Fetch the profile for the authenticated user.
      */
-    public UserProfileResponse getProfile(String firebaseUid) {
+    public UserProfileResponseDto getProfile(String firebaseUid) {
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
-        UserDetails details = userDetailRepository.findByUserId(userLogin.getId()).orElse(new UserDetails());
+        UserDetails details = userDetailRepository.findByUserId(userLogin.getId()).orElseGet(() ->
+                UserDetails.Builder.userDetails()
+                        .withName(null)
+                        .withUserId(userLogin.getId())
+                        .withGender(null)
+                        .withImageUrl(null)
+                        .withEmail(null)
+                        .withPhoneNumber(null)
+                        .withPhotoPublicId(null)
+                        .build()
+        );
         return UserDetailsConverter.toProfileResponse(userLogin, details);
     }
 
     /**
      * Update display name and/or email.
      */
-    public UserProfileResponse updateProfile(String firebaseUid, UserProfileRequest request) {
+    public UserProfileResponseDto updateProfile(String firebaseUid, UserProfileRequestDto request) {
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
         UserDetails details = userDetailRepository.findByUserId(userLogin.getId())
-                .orElse(new UserDetails(null, userLogin.getId(), null, null, null, null, null));
+                .orElseGet(() -> UserDetails.Builder.userDetails()
+                        .withName(null)
+                        .withUserId(userLogin.getId())
+                        .withGender(null)
+                        .withImageUrl(null)
+                        .withEmail(null)
+                        .withPhoneNumber(null)
+                        .withPhotoPublicId(null)
+                        .build());
 
         if (request.getName() != null) {
             details.setName(request.getName());
@@ -111,12 +132,20 @@ public class UserDetailService {
      * The previous photo is soft-replaced: the old file is deleted from the storage
      * provider but the user record itself is never hard-deleted.
      */
-    public UserProfileResponse uploadProfilePhoto(String firebaseUid, MultipartFile file) {
+    public UserProfileResponseDto uploadProfilePhoto(String firebaseUid, MultipartFile file) {
         validatePhoto(file);
 
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
         UserDetails details = userDetailRepository.findByUserId(userLogin.getId())
-                .orElse(new UserDetails(null, userLogin.getId(), null, null, null, null, null));
+                .orElseGet(() -> UserDetails.Builder.userDetails()
+                        .withName(null)
+                        .withUserId(userLogin.getId())
+                        .withGender(null)
+                        .withImageUrl(null)
+                        .withEmail(null)
+                        .withPhoneNumber(null)
+                        .withPhotoPublicId(null)
+                        .build());
 
         // Delete old photo from provider if one exists
         if (details.getPhotoPublicId() != null && !details.getPhotoPublicId().isBlank()) {

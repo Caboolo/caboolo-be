@@ -19,6 +19,9 @@ public final class UserLoginConverter {
         String identifier = userLogin.getPhoneNumber() != null
                 ? userLogin.getPhoneNumber()
                 : "UID: " + userLogin.getFirebaseUid();
-        return new AuthResponse("Login successful", identifier);
+        return AuthResponse.Builder.authResponse()
+                .withMessage("Login successful")
+                .withPhoneNumber(identifier)
+                .build();
     }
 }

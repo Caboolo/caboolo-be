@@ -1,6 +1,6 @@
 package com.caboolo.backend.userdetails.converter;
 
-import com.caboolo.backend.dto.UserProfileResponse;
+import com.caboolo.backend.dto.UserProfileResponseDto;
 import com.caboolo.backend.userLogin.domain.UserLogin;
 import com.caboolo.backend.userdetails.domain.UserDetails;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
@@ -21,30 +21,34 @@ public final class UserDetailsConverter {
         if (details == null) {
             return null;
         }
-        return new UserDetailResponseDto(
-                details.getId(),
-                details.getName(),
-                details.getUserId(),
-                details.getGender(),
-                details.getImageUrl(),
-                details.getEmail(),
-                details.getPhoneNumber()
-        );
+        return UserDetailResponseDto.Builder.userDetailResponseDto()
+                .withDateCreated(null)
+                .withLastModified(null)
+                .withIsDeleted(false)
+                .withId(details.getId())
+                .withName(details.getName())
+                .withUserId(details.getUserId())
+                .withGender(details.getGender())
+                .withImageUrl(details.getImageUrl())
+                .withEmail(details.getEmail())
+                .withPhoneNumber(details.getPhoneNumber())
+                .build();
     }
 
     /**
      * Converts a UserLogin + UserDetails pair into a full UserProfileResponse.
      */
-    public static UserProfileResponse toProfileResponse(UserLogin userLogin, UserDetails details) {
-        UserProfileResponse resp = new UserProfileResponse();
-        resp.setId(userLogin.getId());
-        resp.setFirebaseUid(userLogin.getFirebaseUid());
-        resp.setPhoneNumber(userLogin.getPhoneNumber());
-        resp.setName(details.getName());
-        resp.setEmail(details.getEmail());
-        resp.setImageUrl(details.getImageUrl());
-        resp.setDateCreated(userLogin.getDateCreated());
-        resp.setLastModified(userLogin.getLastModified());
-        return resp;
+    public static UserProfileResponseDto toProfileResponse(UserLogin userLogin, UserDetails details) {
+        return UserProfileResponseDto.Builder.userProfileResponseDto()
+                .withDateCreated(userLogin.getDateCreated())
+                .withLastModified(userLogin.getLastModified())
+                .withIsDeleted(false)
+                .withId(userLogin.getId())
+                .withFirebaseUid(userLogin.getFirebaseUid())
+                .withPhoneNumber(userLogin.getPhoneNumber())
+                .withName(details.getName())
+                .withEmail(details.getEmail())
+                .withImageUrl(details.getImageUrl())
+                .build();
     }
 }
