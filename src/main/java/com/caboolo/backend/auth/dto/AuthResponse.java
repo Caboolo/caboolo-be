@@ -8,8 +8,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthResponse {
+    private String firebaseUid;
     private String message;
     private String phoneNumber;
+
+    public static interface FirebaseUidStep {
+        MessageStep withFirebaseUid(String firebaseUid);
+    }
 
     public static interface MessageStep {
         PhoneNumberStep withMessage(String message);
@@ -23,14 +28,23 @@ public class AuthResponse {
         AuthResponse build();
     }
 
-    public static class Builder implements MessageStep, PhoneNumberStep, BuildStep {
+
+    public static class Builder implements FirebaseUidStep, MessageStep, PhoneNumberStep, BuildStep {
+        private String firebaseUid;
         private String message;
         private String phoneNumber;
 
-        private Builder() {}
+        private Builder() {
+        }
 
-        public static MessageStep authResponse() {
+        public static FirebaseUidStep authResponse() {
             return new Builder();
+        }
+
+        @Override
+        public MessageStep withFirebaseUid(String firebaseUid) {
+            this.firebaseUid = firebaseUid;
+            return this;
         }
 
         @Override
@@ -47,7 +61,11 @@ public class AuthResponse {
 
         @Override
         public AuthResponse build() {
-            return new AuthResponse(this.message, this.phoneNumber);
+            return new AuthResponse(
+                    this.firebaseUid,
+                    this.message,
+                    this.phoneNumber
+            );
         }
     }
 }

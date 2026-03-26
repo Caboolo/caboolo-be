@@ -58,7 +58,7 @@ public class UserDetailService {
                     .withGender(requestDto.getGender())
                     .withImageUrl(requestDto.getImageUrl())
                     .withEmail(requestDto.getEmail())
-                    .withPhoneNumber(null)
+                    .withPhoneNumber(requestDto.getPhoneNumber())
                     .withPhotoPublicId(null)
                     .build();
         }

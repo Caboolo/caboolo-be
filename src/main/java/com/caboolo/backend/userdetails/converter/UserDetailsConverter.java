@@ -22,9 +22,9 @@ public final class UserDetailsConverter {
             return null;
         }
         return UserDetailResponseDto.Builder.userDetailResponseDto()
-                .withDateCreated(null)
-                .withLastModified(null)
-                .withIsDeleted(false)
+                .withDateCreated(details.getDateCreated())
+                .withLastModified(details.getLastModified())
+                .withIsDeleted(details.isDeleted())
                 .withId(details.getId())
                 .withName(details.getName())
                 .withUserId(details.getUserId())
