@@ -1,6 +1,6 @@
 package com.caboolo.backend.waitlist.controller;
 
-import com.caboolo.backend.waitlist.dto.WaitlistRequest;
+import com.caboolo.backend.waitlist.dto.WaitlistRequestDto;
 import com.caboolo.backend.waitlist.service.WaitlistService;
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
@@ -19,7 +19,7 @@ public class WaitlistController extends BaseController {
     }
 
     @PostMapping("/join")
-    public RestEntity<String> joinWaitlist(@RequestBody WaitlistRequest request) {
+    public RestEntity<String> joinWaitlist(@RequestBody WaitlistRequestDto request) {
         try {
             if (request.getEmail() == null || request.getEmail().isBlank()) {
                 return errorResponse("Email is required", HttpStatus.BAD_REQUEST);
