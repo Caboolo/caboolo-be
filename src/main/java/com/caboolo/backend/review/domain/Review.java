@@ -19,6 +19,15 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 public class Review extends GenericIdEntity {
 
+    @Id
+    @GeneratedValue(generator = "entity-unique-id-generator")
+    @org.hibernate.annotations.GenericGenerator(
+        name = "entity-unique-id-generator",
+        type = com.caboolo.backend.core.idgen.EntityUniqueIdGenerator.class
+    )
+    @Column(name = "review_id")
+    private Long reviewId;
+
     @Column(name = "ride_id", nullable = false)
     private Long rideId;
 

@@ -15,6 +15,15 @@ import com.caboolo.backend.core.domain.GenericIdEntity;
 @EqualsAndHashCode(callSuper = true)
 public class UserDetails extends GenericIdEntity {
 
+    @Id
+    @GeneratedValue(generator = "entity-unique-id-generator")
+    @org.hibernate.annotations.GenericGenerator(
+        name = "entity-unique-id-generator",
+        type = com.caboolo.backend.core.idgen.EntityUniqueIdGenerator.class
+    )
+    @Column(name = "user_details_id")
+    private Long userDetailsId;
+
     @Column(name = "name", nullable = false)
     private String name;
 

@@ -15,6 +15,15 @@ import com.caboolo.backend.core.domain.GenericIdEntity;
 @EqualsAndHashCode(callSuper = true)
 public class WaitlistEntry extends GenericIdEntity {
 
+    @Id
+    @GeneratedValue(generator = "entity-unique-id-generator")
+    @org.hibernate.annotations.GenericGenerator(
+        name = "entity-unique-id-generator",
+        type = com.caboolo.backend.core.idgen.EntityUniqueIdGenerator.class
+    )
+    @Column(name = "waitlist_entry_id")
+    private Long waitlistEntryId;
+
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 

@@ -17,11 +17,6 @@ import java.time.LocalDateTime;
 @Data
 public abstract class GenericIdEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
-
     @Column(name = "date_created", nullable = false, updatable = false)
     @CreatedDate
     private LocalDateTime dateCreated;

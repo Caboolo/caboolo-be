@@ -28,15 +28,7 @@ public class AuthController extends BaseController {
         try {
             FirebaseToken decodedToken = authService.verifyToken(loginRequestDto.getIdToken());
             String uid = decodedToken.getUid();
-            
-            // Extract phone number from claims
-            String phoneNumber = null;
-            if (decodedToken.getClaims().containsKey("phone_number")) {
-                phoneNumber = (String) decodedToken.getClaims().get("phone_number");
-            }
-
-            AuthResponse authResponse = userLoginService.handleLogin(uid, phoneNumber);
-
+            AuthResponse authResponse = userLoginService.handleLogin(uid, loginRequestDto.getPhoneNumber());
             return successResponse(authResponse, "Login successful");
         } catch (FirebaseAuthException e) {
             return errorResponse("Invalid or expired token", HttpStatus.UNAUTHORIZED);
