@@ -37,6 +37,18 @@ public class UserDetails extends GenericIdEntity {
     @Column(name = "photo_public_id")
     private String photoPublicId;
 
+    @Column(name = "avg_rating")
+    private Double avgRating;
+
+    @Column(name = "total_reviews")
+    private Integer totalReviews;
+
+    @Column(name = "ride_again_count")
+    private Integer rideAgainCount;
+
+    @Column(name = "tag_counts", columnDefinition = "JSON")
+    private String tagCounts;
+
     public static interface NameStep {
         UserIdStep withName(String name);
     }
@@ -62,14 +74,31 @@ public class UserDetails extends GenericIdEntity {
     }
 
     public static interface PhotoPublicIdStep {
-        BuildStep withPhotoPublicId(String photoPublicId);
+        AvgRatingStep withPhotoPublicId(String photoPublicId);
+    }
+
+    public static interface AvgRatingStep {
+        TotalReviewsStep withAvgRating(Double avgRating);
+    }
+
+    public static interface TotalReviewsStep {
+        RideAgainCountStep withTotalReviews(Integer totalReviews);
+    }
+
+    public static interface RideAgainCountStep {
+        TagCountsStep withRideAgainCount(Integer rideAgainCount);
+    }
+
+    public static interface TagCountsStep {
+        BuildStep withTagCounts(String tagCounts);
     }
 
     public static interface BuildStep {
         UserDetails build();
     }
 
-    public static class Builder implements NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, PhotoPublicIdStep, BuildStep {
+
+    public static class Builder implements NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, PhotoPublicIdStep, AvgRatingStep, TotalReviewsStep, RideAgainCountStep, TagCountsStep, BuildStep {
         private String name;
         private Long userId;
         private Gender gender;
@@ -77,6 +106,10 @@ public class UserDetails extends GenericIdEntity {
         private String email;
         private String phoneNumber;
         private String photoPublicId;
+        private Double avgRating;
+        private Integer totalReviews;
+        private Integer rideAgainCount;
+        private String tagCounts;
 
         private Builder() {
         }
@@ -122,8 +155,32 @@ public class UserDetails extends GenericIdEntity {
         }
 
         @Override
-        public BuildStep withPhotoPublicId(String photoPublicId) {
+        public AvgRatingStep withPhotoPublicId(String photoPublicId) {
             this.photoPublicId = photoPublicId;
+            return this;
+        }
+
+        @Override
+        public TotalReviewsStep withAvgRating(Double avgRating) {
+            this.avgRating = avgRating;
+            return this;
+        }
+
+        @Override
+        public RideAgainCountStep withTotalReviews(Integer totalReviews) {
+            this.totalReviews = totalReviews;
+            return this;
+        }
+
+        @Override
+        public TagCountsStep withRideAgainCount(Integer rideAgainCount) {
+            this.rideAgainCount = rideAgainCount;
+            return this;
+        }
+
+        @Override
+        public BuildStep withTagCounts(String tagCounts) {
+            this.tagCounts = tagCounts;
             return this;
         }
 
@@ -136,7 +193,11 @@ public class UserDetails extends GenericIdEntity {
                     this.imageUrl,
                     this.email,
                     this.phoneNumber,
-                    this.photoPublicId
+                    this.photoPublicId,
+                    this.avgRating,
+                    this.totalReviews,
+                    this.rideAgainCount,
+                    this.tagCounts
             );
         }
     }

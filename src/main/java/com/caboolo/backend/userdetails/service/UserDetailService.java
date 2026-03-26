@@ -60,6 +60,10 @@ public class UserDetailService {
                     .withEmail(requestDto.getEmail())
                     .withPhoneNumber(requestDto.getPhoneNumber())
                     .withPhotoPublicId(null)
+                    .withAvgRating(null)
+                    .withTotalReviews(null)
+                    .withRideAgainCount(null)
+                    .withTagCounts(null)
                     .build();
         }
 
@@ -95,6 +99,10 @@ public class UserDetailService {
                         .withEmail(null)
                         .withPhoneNumber(null)
                         .withPhotoPublicId(null)
+                        .withAvgRating(null)
+                        .withTotalReviews(null)
+                        .withRideAgainCount(null)
+                        .withTagCounts(null)
                         .build()
         );
         return UserDetailsConverter.toProfileResponse(userLogin, details);
@@ -114,6 +122,10 @@ public class UserDetailService {
                         .withEmail(null)
                         .withPhoneNumber(null)
                         .withPhotoPublicId(null)
+                        .withAvgRating(null)
+                        .withTotalReviews(null)
+                        .withRideAgainCount(null)
+                        .withTagCounts(null)
                         .build());
 
         if (request.getName() != null) {
@@ -145,6 +157,10 @@ public class UserDetailService {
                         .withEmail(null)
                         .withPhoneNumber(null)
                         .withPhotoPublicId(null)
+                        .withAvgRating(null)
+                        .withTotalReviews(null)
+                        .withRideAgainCount(null)
+                        .withTagCounts(null)
                         .build());
 
         // Delete old photo from provider if one exists
