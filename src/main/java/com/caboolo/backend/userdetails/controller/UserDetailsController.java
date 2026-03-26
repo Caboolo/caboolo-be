@@ -2,8 +2,8 @@ package com.caboolo.backend.userdetails.controller;
 
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
-import com.caboolo.backend.dto.UserProfileRequest;
-import com.caboolo.backend.dto.UserProfileResponse;
+import com.caboolo.backend.dto.UserProfileRequestDto;
+import com.caboolo.backend.dto.UserProfileResponseDto;
 import com.caboolo.backend.userdetails.dto.UserDetailRequestDto;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.service.UserDetailService;
@@ -41,7 +41,7 @@ public class UserDetailsController extends BaseController {
      * Returns the authenticated user's full profile.
      */
     @GetMapping("/profile")
-    public RestEntity<UserProfileResponse> getProfile(
+    public RestEntity<UserProfileResponseDto> getProfile(
             @AuthenticationPrincipal String firebaseUid) {
         return successResponse(userDetailService.getProfile(firebaseUid), "Profile retrieved successfully");
     }
@@ -52,9 +52,9 @@ public class UserDetailsController extends BaseController {
      * Body: { "displayName": "...", "email": "..." }
      */
     @PutMapping("/profile")
-    public RestEntity<UserProfileResponse> updateProfile(
+    public RestEntity<UserProfileResponseDto> updateProfile(
             @AuthenticationPrincipal String firebaseUid,
-            @RequestBody UserProfileRequest request) {
+            @RequestBody UserProfileRequestDto request) {
         return successResponse(userDetailService.updateProfile(firebaseUid, request), "Profile updated successfully");
     }
 
@@ -64,7 +64,7 @@ public class UserDetailsController extends BaseController {
      * Content-Type: multipart/form-data  —  field name: "file"
      */
     @PostMapping("/profile/photo")
-    public RestEntity<UserProfileResponse> uploadPhoto(
+    public RestEntity<UserProfileResponseDto> uploadPhoto(
             @AuthenticationPrincipal String firebaseUid,
             @RequestParam("file") MultipartFile file) {
         return successResponse(userDetailService.uploadProfilePhoto(firebaseUid, file), "Photo uploaded successfully");

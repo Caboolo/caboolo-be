@@ -1,7 +1,7 @@
 package com.caboolo.backend.auth.controller;
 
 import com.caboolo.backend.auth.dto.AuthResponse;
-import com.caboolo.backend.dto.LoginRequest;
+import com.caboolo.backend.dto.LoginRequestDto;
 import com.caboolo.backend.auth.service.AuthService;
 import com.caboolo.backend.userLogin.service.UserLoginService;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -24,9 +24,9 @@ public class AuthController extends BaseController {
     }
 
     @PostMapping("/login")
-    public RestEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
+    public RestEntity<AuthResponse> login(@RequestBody LoginRequestDto loginRequestDto) {
         try {
-            FirebaseToken decodedToken = authService.verifyToken(loginRequest.getIdToken());
+            FirebaseToken decodedToken = authService.verifyToken(loginRequestDto.getIdToken());
             String uid = decodedToken.getUid();
             
             // Extract phone number from claims
