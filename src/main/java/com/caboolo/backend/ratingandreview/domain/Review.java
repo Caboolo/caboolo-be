@@ -29,11 +29,11 @@ public class Review extends GenericIdEntity {
     @Column(name = "ride_id", nullable = false)
     private Long rideId;
 
-    @Column(name = "reviewer_id", nullable = false)
-    private Long reviewerId;
+    @Column(name = "for_user_id", nullable = false)
+    private Long forUserId;
 
-    @Column(name = "reviewed_id", nullable = false)
-    private Long reviewedId;
+    @Column(name = "by_user_id", nullable = false)
+    private Long byUserId;
 
     @Column(name = "rating", nullable = false)
     private Integer rating;
@@ -44,6 +44,5 @@ public class Review extends GenericIdEntity {
     @Column(name = "would_ride_again")
     private Boolean wouldRideAgain;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+
 }

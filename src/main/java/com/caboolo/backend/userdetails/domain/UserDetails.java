@@ -37,107 +37,15 @@ public class UserDetails extends GenericIdEntity {
     @Column(name = "photo_public_id")
     private String photoPublicId;
 
-    public static interface NameStep {
-        UserIdStep withName(String name);
-    }
+    @Column(name = "avg_rating")
+    private Double avgRating;
 
-    public static interface UserIdStep {
-        GenderStep withUserId(Long userId);
-    }
+    @Column(name = "total_reviews")
+    private Integer totalReviews;
 
-    public static interface GenderStep {
-        ImageUrlStep withGender(Gender gender);
-    }
+    @Column(name = "ride_again_count")
+    private Integer rideAgainCount;
 
-    public static interface ImageUrlStep {
-        EmailStep withImageUrl(String imageUrl);
-    }
-
-    public static interface EmailStep {
-        PhoneNumberStep withEmail(String email);
-    }
-
-    public static interface PhoneNumberStep {
-        PhotoPublicIdStep withPhoneNumber(String phoneNumber);
-    }
-
-    public static interface PhotoPublicIdStep {
-        BuildStep withPhotoPublicId(String photoPublicId);
-    }
-
-    public static interface BuildStep {
-        UserDetails build();
-    }
-
-    public static class Builder implements NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, PhotoPublicIdStep, BuildStep {
-        private String name;
-        private Long userId;
-        private Gender gender;
-        private String imageUrl;
-        private String email;
-        private String phoneNumber;
-        private String photoPublicId;
-
-        private Builder() {
-        }
-
-        public static NameStep userDetails() {
-            return new Builder();
-        }
-
-        @Override
-        public UserIdStep withName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        @Override
-        public GenderStep withUserId(Long userId) {
-            this.userId = userId;
-            return this;
-        }
-
-        @Override
-        public ImageUrlStep withGender(Gender gender) {
-            this.gender = gender;
-            return this;
-        }
-
-        @Override
-        public EmailStep withImageUrl(String imageUrl) {
-            this.imageUrl = imageUrl;
-            return this;
-        }
-
-        @Override
-        public PhoneNumberStep withEmail(String email) {
-            this.email = email;
-            return this;
-        }
-
-        @Override
-        public PhotoPublicIdStep withPhoneNumber(String phoneNumber) {
-            this.phoneNumber = phoneNumber;
-            return this;
-        }
-
-        @Override
-        public BuildStep withPhotoPublicId(String photoPublicId) {
-            this.photoPublicId = photoPublicId;
-            return this;
-        }
-
-        @Override
-        public UserDetails build() {
-            return new UserDetails(
-                    this.name,
-                    this.userId,
-                    this.gender,
-                    this.imageUrl,
-                    this.email,
-                    this.phoneNumber,
-                    this.photoPublicId
-            );
-        }
-    }
+    @Column(name = "tag_counts", columnDefinition = "JSON")
+    private String tagCounts;
 }
