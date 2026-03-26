@@ -1,7 +1,7 @@
-package com.caboolo.backend.ratingandreview.converter;
+package com.caboolo.backend.review.converter;
 
 import com.caboolo.backend.core.converter.AbstractEnumSetConverter;
-import com.caboolo.backend.ratingandreview.enums.ReviewTagType;
+import com.caboolo.backend.review.enums.ReviewTagType;
 import jakarta.persistence.Converter;
 
 @Converter
