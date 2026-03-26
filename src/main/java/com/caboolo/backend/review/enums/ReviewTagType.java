@@ -1,4 +1,4 @@
-package com.caboolo.backend.ratingandreview.enums;
+package com.caboolo.backend.review.enums;
 
 public enum ReviewTagType {
     // Positive

@@ -1,15 +1,14 @@
-package com.caboolo.backend.ratingandreview.domain;
+package com.caboolo.backend.review.domain;
 
 import com.caboolo.backend.core.domain.GenericIdEntity;
-import com.caboolo.backend.ratingandreview.converter.ReviewTagSetConverter;
-import com.caboolo.backend.ratingandreview.enums.ReviewTagType;
+import com.caboolo.backend.review.converter.ReviewTagSetConverter;
+import com.caboolo.backend.review.enums.ReviewTagType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
