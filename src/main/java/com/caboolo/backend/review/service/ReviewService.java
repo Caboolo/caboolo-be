@@ -1,14 +1,17 @@
 package com.caboolo.backend.review.service;
 
-import com.caboolo.backend.review.dto.MyProfileReviewSummaryDto;
-import com.caboolo.backend.review.dto.PublicProfileReviewSummaryDto;
-import com.caboolo.backend.review.dto.SubmitReviewRequestDto;
+import com.caboolo.backend.review.dto.*;
+import java.util.List;
 
 public interface ReviewService {
 
-    void submitReviews(Long reviewerId, SubmitReviewRequestDto request);
+    void submitReview(SubmitReviewRequestDto request);
 
-    MyProfileReviewSummaryDto getMyReviews(Long userId);
+    CoPassengerResponseDto getListOfCoPassengers(Long rideId);
 
-    PublicProfileReviewSummaryDto getUserReviews(Long userId);
+    ProfileHeaderDto getMyProfileHeader(Long userId);
+
+    List<ReviewMinDto> getMyProfileDetail(Long userId);
+
+    CoTravellerProfileDto getCoTravellerProfile(Long userId);
 }
