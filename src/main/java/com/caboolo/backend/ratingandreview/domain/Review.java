@@ -1,6 +1,8 @@
 package com.caboolo.backend.ratingandreview.domain;
 
 import com.caboolo.backend.core.domain.GenericIdEntity;
+import com.caboolo.backend.ratingandreview.converter.ReviewTagSetConverter;
+import com.caboolo.backend.ratingandreview.enums.ReviewTagType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -44,5 +47,8 @@ public class Review extends GenericIdEntity {
     @Column(name = "would_ride_again")
     private Boolean wouldRideAgain;
 
+    @Column(name = "tags")
+    @Convert(converter = ReviewTagSetConverter.class)
+    private Set<ReviewTagType> tags;
 
 }

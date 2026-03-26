@@ -1,7 +1,9 @@
 package com.caboolo.backend.ratingandreview.dto;
 
+import java.util.List;
+
 public class SubmitReviewRequestDto {
     private Long rideId;
 
-    private List<UserReviewInput> reviews;
+    private List<PublicProfileReviewSummaryDto.UserReviewInputDto> reviews;
 }
