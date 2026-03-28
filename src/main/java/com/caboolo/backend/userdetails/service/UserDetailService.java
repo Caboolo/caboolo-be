@@ -1,6 +1,10 @@
 package com.caboolo.backend.userdetails.service;
 
+import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.dto.UserDetailRequestDto;
+import com.caboolo.backend.review.dto.ProfileDto;
+import com.caboolo.backend.review.dto.ReviewDto;
+import com.caboolo.backend.review.service.ReviewService;
 import com.caboolo.backend.storage.StorageService;
 import com.caboolo.backend.storage.StorageUploadResult;
 import com.caboolo.backend.userLogin.domain.UserLogin;
@@ -12,8 +16,8 @@ import com.caboolo.backend.userdetails.repository.UserDetailRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserDetailService {
@@ -28,16 +32,16 @@ public class UserDetailService {
     private final StorageService storageService;
     private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
     private final UserDetailsConverter userDetailsConverter;
+    private final ReviewService reviewService;
 
-    public UserDetailService(UserDetailRepository userDetailRepository,
-                             UserLoginRepository userLoginRepository,
-                             StorageService storageService,
-                             com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator, UserDetailsConverter userDetailsConverter) {
+
+    public UserDetailService(UserDetailRepository userDetailRepository, UserLoginRepository userLoginRepository, StorageService storageService, SequenceGenerator sequenceGenerator, UserDetailsConverter userDetailsConverter, ReviewService reviewService) {
         this.userDetailRepository = userDetailRepository;
         this.userLoginRepository = userLoginRepository;
         this.storageService = storageService;
         this.sequenceGenerator = sequenceGenerator;
         this.userDetailsConverter = userDetailsConverter;
+        this.reviewService = reviewService;
     }
 
     public UserDetailResponseDto saveOrUpdateUserDetail(UserDetailRequestDto requestDto) {
@@ -232,4 +236,35 @@ public class UserDetailService {
     }
 
 
+    public ProfileDto getMyProfileHeader(String userId) {
+        UserDetail userDetails = getUserDetailEntity(userId);
+
+        Map<String, Integer> tagCountMap = userDetails.getTagCounts();
+        if (tagCountMap == null) {
+            tagCountMap = new HashMap<>();
+        }
+
+        Map<String, Integer> top5Tags = tagCountMap.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .limit(5)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
+
+        return ProfileDto.Builder.profileDto()
+                .withUserId(userId)
+                .withName(userDetails.getName())
+                .withNumberOfRides(userDetails.getTotalReviews()) // Using totalReviews as a proxy for rides
+                .withAvgRating(userDetails.getAvgRating() != null ? userDetails.getAvgRating() : 0.0)
+                .withNoOfReviews(userDetails.getTotalReviews() != null ? userDetails.getTotalReviews() : 0)
+                .withTagCountMap(top5Tags)
+                .build();
+    }
+
+    public List<ReviewDto> getReviewDtoList(String userId) {
+        return reviewService.getReviewDtoList(userId);
+    }
 }

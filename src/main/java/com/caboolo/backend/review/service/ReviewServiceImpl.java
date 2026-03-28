@@ -63,36 +63,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ProfileDto getMyProfileHeader(String userId) {
-        UserDetail userDetails = userDetailService.getUserDetailEntity(userId);
-
-        Map<String, Integer> tagCountMap = userDetails.getTagCounts();
-        if (tagCountMap == null) {
-            tagCountMap = new HashMap<>();
-        }
-
-        Map<String, Integer> top5Tags = tagCountMap.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .limit(5)
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (e1, e2) -> e1,
-                        LinkedHashMap::new
-                ));
-
-        return ProfileDto.Builder.profileDto()
-                .withUserId(userId)
-                .withName(userDetails.getName())
-                .withNumberOfRides(userDetails.getTotalReviews()) // Using totalReviews as a proxy for rides
-                .withAvgRating(userDetails.getAvgRating() != null ? userDetails.getAvgRating() : 0.0)
-                .withNoOfReviews(userDetails.getTotalReviews() != null ? userDetails.getTotalReviews() : 0)
-                .withTagCountMap(top5Tags)
-                .build();
-    }
-
-    @Override
-    public List<ReviewDto> getMyProfileDetail(String userId) {
+    public List<ReviewDto> getReviewDtoList(String userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
 
         return reviews.stream()

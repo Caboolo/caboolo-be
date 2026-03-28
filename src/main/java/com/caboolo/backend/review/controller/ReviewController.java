@@ -30,16 +30,6 @@ public class ReviewController extends BaseController {
         return successResponse("Review submitted successfully");
     }
 
-    @GetMapping("/profile")
-    public RestEntity<ProfileDto> getMyProfileHeader(@RequestParam String userId) {
-        return successResponse(reviewService.getMyProfileHeader(userId));
-    }
-
-    @GetMapping("/listing")
-    public RestEntity<List<ReviewDto>> getMyProfileDetail(@RequestParam String userId) {
-        return successResponse(reviewService.getMyProfileDetail(userId));
-    }
-
     @GetMapping("/profile/co-traveller")
     public RestEntity<RiderProfileDto> getCoTravellerProfile(@RequestParam String userId) {
         return successResponse(reviewService.getCoTravellerProfile(userId));

@@ -3,12 +3,16 @@ package com.caboolo.backend.userdetails.controller;
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.dto.UserDetailRequestDto;
+import com.caboolo.backend.review.dto.ProfileDto;
+import com.caboolo.backend.review.dto.ReviewDto;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.service.UserDetailService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/userdetails")
@@ -91,5 +95,15 @@ public class UserDetailsController extends BaseController {
             return errorResponse("Not Found", HttpStatus.NOT_FOUND);
         }
         return successResponse(photoUrl, "Photo URL retrieved successfully");
+    }
+
+    @GetMapping("/review/summary")
+    public RestEntity<ProfileDto> getMyProfileHeader(@RequestParam String userId) {
+        return successResponse(userDetailService.getMyProfileHeader(userId));
+    }
+
+    @GetMapping("/review/listing")
+    public RestEntity<List<ReviewDto>> getReviewDtoList(@RequestParam String userId) {
+        return successResponse(userDetailService.getReviewDtoList(userId));
     }
 }

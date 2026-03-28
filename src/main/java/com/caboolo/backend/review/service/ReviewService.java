@@ -9,9 +9,7 @@ public interface ReviewService {
 
     RideReviewRequestDto getListOfCoPassengers(Long rideId);
 
-    ProfileDto getMyProfileHeader(String userId);
-
-    List<ReviewDto> getMyProfileDetail(String userId);
+    List<ReviewDto> getReviewDtoList(String userId);
 
     RiderProfileDto getCoTravellerProfile(String userId);
 }
