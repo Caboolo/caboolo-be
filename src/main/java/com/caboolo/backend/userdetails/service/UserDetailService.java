@@ -86,6 +86,15 @@ public class UserDetailService {
     }
 
     /**
+     * Get the details for a given user ID.
+     */
+    public UserDetailResponseDto getUserDetailsById(Long userId) {
+        return userDetailRepository.findByUserId(userId)
+                .map(UserDetailsConverter::toDetailResponseDto)
+                .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
+    }
+
+    /**
      * Fetch the profile for the authenticated user.
      */
     public UserProfileResponseDto getProfile(String firebaseUid) {

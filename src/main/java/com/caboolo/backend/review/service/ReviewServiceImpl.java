@@ -2,8 +2,9 @@ package com.caboolo.backend.review.service;
 
 import com.caboolo.backend.review.domain.Review;
 import com.caboolo.backend.review.dto.*;
-import com.caboolo.backend.review.enums.ReviewTagType;
 import com.caboolo.backend.review.repository.ReviewRepository;
+import com.caboolo.backend.userdetails.service.UserDetailService;
+import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,10 +18,11 @@ import java.util.stream.Collectors;
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final UserDetailService userDetailService;
 
     @Override
     @Transactional
-    public void submitReview(SubmitReviewRequestDto request) {
+    public void submitReview(RideReviewResponseDto request) {
         List<Review> reviews = request.getReviews().stream()
                 .map(item -> Review.Builder.review()
                         .withRideId(request.getRideId())
@@ -36,28 +38,18 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public CoPassengerResponseDto getListOfCoPassengers(Long rideId) {
-        // Hardcoded ride details as requested
-        return CoPassengerResponseDto.Builder.builder()
-                .withFromLocation("Indira Nagar")
-                .withToLocation("Electronic City")
-                .withRiders(List.of(
-                        RiderDto.Builder.builder()
-                                .withUserId(101L)
-                                .withName("Rahul Sharma")
-                                .withAvgRating(4.5)
-                                .build(),
-                        RiderDto.Builder.builder()
-                                .withUserId(102L)
-                                .withName("Priya Singh")
-                                .withAvgRating(4.8)
-                                .build()
-                ))
+    public RideReviewRequestDto getListOfCoPassengers(Long rideId) {
+        // Ride module planned, setting ride details to null for now.
+        return RideReviewRequestDto.Builder.rideReviewDto()
+                .withRideId(String.valueOf(rideId))
+                .withSource(null)
+                .withDestination(null)
+                .withRiders(List.of())
                 .build();
     }
 
     @Override
-    public ProfileHeaderDto getMyProfileHeader(Long userId) {
+    public UserProfileDto getMyProfileHeader(Long userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
         
         Double avgRating = reviews.stream()
@@ -82,34 +74,39 @@ public class ReviewServiceImpl implements ReviewService {
                         LinkedHashMap::new
                 ));
 
-        return ProfileHeaderDto.Builder.builder()
-                .withName("Current User") // Dummy name, usually fetched from user service
-                .withAvgRating(avgRating)
-                .withTagCountMap(top5Tags)
+        UserDetailResponseDto userDetails = userDetailService.getUserDetailsById(userId);
+
+        return UserProfileDto.Builder.userProfileDto()
+                .withUserId(String.valueOf(userId))
+                .withName(userDetails.getName())
                 .withNumberOfRides(reviews.size()) // Dummy: assuming each review is from a ride
-                .withTotalReviews(reviews.size())
+                .withAvgRating(avgRating)
+                .withNoOfReviews(reviews.size())
+                .withTagCountMap(top5Tags)
                 .build();
     }
 
     @Override
-    public List<ReviewMinDto> getMyProfileDetail(Long userId) {
+    public List<ReviewDto> getMyProfileDetail(Long userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
 
         return reviews.stream()
-                .map(r -> ReviewMinDto.Builder.builder()
+                .map(r -> ReviewDto.Builder.userReviewDto()
                         .withByUserId(r.getByUserId())
-                        .withFromToLocation("Point A to Point B") // Hardcoded as per requirement
-                        .withDate(LocalDateTime.now()) // Hardcoded/Dummy
+                        .withRideId(String.valueOf(r.getRideId()))
+                        .withSource(null)
+                        .withDestination(null)
+                        .withDate(null)
                         .withTags(r.getTags())
                         .withComments(r.getComment())
                         .withRating(r.getRating())
                         .build())
-                .sorted(Comparator.comparing(ReviewMinDto::getRating).reversed())
+                .sorted(Comparator.comparing(ReviewDto::getRating).reversed())
                 .collect(Collectors.toList());
     }
 
     @Override
-    public CoTravellerProfileDto getCoTravellerProfile(Long userId) {
+    public RiderProfileDto getCoTravellerProfile(Long userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
 
         Double avgRating = reviews.stream()
@@ -126,13 +123,16 @@ public class ReviewServiceImpl implements ReviewService {
             ratingBreakdown.merge(r.getRating(), 1, Integer::sum);
         });
 
-        return CoTravellerProfileDto.Builder.builder()
-                .withName("Co-Traveller")
+        UserDetailResponseDto userDetails = userDetailService.getUserDetailsById(userId);
+
+        return RiderProfileDto.Builder.riderProfileDto()
+                .withUserId(String.valueOf(userId))
+                .withName(userDetails.getName())
                 .withNumberOfRides(reviews.size())
                 .withAvgRating(avgRating)
                 .withNoOfReviews(reviews.size())
-                .withTrustScore(85.0) // Dummy
                 .withTagCountMap(tagCountMap)
+                .withTrustScore(null) // Dummy
                 .withRatingBreakdown(ratingBreakdown)
                 .build();
     }

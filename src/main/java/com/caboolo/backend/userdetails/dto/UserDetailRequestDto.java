@@ -1,7 +1,9 @@
 package com.caboolo.backend.userdetails.dto;
 
 import com.caboolo.backend.core.dto.GenericEntityDto;
+
 import java.time.LocalDateTime;
+
 import com.caboolo.backend.userdetails.domain.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,7 +20,8 @@ public class UserDetailRequestDto extends GenericEntityDto {
     private String email;
     private String phoneNumber;
 
-    public UserDetailRequestDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, String name, Long userId, Gender gender, String imageUrl, String email, String phoneNumber) {
+    public UserDetailRequestDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, String name,
+                                Long userId, Gender gender, String imageUrl, String email, String phoneNumber) {
         super(dateCreated, lastModified, isDeleted);
         this.name = name;
         this.userId = userId;
@@ -68,7 +71,9 @@ public class UserDetailRequestDto extends GenericEntityDto {
         UserDetailRequestDto build();
     }
 
-    public static class Builder implements DateCreatedStep, LastModifiedStep, IsDeletedStep, NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, BuildStep {
+    public static class Builder
+        implements DateCreatedStep, LastModifiedStep, IsDeletedStep, NameStep, UserIdStep, GenderStep, ImageUrlStep,
+        EmailStep, PhoneNumberStep, BuildStep {
         private LocalDateTime dateCreated;
         private LocalDateTime lastModified;
         private boolean isDeleted;
@@ -79,7 +84,8 @@ public class UserDetailRequestDto extends GenericEntityDto {
         private String email;
         private String phoneNumber;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         public static DateCreatedStep userDetailRequestDto() {
             return new Builder();

@@ -1,8 +1,8 @@
 package com.caboolo.backend.review.domain;
 
 import com.caboolo.backend.core.domain.GenericIdEntity;
+import com.caboolo.backend.review.enums.ReviewTag;
 import com.caboolo.backend.review.converter.ReviewTagSetConverter;
-import com.caboolo.backend.review.enums.ReviewTagType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,7 +39,7 @@ public class Review extends GenericIdEntity {
 
     @Column(name = "tags")
     @Convert(converter = ReviewTagSetConverter.class)
-    private Set<ReviewTagType> tags;
+    private Set<ReviewTag> tags;
 
     public static interface RideIdStep {
         ForUserIdStep withRideId(Long rideId);
@@ -66,7 +66,7 @@ public class Review extends GenericIdEntity {
     }
 
     public static interface TagsStep {
-        BuildStep withTags(Set<ReviewTagType> tags);
+        BuildStep withTags(Set<ReviewTag> tags);
     }
 
     public static interface BuildStep {
@@ -81,7 +81,7 @@ public class Review extends GenericIdEntity {
         private Integer rating;
         private String comment;
         private Boolean rideAgain;
-        private Set<ReviewTagType> tags;
+        private Set<ReviewTag> tags;
 
         private Builder() {
         }
@@ -127,7 +127,7 @@ public class Review extends GenericIdEntity {
         }
 
         @Override
-        public BuildStep withTags(Set<ReviewTagType> tags) {
+        public BuildStep withTags(Set<ReviewTag> tags) {
             this.tags = tags;
             return this;
         }
