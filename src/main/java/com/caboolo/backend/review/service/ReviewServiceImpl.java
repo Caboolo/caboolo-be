@@ -38,6 +38,12 @@ public class ReviewServiceImpl implements ReviewService {
                         .build())
                 .collect(Collectors.toList());
         reviewRepository.saveAll(reviews);
+
+        // Update user statistics asynchronously
+        request.getReviews().stream()
+                .map(UserReviewDto::getToUserId)
+                .distinct()
+                .forEach(userDetailService::updateUserStatsAsync);
     }
 
     @Override
