@@ -62,7 +62,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public UserProfileDto getMyProfileHeader(String userId) {
+    public ProfileDto getMyProfileHeader(String userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
         
         Double avgRating = reviews.stream()
@@ -89,7 +89,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         UserDetailResponseDto userDetails = userDetailService.getUserDetailsById(userId);
 
-        return UserProfileDto.Builder.userProfileDto()
+        return ProfileDto.Builder.profileDto()
                 .withUserId(String.valueOf(userId))
                 .withName(userDetails.getName())
                 .withNumberOfRides(reviews.size()) // Dummy: assuming each review is from a ride
