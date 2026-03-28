@@ -22,7 +22,7 @@ public class UserDetails extends GenericIdEntity {
     private String name;
 
     @Column(name = "user_id", nullable = false, unique = true)
-    private Long userId;
+    private String userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender", length = 20)
@@ -61,7 +61,7 @@ public class UserDetails extends GenericIdEntity {
     }
 
     public static interface UserIdStep {
-        GenderStep withUserId(Long userId);
+        GenderStep withUserId(String userId);
     }
 
     public static interface GenderStep {
@@ -108,7 +108,7 @@ public class UserDetails extends GenericIdEntity {
     public static class Builder implements UserDetailsIdStep, NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, PhotoPublicIdStep, AvgRatingStep, TotalReviewsStep, RideAgainCountStep, TagCountsStep, BuildStep {
         private Long userDetailsId;
         private String name;
-        private Long userId;
+        private String userId;
         private Gender gender;
         private String imageUrl;
         private String email;
@@ -139,7 +139,7 @@ public class UserDetails extends GenericIdEntity {
         }
 
         @Override
-        public GenderStep withUserId(Long userId) {
+        public GenderStep withUserId(String userId) {
             this.userId = userId;
             return this;
         }

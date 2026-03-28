@@ -10,14 +10,14 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReviewItemDto {
-    private Long toUserId;
+    private String toUserId;
     private Integer rating;
     private Boolean rideAgain;
     private Set<ReviewTagType> tags;
     private String comment;
 
     public static interface ToUserIdStep {
-        RatingStep withToUserId(Long toUserId);
+        RatingStep withToUserId(String toUserId);
     }
 
     public static interface RatingStep {
@@ -41,7 +41,7 @@ public class ReviewItemDto {
     }
 
     public static class Builder implements ToUserIdStep, RatingStep, RideAgainStep, TagsStep, CommentStep, BuildStep {
-        private Long toUserId;
+        private String toUserId;
         private Integer rating;
         private Boolean rideAgain;
         private Set<ReviewTagType> tags;
@@ -52,7 +52,7 @@ public class ReviewItemDto {
         }
 
         @Override
-        public RatingStep withToUserId(Long toUserId) {
+        public RatingStep withToUserId(String toUserId) {
             this.toUserId = toUserId;
             return this;
         }

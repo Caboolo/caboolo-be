@@ -45,12 +45,12 @@ public class ReviewServiceImpl implements ReviewService {
                 .withToLocation("Electronic City")
                 .withRiders(List.of(
                         RiderDto.Builder.builder()
-                                .withUserId(101L)
+                                .withUserId("user101")
                                 .withName("Rahul Sharma")
                                 .withAvgRating(4.5)
                                 .build(),
                         RiderDto.Builder.builder()
-                                .withUserId(102L)
+                                .withUserId("user102")
                                 .withName("Priya Singh")
                                 .withAvgRating(4.8)
                                 .build()
@@ -59,7 +59,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ProfileHeaderDto getMyProfileHeader(Long userId) {
+    public ProfileHeaderDto getMyProfileHeader(String userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
         
         Double avgRating = reviews.stream()
@@ -94,7 +94,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<ReviewMinDto> getMyProfileDetail(Long userId) {
+    public List<ReviewMinDto> getMyProfileDetail(String userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
 
         return reviews.stream()
@@ -111,7 +111,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public CoTravellerProfileDto getCoTravellerProfile(Long userId) {
+    public CoTravellerProfileDto getCoTravellerProfile(String userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
 
         Double avgRating = reviews.stream()

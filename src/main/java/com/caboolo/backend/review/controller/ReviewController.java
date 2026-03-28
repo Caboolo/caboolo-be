@@ -28,17 +28,17 @@ public class ReviewController extends BaseController {
     }
 
     @GetMapping("/profile/header")
-    public RestEntity<ProfileHeaderDto> getMyProfileHeader(@RequestParam Long userId) {
+    public RestEntity<ProfileHeaderDto> getMyProfileHeader(@RequestParam String userId) {
         return successResponse(reviewService.getMyProfileHeader(userId));
     }
 
     @GetMapping("/profile/details")
-    public RestEntity<List<ReviewMinDto>> getMyProfileDetail(@RequestParam Long userId) {
+    public RestEntity<List<ReviewMinDto>> getMyProfileDetail(@RequestParam String userId) {
         return successResponse(reviewService.getMyProfileDetail(userId));
     }
 
     @GetMapping("/profile/co-traveller")
-    public RestEntity<CoTravellerProfileDto> getCoTravellerProfile(@RequestParam Long userId) {
+    public RestEntity<CoTravellerProfileDto> getCoTravellerProfile(@RequestParam String userId) {
         return successResponse(reviewService.getCoTravellerProfile(userId));
     }
 }

@@ -11,7 +11,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReviewMinDto {
-    private Long byUserId;
+    private String byUserId;
     private String fromToLocation;
     private LocalDateTime date;
     private Set<ReviewTagType> tags;
@@ -19,7 +19,7 @@ public class ReviewMinDto {
     private Integer rating;
 
     public static interface ByUserIdStep {
-        FromToLocationStep withByUserId(Long byUserId);
+        FromToLocationStep withByUserId(String byUserId);
     }
 
     public static interface FromToLocationStep {
@@ -47,7 +47,7 @@ public class ReviewMinDto {
     }
 
     public static class Builder implements ByUserIdStep, FromToLocationStep, DateStep, TagsStep, CommentsStep, RatingStep, BuildStep {
-        private Long byUserId;
+        private String byUserId;
         private String fromToLocation;
         private LocalDateTime date;
         private Set<ReviewTagType> tags;
@@ -59,7 +59,7 @@ public class ReviewMinDto {
         }
 
         @Override
-        public FromToLocationStep withByUserId(Long byUserId) {
+        public FromToLocationStep withByUserId(String byUserId) {
             this.byUserId = byUserId;
             return this;
         }

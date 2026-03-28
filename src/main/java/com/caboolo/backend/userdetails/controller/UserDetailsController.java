@@ -2,10 +2,8 @@ package com.caboolo.backend.userdetails.controller;
 
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
-import com.caboolo.backend.dto.UserProfileRequestDto;
-import com.caboolo.backend.dto.UserProfileResponseDto;
-import com.caboolo.backend.userdetails.dto.UserDetailRequestDto;
-import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
+import com.caboolo.backend.dto.UserDetailRequestDto;
+import com.caboolo.backend.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.service.UserDetailService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -41,7 +39,7 @@ public class UserDetailsController extends BaseController {
      * Returns the authenticated user's full profile.
      */
     @GetMapping("/profile")
-    public RestEntity<UserProfileResponseDto> getProfile(
+    public RestEntity<UserDetailResponseDto> getProfile(
             @AuthenticationPrincipal String firebaseUid) {
         return successResponse(userDetailService.getProfile(firebaseUid), "Profile retrieved successfully");
     }
@@ -52,9 +50,9 @@ public class UserDetailsController extends BaseController {
      * Body: { "displayName": "...", "email": "..." }
      */
     @PutMapping("/profile")
-    public RestEntity<UserProfileResponseDto> updateProfile(
+    public RestEntity<UserDetailResponseDto> updateProfile(
             @AuthenticationPrincipal String firebaseUid,
-            @RequestBody UserProfileRequestDto request) {
+            @RequestBody UserDetailRequestDto request) {
         return successResponse(userDetailService.updateProfile(firebaseUid, request), "Profile updated successfully");
     }
 
@@ -64,7 +62,7 @@ public class UserDetailsController extends BaseController {
      * Content-Type: multipart/form-data  —  field name: "file"
      */
     @PostMapping("/profile/photo")
-    public RestEntity<UserProfileResponseDto> uploadPhoto(
+    public RestEntity<UserDetailResponseDto> uploadPhoto(
             @AuthenticationPrincipal String firebaseUid,
             @RequestParam("file") MultipartFile file) {
         return successResponse(userDetailService.uploadProfilePhoto(firebaseUid, file), "Photo uploaded successfully");
@@ -87,7 +85,7 @@ public class UserDetailsController extends BaseController {
      * Resolves the user's profile photo.
      */
     @GetMapping("/{id}/photo")
-    public RestEntity<String> getUserPhoto(@PathVariable Long id) {
+    public RestEntity<String> getUserPhoto(@PathVariable String id) {
         String photoUrl = userDetailService.getPhotoUrlByUserId(id);
         if (photoUrl == null || photoUrl.isBlank()) {
             return errorResponse("Not Found", HttpStatus.NOT_FOUND);

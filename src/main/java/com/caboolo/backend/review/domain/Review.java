@@ -26,10 +26,10 @@ public class Review extends GenericIdEntity {
     private Long rideId;
 
     @Column(name = "for_user_id", nullable = false)
-    private Long forUserId;
+    private String forUserId;
 
     @Column(name = "by_user_id", nullable = false)
-    private Long byUserId;
+    private String byUserId;
 
     @Column(name = "rating", nullable = false)
     private Integer rating;
@@ -53,11 +53,11 @@ public class Review extends GenericIdEntity {
     }
 
     public static interface ForUserIdStep {
-        ByUserIdStep withForUserId(Long forUserId);
+        ByUserIdStep withForUserId(String forUserId);
     }
 
     public static interface ByUserIdStep {
-        RatingStep withByUserId(Long byUserId);
+        RatingStep withByUserId(String byUserId);
     }
 
     public static interface RatingStep {
@@ -84,8 +84,8 @@ public class Review extends GenericIdEntity {
     public static class Builder implements ReviewIdStep, RideIdStep, ForUserIdStep, ByUserIdStep, RatingStep, CommentStep, RideAgainStep, TagsStep, BuildStep {
         private Long reviewId;
         private Long rideId;
-        private Long forUserId;
-        private Long byUserId;
+        private String forUserId;
+        private String byUserId;
         private Integer rating;
         private String comment;
         private Boolean rideAgain;
@@ -111,13 +111,13 @@ public class Review extends GenericIdEntity {
         }
 
         @Override
-        public ByUserIdStep withForUserId(Long forUserId) {
+        public ByUserIdStep withForUserId(String forUserId) {
             this.forUserId = forUserId;
             return this;
         }
 
         @Override
-        public RatingStep withByUserId(Long byUserId) {
+        public RatingStep withByUserId(String byUserId) {
             this.byUserId = byUserId;
             return this;
         }

@@ -8,12 +8,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RiderDto {
-    private Long userId;
+    private String userId;
     private String name;
     private Double avgRating;
 
     public static interface UserIdStep {
-        NameStep withUserId(Long userId);
+        NameStep withUserId(String userId);
     }
 
     public static interface NameStep {
@@ -29,7 +29,7 @@ public class RiderDto {
     }
 
     public static class Builder implements UserIdStep, NameStep, AvgRatingStep, BuildStep {
-        private Long userId;
+        private String userId;
         private String name;
         private Double avgRating;
 
@@ -38,7 +38,7 @@ public class RiderDto {
         }
 
         @Override
-        public NameStep withUserId(Long userId) {
+        public NameStep withUserId(String userId) {
             this.userId = userId;
             return this;
         }
