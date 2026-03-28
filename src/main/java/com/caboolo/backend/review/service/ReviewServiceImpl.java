@@ -14,11 +14,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final UserDetailService userDetailService;
+
+    public ReviewServiceImpl(ReviewRepository reviewRepository, UserDetailService userDetailService) {
+        this.reviewRepository = reviewRepository;
+        this.userDetailService = userDetailService;
+    }
 
     @Override
     @Transactional
