@@ -11,12 +11,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/reviews")
-@RequiredArgsConstructor
 public class ReviewController extends BaseController {
 
     private final ReviewService reviewService;
 
-    @GetMapping("/co-passengers")
+    public ReviewController(ReviewService reviewService) {
+        this.reviewService = reviewService;
+    }
+
+    @GetMapping("/co-passengers/listing")
     public RestEntity<RideReviewRequestDto> getListOfCoPassengers(@RequestParam Long rideId) {
         return successResponse(reviewService.getListOfCoPassengers(rideId));
     }

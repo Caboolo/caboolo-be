@@ -133,7 +133,11 @@ public class ReviewServiceImpl implements ReviewService {
                 .withAvgRating(userDetails.getAvgRating() != null ? userDetails.getAvgRating() : 0.0)
                 .withNoOfReviews(userDetails.getTotalReviews() != null ? userDetails.getTotalReviews() : 0)
                 .withTagCountMap(tagCountMap)
-                .withTrustScore(null) // Dummy
+                .withTrustScore(
+                        userDetails.getTotalReviews() == 0
+                                ? 0
+                                : (userDetails.getRideAgainCount() * 100.0) / userDetails.getTotalReviews()
+                )
                 .withRatingBreakdown(ratingBreakdown)
                 .build();
     }
