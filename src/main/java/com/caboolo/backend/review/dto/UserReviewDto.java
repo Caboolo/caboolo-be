@@ -1,6 +1,6 @@
 package com.caboolo.backend.review.dto;
 
-import com.caboolo.backend.review.enums.ReviewTagType;
+import com.caboolo.backend.review.enums.ReviewTag;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +13,7 @@ public class UserReviewDto {
     private String toUserId;
     private Integer rating;
     private Boolean rideAgain;
-    private Set<ReviewTagType> tags;
+    private Set<ReviewTag> tags;
     private String comment;
 
     public static interface ToUserIdStep {
@@ -29,7 +29,7 @@ public class UserReviewDto {
     }
 
     public static interface TagsStep {
-        CommentStep withTags(Set<ReviewTagType> tags);
+        CommentStep withTags(Set<ReviewTag> tags);
     }
 
     public static interface CommentStep {
@@ -44,7 +44,7 @@ public class UserReviewDto {
         private String toUserId;
         private Integer rating;
         private Boolean rideAgain;
-        private Set<ReviewTagType> tags;
+        private Set<ReviewTag> tags;
         private String comment;
 
         public static ToUserIdStep builder() {
@@ -70,7 +70,7 @@ public class UserReviewDto {
         }
 
         @Override
-        public CommentStep withTags(Set<ReviewTagType> tags) {
+        public CommentStep withTags(Set<ReviewTag> tags) {
             this.tags = tags;
             return this;
         }

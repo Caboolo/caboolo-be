@@ -27,7 +27,7 @@ public class UserDetailsController extends BaseController {
     @PostMapping
     public RestEntity<UserDetailResponseDto> saveUserDetails(@RequestBody UserDetailRequestDto requestDto) {
         try {
-            UserDetailResponseDto responseDto = userDetailService.saveOrUpdateUserDetail(requestDto);
+            UserDetailResponseDto responseDto = userDetailService.createOrUpdateUserDetails(requestDto);
             return successResponse(responseDto, "User details saved successfully");
         } catch (IllegalArgumentException e) {
             return errorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);

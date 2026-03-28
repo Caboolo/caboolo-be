@@ -1,21 +1,47 @@
 package com.caboolo.backend.review.dto;
 
+import com.caboolo.backend.core.dto.GenericEntityDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileDto {
+public class ProfileDto extends GenericEntityDto {
     private String userId;
     private String name;
     private Integer numberOfRides;
     private Double avgRating;
     private Integer noOfReviews;
     private Map<String, Integer> tagCountMap;
+
+    public ProfileDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted,
+                      String userId, String name, Integer numberOfRides, Double avgRating, Integer noOfReviews,
+                      Map<String, Integer> tagCountMap) {
+        super(dateCreated, lastModified, isDeleted);
+        this.userId = userId;
+        this.name = name;
+        this.numberOfRides = numberOfRides;
+        this.avgRating = avgRating;
+        this.noOfReviews = noOfReviews;
+        this.tagCountMap = tagCountMap;
+    }
+
+    public static interface DateCreatedStep {
+        LastModifiedStep withDateCreated(LocalDateTime dateCreated);
+    }
+
+    public static interface LastModifiedStep {
+        IsDeletedStep withLastModified(LocalDateTime lastModified);
+    }
+
+    public static interface IsDeletedStep {
+        UserIdStep withIsDeleted(boolean isDeleted);
+    }
 
     public static interface UserIdStep {
         NameStep withUserId(String userId);
@@ -46,7 +72,11 @@ public class ProfileDto {
     }
 
     public static class Builder
-        implements UserIdStep, NameStep, NumberOfRidesStep, AvgRatingStep, NoOfReviewsStep, TagCountMapStep, BuildStep {
+        implements DateCreatedStep, LastModifiedStep, IsDeletedStep, UserIdStep, NameStep, NumberOfRidesStep,
+        AvgRatingStep, NoOfReviewsStep, TagCountMapStep, BuildStep {
+        private LocalDateTime dateCreated;
+        private LocalDateTime lastModified;
+        private boolean isDeleted;
         private String userId;
         private String name;
         private Integer numberOfRides;
@@ -57,8 +87,26 @@ public class ProfileDto {
         private Builder() {
         }
 
-        public static UserIdStep profileDto() {
+        public static DateCreatedStep profileDto() {
             return new Builder();
+        }
+
+        @Override
+        public LastModifiedStep withDateCreated(LocalDateTime dateCreated) {
+            this.dateCreated = dateCreated;
+            return this;
+        }
+
+        @Override
+        public IsDeletedStep withLastModified(LocalDateTime lastModified) {
+            this.lastModified = lastModified;
+            return this;
+        }
+
+        @Override
+        public UserIdStep withIsDeleted(boolean isDeleted) {
+            this.isDeleted = isDeleted;
+            return this;
         }
 
         @Override
@@ -100,6 +148,9 @@ public class ProfileDto {
         @Override
         public ProfileDto build() {
             return new ProfileDto(
+                this.dateCreated,
+                this.lastModified,
+                this.isDeleted,
                 this.userId,
                 this.name,
                 this.numberOfRides,

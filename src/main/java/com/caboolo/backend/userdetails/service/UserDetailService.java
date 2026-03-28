@@ -4,7 +4,7 @@ import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.dto.UserDetailRequestDto;
 import com.caboolo.backend.review.dto.ProfileDto;
 import com.caboolo.backend.review.dto.ReviewDto;
-import com.caboolo.backend.review.enums.ReviewTagType;
+import com.caboolo.backend.review.enums.ReviewTag;
 import com.caboolo.backend.review.service.ReviewService;
 import com.caboolo.backend.storage.StorageService;
 import com.caboolo.backend.storage.StorageUploadResult;
@@ -29,7 +29,7 @@ public class UserDetailService {
     private static final String PROFILE_PHOTO_FOLDER = "caboolo/profile_photos";
     private static final long MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
     private static final List<String> ALLOWED_PHOTO_TYPES =
-            List.of("image/jpeg", "image/png", "image/webp", "image/gif");
+        List.of("image/jpeg", "image/png", "image/webp", "image/gif");
 
     private final UserDetailRepository userDetailRepository;
     private final UserLoginRepository userLoginRepository;
@@ -39,8 +39,10 @@ public class UserDetailService {
     private final ReviewService reviewService;
     private final ReviewRepository reviewRepository;
 
-
-    public UserDetailService(UserDetailRepository userDetailRepository, UserLoginRepository userLoginRepository, StorageService storageService, SequenceGenerator sequenceGenerator, UserDetailsConverter userDetailsConverter, ReviewService reviewService, ReviewRepository reviewRepository) {
+    public UserDetailService(UserDetailRepository userDetailRepository, UserLoginRepository userLoginRepository,
+                             StorageService storageService, SequenceGenerator sequenceGenerator,
+                             UserDetailsConverter userDetailsConverter, ReviewService reviewService,
+                             ReviewRepository reviewRepository) {
         this.userDetailRepository = userDetailRepository;
         this.userLoginRepository = userLoginRepository;
         this.storageService = storageService;
@@ -50,7 +52,7 @@ public class UserDetailService {
         this.reviewRepository = reviewRepository;
     }
 
-    public UserDetailResponseDto saveOrUpdateUserDetail(UserDetailRequestDto requestDto) {
+    public UserDetailResponseDto createOrUpdateUserDetails(UserDetailRequestDto requestDto) {
         if (requestDto.getUserId() == null) {
             throw new IllegalArgumentException("User ID must not be null");
         }
@@ -66,19 +68,19 @@ public class UserDetailService {
             details.setEmail(requestDto.getEmail());
         } else {
             details = UserDetail.Builder.userDetails()
-                    .withUserDetailsId(sequenceGenerator.nextId())
-                    .withName(requestDto.getName())
-                    .withUserId(requestDto.getUserId())
-                    .withGender(requestDto.getGender())
-                    .withImageUrl(requestDto.getImageUrl())
-                    .withEmail(requestDto.getEmail())
-                    .withPhoneNumber(requestDto.getPhoneNumber())
-                    .withPhotoPublicId(null)
-                    .withAvgRating(null)
-                    .withTotalReviews(null)
-                    .withRideAgainCount(null)
-                    .withTagCounts(null)
-                    .build();
+                .withUserDetailsId(sequenceGenerator.nextId())
+                .withName(requestDto.getName())
+                .withUserId(requestDto.getUserId())
+                .withGender(requestDto.getGender())
+                .withImageUrl(requestDto.getImageUrl())
+                .withEmail(requestDto.getEmail())
+                .withPhoneNumber(requestDto.getPhoneNumber())
+                .withPhotoPublicId(null)
+                .withAvgRating(null)
+                .withTotalReviews(null)
+                .withRideAgainCount(null)
+                .withTagCounts(null)
+                .build();
         }
 
         UserDetail saved = userDetailRepository.save(details);
@@ -95,8 +97,8 @@ public class UserDetailService {
      */
     public String getPhotoUrlByUserId(String userId) {
         return userDetailRepository.findByUserId(userId)
-                .map(UserDetail::getImageUrl)
-                .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
+            .map(UserDetail::getImageUrl)
+            .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
     }
 
     /**
@@ -104,8 +106,8 @@ public class UserDetailService {
      */
     public UserDetailResponseDto getUserDetailById(String userId) {
         return userDetailRepository.findByUserId(userId)
-                .map(userDetailsConverter::toDetailResponseDto)
-                .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
+            .map(userDetailsConverter::toDetailResponseDto)
+            .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
     }
 
     /**
@@ -113,7 +115,7 @@ public class UserDetailService {
      */
     public UserDetail getUserDetailEntity(String userId) {
         return userDetailRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
+            .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
     }
 
     /**
@@ -121,20 +123,20 @@ public class UserDetailService {
      */
     public UserDetailResponseDto getProfile(String firebaseUid) {
         UserDetail details = userDetailRepository.findByUserId(firebaseUid).orElseGet(() ->
-                UserDetail.Builder.userDetails()
-                        .withUserDetailsId(sequenceGenerator.nextId())
-                        .withName(null)
-                        .withUserId(firebaseUid)
-                        .withGender(null)
-                        .withImageUrl(null)
-                        .withEmail(null)
-                        .withPhoneNumber(null)
-                        .withPhotoPublicId(null)
-                        .withAvgRating(null)
-                        .withTotalReviews(null)
-                        .withRideAgainCount(null)
-                        .withTagCounts(null)
-                        .build()
+            UserDetail.Builder.userDetails()
+                .withUserDetailsId(sequenceGenerator.nextId())
+                .withName(null)
+                .withUserId(firebaseUid)
+                .withGender(null)
+                .withImageUrl(null)
+                .withEmail(null)
+                .withPhoneNumber(null)
+                .withPhotoPublicId(null)
+                .withAvgRating(null)
+                .withTotalReviews(null)
+                .withRideAgainCount(null)
+                .withTagCounts(null)
+                .build()
         );
         return userDetailsConverter.toDetailResponseDto(details);
     }
@@ -144,20 +146,20 @@ public class UserDetailService {
      */
     public UserDetailResponseDto updateProfile(String firebaseUid, UserDetailRequestDto request) {
         UserDetail details = userDetailRepository.findByUserId(firebaseUid)
-                .orElseGet(() -> UserDetail.Builder.userDetails()
-                        .withUserDetailsId(sequenceGenerator.nextId())
-                        .withName(null)
-                        .withUserId(firebaseUid)
-                        .withGender(null)
-                        .withImageUrl(null)
-                        .withEmail(null)
-                        .withPhoneNumber(null)
-                        .withPhotoPublicId(null)
-                        .withAvgRating(null)
-                        .withTotalReviews(null)
-                        .withRideAgainCount(null)
-                        .withTagCounts(null)
-                        .build());
+            .orElseGet(() -> UserDetail.Builder.userDetails()
+                .withUserDetailsId(sequenceGenerator.nextId())
+                .withName(null)
+                .withUserId(firebaseUid)
+                .withGender(null)
+                .withImageUrl(null)
+                .withEmail(null)
+                .withPhoneNumber(null)
+                .withPhotoPublicId(null)
+                .withAvgRating(null)
+                .withTotalReviews(null)
+                .withRideAgainCount(null)
+                .withTagCounts(null)
+                .build());
 
         if (request.getName() != null) {
             details.setName(request.getName());
@@ -179,20 +181,20 @@ public class UserDetailService {
         validatePhoto(file);
 
         UserDetail details = userDetailRepository.findByUserId(firebaseUid)
-                .orElseGet(() -> UserDetail.Builder.userDetails()
-                        .withUserDetailsId(sequenceGenerator.nextId())
-                        .withName(null)
-                        .withUserId(firebaseUid)
-                        .withGender(null)
-                        .withImageUrl(null)
-                        .withEmail(null)
-                        .withPhoneNumber(null)
-                        .withPhotoPublicId(null)
-                        .withAvgRating(null)
-                        .withTotalReviews(null)
-                        .withRideAgainCount(null)
-                        .withTagCounts(null)
-                        .build());
+            .orElseGet(() -> UserDetail.Builder.userDetails()
+                .withUserDetailsId(sequenceGenerator.nextId())
+                .withName(null)
+                .withUserId(firebaseUid)
+                .withGender(null)
+                .withImageUrl(null)
+                .withEmail(null)
+                .withPhoneNumber(null)
+                .withPhotoPublicId(null)
+                .withAvgRating(null)
+                .withTotalReviews(null)
+                .withRideAgainCount(null)
+                .withTagCounts(null)
+                .build());
 
         // Delete old photo from provider if one exists
         if (details.getPhotoPublicId() != null && !details.getPhotoPublicId().isBlank()) {
@@ -227,20 +229,19 @@ public class UserDetailService {
         }
         if (file.getSize() > MAX_PHOTO_SIZE_BYTES) {
             throw new IllegalArgumentException(
-                    "Photo exceeds the maximum allowed size of 5 MB.");
+                "Photo exceeds the maximum allowed size of 5 MB.");
         }
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_PHOTO_TYPES.contains(contentType)) {
             throw new IllegalArgumentException(
-                    "Unsupported file type '" + contentType + "'. Allowed types: " + ALLOWED_PHOTO_TYPES);
+                "Unsupported file type '" + contentType + "'. Allowed types: " + ALLOWED_PHOTO_TYPES);
         }
     }
 
     private UserLogin findActiveUserOrThrow(String firebaseUid) {
         return userLoginRepository.findByFirebaseUidAndIsDeletedFalse(firebaseUid)
-                .orElseThrow(() -> new RuntimeException("User not found: " + firebaseUid));
+            .orElseThrow(() -> new RuntimeException("User not found: " + firebaseUid));
     }
-
 
     public ProfileDto getMyProfileHeader(String userId) {
         UserDetail userDetails = getUserDetailEntity(userId);
@@ -251,23 +252,26 @@ public class UserDetailService {
         }
 
         Map<String, Integer> top5Tags = tagCountMap.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .limit(5)
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (e1, e2) -> e1,
-                        LinkedHashMap::new
-                ));
+            .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+            .limit(5)
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (e1, e2) -> e1,
+                LinkedHashMap::new
+            ));
 
         return ProfileDto.Builder.profileDto()
-                .withUserId(userId)
-                .withName(userDetails.getName())
-                .withNumberOfRides(userDetails.getTotalReviews()) // Using totalReviews as a proxy for rides
-                .withAvgRating(userDetails.getAvgRating() != null ? userDetails.getAvgRating() : 0.0)
-                .withNoOfReviews(userDetails.getTotalReviews() != null ? userDetails.getTotalReviews() : 0)
-                .withTagCountMap(top5Tags)
-                .build();
+            .withDateCreated(userDetails.getDateCreated())
+            .withLastModified(userDetails.getLastModified())
+            .withIsDeleted(userDetails.isDeleted())
+            .withUserId(userId)
+            .withName(userDetails.getName())
+            .withNumberOfRides(userDetails.getTotalReviews()) // Using totalReviews as a proxy for rides
+            .withAvgRating(userDetails.getAvgRating() != null ? userDetails.getAvgRating() : 0.0)
+            .withNoOfReviews(userDetails.getTotalReviews() != null ? userDetails.getTotalReviews() : 0)
+            .withTagCountMap(top5Tags)
+            .build();
     }
 
     public List<ReviewDto> getReviewDtoList(String userId) {
@@ -298,7 +302,7 @@ public class UserDetailService {
                     rideAgainCount++;
                 }
                 if (review.getTags() != null) {
-                    for (ReviewTagType tag : review.getTags()) {
+                    for (ReviewTag tag : review.getTags()) {
                         tagCounts.merge(tag.name(), 1, Integer::sum);
                     }
                 }

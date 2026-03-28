@@ -1,6 +1,6 @@
 package com.caboolo.backend.review.dto;
 
-import com.caboolo.backend.review.enums.ReviewTagType;
+import com.caboolo.backend.review.enums.ReviewTag;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,7 @@ public class ReviewDto {
     private String source;
     private String destination;
     private LocalDateTime date; // rideDate
-    private Set<ReviewTagType> tags;
+    private Set<ReviewTag> tags;
     private String comments;
     private Integer rating;
 
@@ -42,7 +42,7 @@ public class ReviewDto {
     }
 
     public static interface TagsStep {
-        CommentsStep withTags(Set<ReviewTagType> tags);
+        CommentsStep withTags(Set<ReviewTag> tags);
     }
 
     public static interface CommentsStep {
@@ -65,7 +65,7 @@ public class ReviewDto {
         private String source;
         private String destination;
         private LocalDateTime date;
-        private Set<ReviewTagType> tags;
+        private Set<ReviewTag> tags;
         private String comments;
         private Integer rating;
 
@@ -107,7 +107,7 @@ public class ReviewDto {
         }
 
         @Override
-        public CommentsStep withTags(Set<ReviewTagType> tags) {
+        public CommentsStep withTags(Set<ReviewTag> tags) {
             this.tags = tags;
             return this;
         }
