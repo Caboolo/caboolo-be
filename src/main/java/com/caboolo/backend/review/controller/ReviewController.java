@@ -30,7 +30,7 @@ public class ReviewController extends BaseController {
         return successResponse("Review submitted successfully");
     }
 
-    @GetMapping("/profile/co-traveller")
+    @GetMapping("/co-passenger/profile")
     public RestEntity<RiderProfileDto> getCoTravellerProfile(@RequestParam String userId) {
         return successResponse(reviewService.getCoTravellerProfile(userId));
     }
