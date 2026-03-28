@@ -8,10 +8,10 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SubmitReviewRequestDto {
+public class RideReviewResponseDto {
     private Long rideId;
     private String byUserId;
-    private List<ReviewItemDto> reviews;
+    private List<UserReviewDto> reviews;
 
     public static interface RideIdStep {
         ByUserIdStep withRideId(Long rideId);
@@ -22,17 +22,17 @@ public class SubmitReviewRequestDto {
     }
 
     public static interface ReviewsStep {
-        BuildStep withReviews(List<ReviewItemDto> reviews);
+        BuildStep withReviews(List<UserReviewDto> reviews);
     }
 
     public static interface BuildStep {
-        SubmitReviewRequestDto build();
+        RideReviewResponseDto build();
     }
 
     public static class Builder implements RideIdStep, ByUserIdStep, ReviewsStep, BuildStep {
         private Long rideId;
         private String byUserId;
-        private List<ReviewItemDto> reviews;
+        private List<UserReviewDto> reviews;
 
         public static RideIdStep builder() {
             return new Builder();
@@ -51,14 +51,14 @@ public class SubmitReviewRequestDto {
         }
 
         @Override
-        public BuildStep withReviews(List<ReviewItemDto> reviews) {
+        public BuildStep withReviews(List<UserReviewDto> reviews) {
             this.reviews = reviews;
             return this;
         }
 
         @Override
-        public SubmitReviewRequestDto build() {
-            return new SubmitReviewRequestDto(rideId, byUserId, reviews);
+        public RideReviewResponseDto build() {
+            return new RideReviewResponseDto(rideId, byUserId, reviews);
         }
     }
 }

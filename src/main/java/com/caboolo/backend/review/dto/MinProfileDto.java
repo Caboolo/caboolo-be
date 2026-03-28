@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RiderDto {
+public class MinProfileDto {
     private String userId;
     private String name;
     private Double avgRating;
@@ -25,15 +25,19 @@ public class RiderDto {
     }
 
     public static interface BuildStep {
-        RiderDto build();
+        MinProfileDto build();
     }
+
 
     public static class Builder implements UserIdStep, NameStep, AvgRatingStep, BuildStep {
         private String userId;
         private String name;
         private Double avgRating;
 
-        public static UserIdStep builder() {
+        private Builder() {
+        }
+
+        public static UserIdStep minProfileDto() {
             return new Builder();
         }
 
@@ -56,8 +60,12 @@ public class RiderDto {
         }
 
         @Override
-        public RiderDto build() {
-            return new RiderDto(userId, name, avgRating);
+        public MinProfileDto build() {
+            return new MinProfileDto(
+                    this.userId,
+                    this.name,
+                    this.avgRating
+            );
         }
     }
 }

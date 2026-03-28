@@ -2,8 +2,10 @@ package com.caboolo.backend.review.service;
 
 import com.caboolo.backend.review.domain.Review;
 import com.caboolo.backend.review.dto.*;
-import com.caboolo.backend.review.enums.ReviewTagType;
 import com.caboolo.backend.review.repository.ReviewRepository;
+import com.caboolo.backend.userdetails.domain.UserDetail;
+import com.caboolo.backend.userdetails.service.UserDetailService;
+import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +20,11 @@ public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
+    private final UserDetailService userDetailService;
 
     @Override
     @Transactional
-    public void submitReview(SubmitReviewRequestDto request) {
+    public void submitReview(RideReviewResponseDto request) {
         List<Review> reviews = request.getReviews().stream()
                 .map(item -> Review.Builder.review()
                         .withReviewId(sequenceGenerator.nextId())
@@ -35,21 +38,28 @@ public class ReviewServiceImpl implements ReviewService {
                         .build())
                 .collect(Collectors.toList());
         reviewRepository.saveAll(reviews);
+
+        // Update user statistics asynchronously
+        request.getReviews().stream()
+                .map(UserReviewDto::getToUserId)
+                .distinct()
+                .forEach(userDetailService::updateUserStatsAsync);
     }
 
     @Override
-    public CoPassengerResponseDto getListOfCoPassengers(Long rideId) {
+    public RideReviewRequestDto getListOfCoPassengers(Long rideId) {
         // Hardcoded ride details as requested
-        return CoPassengerResponseDto.Builder.builder()
-                .withFromLocation("Indira Nagar")
-                .withToLocation("Electronic City")
+        return RideReviewRequestDto.Builder.rideReviewRequestDto()
+                .withRideId(1231L)
+                .withSource("Indira Nagar")
+                .withDestination("Electronic City")
                 .withRiders(List.of(
-                        RiderDto.Builder.builder()
+                        MinProfileDto.Builder.minProfileDto()
                                 .withUserId("user101")
                                 .withName("Rahul Sharma")
                                 .withAvgRating(4.5)
                                 .build(),
-                        RiderDto.Builder.builder()
+                        MinProfileDto.Builder.minProfileDto()
                                 .withUserId("user102")
                                 .withName("Priya Singh")
                                 .withAvgRating(4.8)
@@ -59,82 +69,52 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ProfileHeaderDto getMyProfileHeader(String userId) {
-        List<Review> reviews = reviewRepository.findByForUserId(userId);
-        
-        Double avgRating = reviews.stream()
-                .mapToInt(Review::getRating)
-                .average()
-                .orElse(0.0);
-
-        Map<String, Integer> tagCountMap = new HashMap<>();
-        reviews.forEach(r -> {
-            if (r.getTags() != null) {
-                r.getTags().forEach(tag -> tagCountMap.merge(tag.name(), 1, Integer::sum));
-            }
-        });
-
-        Map<String, Integer> top5Tags = tagCountMap.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .limit(5)
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (e1, e2) -> e1,
-                        LinkedHashMap::new
-                ));
-
-        return ProfileHeaderDto.Builder.builder()
-                .withName("Current User") // Dummy name, usually fetched from user service
-                .withAvgRating(avgRating)
-                .withTagCountMap(top5Tags)
-                .withNumberOfRides(reviews.size()) // Dummy: assuming each review is from a ride
-                .withTotalReviews(reviews.size())
-                .build();
-    }
-
-    @Override
-    public List<ReviewMinDto> getMyProfileDetail(String userId) {
+    public List<ReviewDto> getReviewDtoList(String userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
 
         return reviews.stream()
-                .map(r -> ReviewMinDto.Builder.builder()
+                .map(r -> ReviewDto.Builder.userReviewDto()
                         .withByUserId(r.getByUserId())
-                        .withFromToLocation("Point A to Point B") // Hardcoded as per requirement
-                        .withDate(LocalDateTime.now()) // Hardcoded/Dummy
+                        .withRideId(String.valueOf(r.getRideId()))
+                        .withSource(null)
+                        .withDestination(null)
+                        .withDate(null)
                         .withTags(r.getTags())
                         .withComments(r.getComment())
                         .withRating(r.getRating())
                         .build())
-                .sorted(Comparator.comparing(ReviewMinDto::getRating).reversed())
+                .sorted(Comparator.comparing(ReviewDto::getRating).reversed())
                 .collect(Collectors.toList());
     }
 
     @Override
-    public CoTravellerProfileDto getCoTravellerProfile(String userId) {
+    public RiderProfileDto getCoTravellerProfile(String userId) {
+        UserDetail userDetails = userDetailService.getUserDetailEntity(userId);
+
+        Map<String, Integer> tagCountMap = userDetails.getTagCounts();
+        if (tagCountMap == null) {
+            tagCountMap = new HashMap<>();
+        }
+        
+        // We still need rating breakdown, so we fetch reviews for that
+        // OR we could store rating breakdown in UserDetails as well.
+        // For now, let's keep review fetch for rating breakdown if it's not in UserDetails.
         List<Review> reviews = reviewRepository.findByForUserId(userId);
-
-        Double avgRating = reviews.stream()
-                .mapToInt(Review::getRating)
-                .average()
-                .orElse(0.0);
-
-        Map<String, Integer> tagCountMap = new HashMap<>();
         Map<Integer, Integer> ratingBreakdown = new HashMap<>();
-        reviews.forEach(r -> {
-            if (r.getTags() != null) {
-                r.getTags().forEach(tag -> tagCountMap.merge(tag.name(), 1, Integer::sum));
-            }
-            ratingBreakdown.merge(r.getRating(), 1, Integer::sum);
-        });
+        reviews.forEach(r -> ratingBreakdown.merge(r.getRating(), 1, Integer::sum));
 
-        return CoTravellerProfileDto.Builder.builder()
-                .withName("Co-Traveller")
-                .withNumberOfRides(reviews.size())
-                .withAvgRating(avgRating)
-                .withNoOfReviews(reviews.size())
-                .withTrustScore(85.0) // Dummy
+        return RiderProfileDto.Builder.riderProfileDto()
+                .withUserId(userId)
+                .withName(userDetails.getName())
+                .withNumberOfRides(userDetails.getTotalReviews())
+                .withAvgRating(userDetails.getAvgRating() != null ? userDetails.getAvgRating() : 0.0)
+                .withNoOfReviews(userDetails.getTotalReviews() != null ? userDetails.getTotalReviews() : 0)
                 .withTagCountMap(tagCountMap)
+                .withTrustScore(
+                        userDetails.getTotalReviews() == 0
+                                ? 0
+                                : (userDetails.getRideAgainCount() * 100.0) / userDetails.getTotalReviews()
+                )
                 .withRatingBreakdown(ratingBreakdown)
                 .build();
     }

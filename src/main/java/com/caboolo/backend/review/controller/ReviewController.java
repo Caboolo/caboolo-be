@@ -10,35 +10,28 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/reviews")
-@RequiredArgsConstructor
+@RequestMapping("/api/v1/reviews")
 public class ReviewController extends BaseController {
 
     private final ReviewService reviewService;
 
-    @GetMapping("/co-passengers")
-    public RestEntity<CoPassengerResponseDto> getListOfCoPassengers(@RequestParam Long rideId) {
+    public ReviewController(ReviewService reviewService) {
+        this.reviewService = reviewService;
+    }
+
+    @GetMapping("/co-passengers/listing")
+    public RestEntity<RideReviewRequestDto> getListOfCoPassengers(@RequestParam Long rideId) {
         return successResponse(reviewService.getListOfCoPassengers(rideId));
     }
 
     @PostMapping("/submit")
-    public RestEntity<Void> submitReview(@RequestBody SubmitReviewRequestDto request) {
+    public RestEntity<Void> submitReview(@RequestBody RideReviewResponseDto request) {
         reviewService.submitReview(request);
         return successResponse("Review submitted successfully");
     }
 
-    @GetMapping("/profile/header")
-    public RestEntity<ProfileHeaderDto> getMyProfileHeader(@RequestParam String userId) {
-        return successResponse(reviewService.getMyProfileHeader(userId));
-    }
-
-    @GetMapping("/profile/details")
-    public RestEntity<List<ReviewMinDto>> getMyProfileDetail(@RequestParam String userId) {
-        return successResponse(reviewService.getMyProfileDetail(userId));
-    }
-
-    @GetMapping("/profile/co-traveller")
-    public RestEntity<CoTravellerProfileDto> getCoTravellerProfile(@RequestParam String userId) {
+    @GetMapping("/co-passenger/profile")
+    public RestEntity<RiderProfileDto> getCoTravellerProfile(@RequestParam String userId) {
         return successResponse(reviewService.getCoTravellerProfile(userId));
     }
 }

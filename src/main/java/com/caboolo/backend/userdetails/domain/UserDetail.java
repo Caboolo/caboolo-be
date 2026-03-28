@@ -7,13 +7,15 @@ import lombok.NoArgsConstructor;
 import lombok.EqualsAndHashCode;
 import com.caboolo.backend.core.domain.GenericIdEntity;
 
+import java.util.Map;
+
 @Entity
 @Table(name = "user_detail")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class UserDetails extends GenericIdEntity {
+public class UserDetail extends GenericIdEntity {
 
     @Column(name = "user_details_id")
     private Long userDetailsId;
@@ -49,8 +51,9 @@ public class UserDetails extends GenericIdEntity {
     @Column(name = "ride_again_count")
     private Integer rideAgainCount;
 
+    @Convert(converter = com.caboolo.backend.core.converter.JsonToMapConverter.class)
     @Column(name = "tag_counts", columnDefinition = "JSON")
-    private String tagCounts;
+    private Map<String, Integer> tagCounts;
 
     public static interface UserDetailsIdStep {
         NameStep withUserDetailsId(Long userDetailsId);
@@ -97,11 +100,11 @@ public class UserDetails extends GenericIdEntity {
     }
 
     public static interface TagCountsStep {
-        BuildStep withTagCounts(String tagCounts);
+        BuildStep withTagCounts(Map<String, Integer> tagCounts);
     }
 
     public static interface BuildStep {
-        UserDetails build();
+        UserDetail build();
     }
 
 
@@ -117,7 +120,7 @@ public class UserDetails extends GenericIdEntity {
         private Double avgRating;
         private Integer totalReviews;
         private Integer rideAgainCount;
-        private String tagCounts;
+        private Map<String, Integer> tagCounts;
 
         private Builder() {
         }
@@ -193,14 +196,14 @@ public class UserDetails extends GenericIdEntity {
         }
 
         @Override
-        public BuildStep withTagCounts(String tagCounts) {
+        public BuildStep withTagCounts(Map<String, Integer> tagCounts) {
             this.tagCounts = tagCounts;
             return this;
         }
 
         @Override
-        public UserDetails build() {
-            return new UserDetails(
+        public UserDetail build() {
+            return new UserDetail(
                     this.userDetailsId,
                     this.name,
                     this.userId,

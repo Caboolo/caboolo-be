@@ -5,13 +5,11 @@ import java.util.List;
 
 public interface ReviewService {
 
-    void submitReview(SubmitReviewRequestDto request);
+    void submitReview(RideReviewResponseDto request);
 
-    CoPassengerResponseDto getListOfCoPassengers(Long rideId);
+    RideReviewRequestDto getListOfCoPassengers(Long rideId);
 
-    ProfileHeaderDto getMyProfileHeader(String userId);
+    List<ReviewDto> getReviewDtoList(String userId);
 
-    List<ReviewMinDto> getMyProfileDetail(String userId);
-
-    CoTravellerProfileDto getCoTravellerProfile(String userId);
+    RiderProfileDto getCoTravellerProfile(String userId);
 }

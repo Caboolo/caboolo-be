@@ -1,6 +1,6 @@
 package com.caboolo.backend.review.dto;
 
-import com.caboolo.backend.review.enums.ReviewTagType;
+import com.caboolo.backend.review.enums.ReviewTag;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,11 +9,11 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReviewItemDto {
+public class UserReviewDto {
     private String toUserId;
     private Integer rating;
     private Boolean rideAgain;
-    private Set<ReviewTagType> tags;
+    private Set<ReviewTag> tags;
     private String comment;
 
     public static interface ToUserIdStep {
@@ -29,7 +29,7 @@ public class ReviewItemDto {
     }
 
     public static interface TagsStep {
-        CommentStep withTags(Set<ReviewTagType> tags);
+        CommentStep withTags(Set<ReviewTag> tags);
     }
 
     public static interface CommentStep {
@@ -37,14 +37,14 @@ public class ReviewItemDto {
     }
 
     public static interface BuildStep {
-        ReviewItemDto build();
+        UserReviewDto build();
     }
 
     public static class Builder implements ToUserIdStep, RatingStep, RideAgainStep, TagsStep, CommentStep, BuildStep {
         private String toUserId;
         private Integer rating;
         private Boolean rideAgain;
-        private Set<ReviewTagType> tags;
+        private Set<ReviewTag> tags;
         private String comment;
 
         public static ToUserIdStep builder() {
@@ -70,7 +70,7 @@ public class ReviewItemDto {
         }
 
         @Override
-        public CommentStep withTags(Set<ReviewTagType> tags) {
+        public CommentStep withTags(Set<ReviewTag> tags) {
             this.tags = tags;
             return this;
         }
@@ -82,8 +82,8 @@ public class ReviewItemDto {
         }
 
         @Override
-        public ReviewItemDto build() {
-            return new ReviewItemDto(toUserId, rating, rideAgain, tags, comment);
+        public UserReviewDto build() {
+            return new UserReviewDto(toUserId, rating, rideAgain, tags, comment);
         }
     }
 }

@@ -1,12 +1,13 @@
 package com.caboolo.backend.userdetails.converter;
 
-import com.caboolo.backend.dto.UserDetailResponseDto;
-import com.caboolo.backend.userLogin.domain.UserLogin;
-import com.caboolo.backend.userdetails.domain.UserDetails;
+import com.caboolo.backend.userdetails.domain.UserDetail;
+import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
+import org.springframework.stereotype.Component;
 
 /**
  * Converts UserDetails domain entities to their corresponding DTOs.
  */
+@Component
 public final class UserDetailsConverter {
 
     private UserDetailsConverter() {
@@ -16,7 +17,7 @@ public final class UserDetailsConverter {
     /**
      * Converts a UserDetails domain entity to a UserDetailResponseDto.
      */
-    public static UserDetailResponseDto toDetailResponseDto(UserDetails details) {
+    public UserDetailResponseDto toDetailResponseDto(UserDetail details) {
         if (details == null) {
             return null;
         }
@@ -24,29 +25,12 @@ public final class UserDetailsConverter {
                 .withDateCreated(details.getDateCreated())
                 .withLastModified(details.getLastModified())
                 .withIsDeleted(details.isDeleted())
-                .withUserDetailId(details.getUserDetailsId())
-                .withFirebaseUid(details.getUserId())
+                .withName(details.getName())
+                .withUserId(details.getUserId())
+                .withGender(details.getGender())
+                .withImageUrl(details.getImageUrl())
+                .withEmail(details.getEmail())
                 .withPhoneNumber(details.getPhoneNumber())
-                .withName(details.getName())
-                .withEmail(details.getEmail())
-                .withImageUrl(details.getImageUrl())
-                .build();
-    }
-
-    /**
-     * Converts a UserLogin + UserDetails pair into a full UserDetailResponse.
-     */
-    public static UserDetailResponseDto toProfileResponse(UserLogin userLogin, UserDetails details) {
-        return UserDetailResponseDto.Builder.userDetailResponseDto()
-                .withDateCreated(userLogin.getDateCreated())
-                .withLastModified(userLogin.getLastModified())
-                .withIsDeleted(false)
-                .withUserDetailId(details.getUserDetailsId())
-                .withFirebaseUid(userLogin.getFirebaseUid())
-                .withPhoneNumber(userLogin.getPhoneNumber())
-                .withName(details.getName())
-                .withEmail(details.getEmail())
-                .withImageUrl(details.getImageUrl())
                 .build();
     }
 }
