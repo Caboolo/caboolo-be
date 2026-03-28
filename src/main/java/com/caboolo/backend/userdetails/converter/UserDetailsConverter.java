@@ -1,9 +1,8 @@
 package com.caboolo.backend.userdetails.converter;
 
-import com.caboolo.backend.dto.UserProfileResponseDto;
+import com.caboolo.backend.dto.UserDetailResponseDto;
 import com.caboolo.backend.userLogin.domain.UserLogin;
 import com.caboolo.backend.userdetails.domain.UserDetails;
-import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 
 /**
  * Converts UserDetails domain entities to their corresponding DTOs.
@@ -25,25 +24,24 @@ public final class UserDetailsConverter {
                 .withDateCreated(details.getDateCreated())
                 .withLastModified(details.getLastModified())
                 .withIsDeleted(details.isDeleted())
-                .withId(details.getId())
-                .withName(details.getName())
-                .withUserId(details.getUserId())
-                .withGender(details.getGender())
-                .withImageUrl(details.getImageUrl())
-                .withEmail(details.getEmail())
+                .withUserDetailId(details.getUserDetailsId())
+                .withFirebaseUid(details.getUserId())
                 .withPhoneNumber(details.getPhoneNumber())
+                .withName(details.getName())
+                .withEmail(details.getEmail())
+                .withImageUrl(details.getImageUrl())
                 .build();
     }
 
     /**
-     * Converts a UserLogin + UserDetails pair into a full UserProfileResponse.
+     * Converts a UserLogin + UserDetails pair into a full UserDetailResponse.
      */
-    public static UserProfileResponseDto toProfileResponse(UserLogin userLogin, UserDetails details) {
-        return UserProfileResponseDto.Builder.userProfileResponseDto()
+    public static UserDetailResponseDto toProfileResponse(UserLogin userLogin, UserDetails details) {
+        return UserDetailResponseDto.Builder.userDetailResponseDto()
                 .withDateCreated(userLogin.getDateCreated())
                 .withLastModified(userLogin.getLastModified())
                 .withIsDeleted(false)
-                .withId(userLogin.getId())
+                .withUserDetailId(details.getUserDetailsId())
                 .withFirebaseUid(userLogin.getFirebaseUid())
                 .withPhoneNumber(userLogin.getPhoneNumber())
                 .withName(details.getName())

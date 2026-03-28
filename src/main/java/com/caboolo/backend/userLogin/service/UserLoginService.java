@@ -12,9 +12,12 @@ import java.util.Optional;
 public class UserLoginService {
 
     private final UserLoginRepository userLoginRepository;
+    private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
 
-    public UserLoginService(UserLoginRepository userLoginRepository) {
+    public UserLoginService(UserLoginRepository userLoginRepository,
+                            com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator) {
         this.userLoginRepository = userLoginRepository;
+        this.sequenceGenerator = sequenceGenerator;
     }
 
     // -----------------------------------------------------------------------
@@ -27,6 +30,7 @@ public class UserLoginService {
 
         if (existingUserOpt.isEmpty()) {
             userLogin = UserLogin.Builder.userLogin()
+                    .withUserLoginId(sequenceGenerator.nextId())
                     .withFirebaseUid(uid)
                     .withPhoneNumber(phoneNumber)
                     .build();

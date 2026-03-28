@@ -11,11 +11,10 @@ import lombok.NoArgsConstructor;
  */
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class UserProfileResponseDto extends GenericEntityDto {
+public class UserDetailResponseDto extends GenericEntityDto {
 
-    private Long id;
+    private Long userDetailId;
 
     private String firebaseUid;
 
@@ -27,10 +26,9 @@ public class UserProfileResponseDto extends GenericEntityDto {
 
     private String imageUrl;
 
-    public UserProfileResponseDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, Long id,
-                                  String firebaseUid, String phoneNumber, String name, String email, String imageUrl) {
+    public UserDetailResponseDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, Long userDetailId, String firebaseUid, String phoneNumber, String name, String email, String imageUrl) {
         super(dateCreated, lastModified, isDeleted);
-        this.id = id;
+        this.userDetailId = userDetailId;
         this.firebaseUid = firebaseUid;
         this.phoneNumber = phoneNumber;
         this.name = name;
@@ -47,11 +45,11 @@ public class UserProfileResponseDto extends GenericEntityDto {
     }
 
     public static interface IsDeletedStep {
-        IdStep withIsDeleted(boolean isDeleted);
+        UserDetailIdStep withIsDeleted(boolean isDeleted);
     }
 
-    public static interface IdStep {
-        FirebaseUidStep withId(Long id);
+    public static interface UserDetailIdStep {
+        FirebaseUidStep withUserDetailId(Long userDetailId);
     }
 
     public static interface FirebaseUidStep {
@@ -75,16 +73,15 @@ public class UserProfileResponseDto extends GenericEntityDto {
     }
 
     public static interface BuildStep {
-        UserProfileResponseDto build();
+        UserDetailResponseDto build();
     }
 
-    public static class Builder
-        implements DateCreatedStep, LastModifiedStep, IsDeletedStep, IdStep, FirebaseUidStep, PhoneNumberStep, NameStep,
-        EmailStep, ImageUrlStep, BuildStep {
+
+    public static class Builder implements DateCreatedStep, LastModifiedStep, IsDeletedStep, UserDetailIdStep, FirebaseUidStep, PhoneNumberStep, NameStep, EmailStep, ImageUrlStep, BuildStep {
         private LocalDateTime dateCreated;
         private LocalDateTime lastModified;
         private boolean isDeleted;
-        private Long id;
+        private Long userDetailId;
         private String firebaseUid;
         private String phoneNumber;
         private String name;
@@ -94,7 +91,7 @@ public class UserProfileResponseDto extends GenericEntityDto {
         private Builder() {
         }
 
-        public static DateCreatedStep userProfileResponseDto() {
+        public static DateCreatedStep userDetailResponseDto() {
             return new Builder();
         }
 
@@ -111,14 +108,14 @@ public class UserProfileResponseDto extends GenericEntityDto {
         }
 
         @Override
-        public IdStep withIsDeleted(boolean isDeleted) {
+        public UserDetailIdStep withIsDeleted(boolean isDeleted) {
             this.isDeleted = isDeleted;
             return this;
         }
 
         @Override
-        public FirebaseUidStep withId(Long id) {
-            this.id = id;
+        public FirebaseUidStep withUserDetailId(Long userDetailId) {
+            this.userDetailId = userDetailId;
             return this;
         }
 
@@ -153,17 +150,17 @@ public class UserProfileResponseDto extends GenericEntityDto {
         }
 
         @Override
-        public UserProfileResponseDto build() {
-            return new UserProfileResponseDto(
-                this.dateCreated,
-                this.lastModified,
-                this.isDeleted,
-                this.id,
-                this.firebaseUid,
-                this.phoneNumber,
-                this.name,
-                this.email,
-                this.imageUrl
+        public UserDetailResponseDto build() {
+            return new UserDetailResponseDto(
+                    this.dateCreated,
+                    this.lastModified,
+                    this.isDeleted,
+                    this.userDetailId,
+                    this.firebaseUid,
+                    this.phoneNumber,
+                    this.name,
+                    this.email,
+                    this.imageUrl
             );
         }
     }

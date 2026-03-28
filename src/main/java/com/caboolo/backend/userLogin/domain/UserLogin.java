@@ -15,11 +15,18 @@ import com.caboolo.backend.core.domain.GenericIdEntity;
 @EqualsAndHashCode(callSuper = true)
 public class UserLogin extends GenericIdEntity {
 
+    @Column(name = "user_login_id")
+    private Long userLoginId;
+
     @Column(name = "firebase_uid", nullable = false, unique = true)
     private String firebaseUid;
 
     @Column(name = "phone_number", unique = true)
     private String phoneNumber;
+
+    public static interface UserLoginIdStep {
+        FirebaseUidStep withUserLoginId(Long userLoginId);
+    }
 
     public static interface FirebaseUidStep {
         PhoneNumberStep withFirebaseUid(String firebaseUid);
@@ -33,15 +40,22 @@ public class UserLogin extends GenericIdEntity {
         UserLogin build();
     }
 
-    public static class Builder implements FirebaseUidStep, PhoneNumberStep, BuildStep {
+    public static class Builder implements UserLoginIdStep, FirebaseUidStep, PhoneNumberStep, BuildStep {
+        private Long userLoginId;
         private String firebaseUid;
         private String phoneNumber;
 
         private Builder() {
         }
 
-        public static FirebaseUidStep userLogin() {
+        public static UserLoginIdStep userLogin() {
             return new Builder();
+        }
+
+        @Override
+        public FirebaseUidStep withUserLoginId(Long userLoginId) {
+            this.userLoginId = userLoginId;
+            return this;
         }
 
         @Override
@@ -59,6 +73,7 @@ public class UserLogin extends GenericIdEntity {
         @Override
         public UserLogin build() {
             return new UserLogin(
+                    this.userLoginId,
                     this.firebaseUid,
                     this.phoneNumber
             );
