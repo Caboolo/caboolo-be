@@ -1,6 +1,6 @@
 package com.caboolo.backend.userdetails.converter;
 
-import com.caboolo.backend.userdetails.domain.UserDetails;
+import com.caboolo.backend.userdetails.domain.UserDetail;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +17,7 @@ public final class UserDetailsConverter {
     /**
      * Converts a UserDetails domain entity to a UserDetailResponseDto.
      */
-    public UserDetailResponseDto toDetailResponseDto(UserDetails details) {
+    public UserDetailResponseDto toDetailResponseDto(UserDetail details) {
         if (details == null) {
             return null;
         }

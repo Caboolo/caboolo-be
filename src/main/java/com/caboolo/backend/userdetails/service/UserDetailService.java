@@ -6,7 +6,7 @@ import com.caboolo.backend.storage.StorageUploadResult;
 import com.caboolo.backend.userLogin.domain.UserLogin;
 import com.caboolo.backend.userLogin.repository.UserLoginRepository;
 import com.caboolo.backend.userdetails.converter.UserDetailsConverter;
-import com.caboolo.backend.userdetails.domain.UserDetails;
+import com.caboolo.backend.userdetails.domain.UserDetail;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.repository.UserDetailRepository;
 import org.springframework.stereotype.Service;
@@ -40,13 +40,13 @@ public class UserDetailService {
         this.userDetailsConverter = userDetailsConverter;
     }
 
-    public UserDetailResponseDto saveOrUpdateUserDetails(UserDetailRequestDto requestDto) {
+    public UserDetailResponseDto saveOrUpdateUserDetail(UserDetailRequestDto requestDto) {
         if (requestDto.getUserId() == null) {
             throw new IllegalArgumentException("User ID must not be null");
         }
 
-        Optional<UserDetails> existingDetailsOpt = userDetailRepository.findByUserId(requestDto.getUserId());
-        UserDetails details;
+        Optional<UserDetail> existingDetailsOpt = userDetailRepository.findByUserId(requestDto.getUserId());
+        UserDetail details;
 
         if (existingDetailsOpt.isPresent()) {
             details = existingDetailsOpt.get();
@@ -55,7 +55,7 @@ public class UserDetailService {
             details.setImageUrl(requestDto.getImageUrl());
             details.setEmail(requestDto.getEmail());
         } else {
-            details = UserDetails.Builder.userDetails()
+            details = UserDetail.Builder.userDetails()
                     .withUserDetailsId(sequenceGenerator.nextId())
                     .withName(requestDto.getName())
                     .withUserId(requestDto.getUserId())
@@ -71,7 +71,7 @@ public class UserDetailService {
                     .build();
         }
 
-        UserDetails saved = userDetailRepository.save(details);
+        UserDetail saved = userDetailRepository.save(details);
         return userDetailsConverter.toDetailResponseDto(saved);
     }
 
@@ -85,16 +85,24 @@ public class UserDetailService {
      */
     public String getPhotoUrlByUserId(String userId) {
         return userDetailRepository.findByUserId(userId)
-                .map(UserDetails::getImageUrl)
+                .map(UserDetail::getImageUrl)
                 .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
     }
 
     /**
      * Get the details for a given user ID.
      */
-    public UserDetailResponseDto getUserDetailsById(String userId) {
+    public UserDetailResponseDto getUserDetailById(String userId) {
         return userDetailRepository.findByUserId(userId)
                 .map(userDetailsConverter::toDetailResponseDto)
+                .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
+    }
+
+    /**
+     * Get the full UserDetail entity for internal service use.
+     */
+    public UserDetail getUserDetailEntity(String userId) {
+        return userDetailRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
     }
 
@@ -102,8 +110,8 @@ public class UserDetailService {
      * Fetch the profile for the authenticated user.
      */
     public UserDetailResponseDto getProfile(String firebaseUid) {
-        UserDetails details = userDetailRepository.findByUserId(firebaseUid).orElseGet(() ->
-                UserDetails.Builder.userDetails()
+        UserDetail details = userDetailRepository.findByUserId(firebaseUid).orElseGet(() ->
+                UserDetail.Builder.userDetails()
                         .withUserDetailsId(sequenceGenerator.nextId())
                         .withName(null)
                         .withUserId(firebaseUid)
@@ -125,8 +133,8 @@ public class UserDetailService {
      * Update display name and/or email.
      */
     public UserDetailResponseDto updateProfile(String firebaseUid, UserDetailRequestDto request) {
-        UserDetails details = userDetailRepository.findByUserId(firebaseUid)
-                .orElseGet(() -> UserDetails.Builder.userDetails()
+        UserDetail details = userDetailRepository.findByUserId(firebaseUid)
+                .orElseGet(() -> UserDetail.Builder.userDetails()
                         .withUserDetailsId(sequenceGenerator.nextId())
                         .withName(null)
                         .withUserId(firebaseUid)
@@ -160,8 +168,8 @@ public class UserDetailService {
     public UserDetailResponseDto uploadProfilePhoto(String firebaseUid, MultipartFile file) {
         validatePhoto(file);
 
-        UserDetails details = userDetailRepository.findByUserId(firebaseUid)
-                .orElseGet(() -> UserDetails.Builder.userDetails()
+        UserDetail details = userDetailRepository.findByUserId(firebaseUid)
+                .orElseGet(() -> UserDetail.Builder.userDetails()
                         .withUserDetailsId(sequenceGenerator.nextId())
                         .withName(null)
                         .withUserId(firebaseUid)

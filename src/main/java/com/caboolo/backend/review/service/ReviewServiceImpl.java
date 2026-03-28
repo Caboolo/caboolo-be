@@ -3,6 +3,7 @@ package com.caboolo.backend.review.service;
 import com.caboolo.backend.review.domain.Review;
 import com.caboolo.backend.review.dto.*;
 import com.caboolo.backend.review.repository.ReviewRepository;
+import com.caboolo.backend.userdetails.domain.UserDetail;
 import com.caboolo.backend.userdetails.service.UserDetailService;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -63,19 +64,12 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public ProfileDto getMyProfileHeader(String userId) {
-        List<Review> reviews = reviewRepository.findByForUserId(userId);
-        
-        Double avgRating = reviews.stream()
-                .mapToInt(Review::getRating)
-                .average()
-                .orElse(0.0);
+        UserDetail userDetails = userDetailService.getUserDetailEntity(userId);
 
-        Map<String, Integer> tagCountMap = new HashMap<>();
-        reviews.forEach(r -> {
-            if (r.getTags() != null) {
-                r.getTags().forEach(tag -> tagCountMap.merge(tag.name(), 1, Integer::sum));
-            }
-        });
+        Map<String, Integer> tagCountMap = userDetails.getTagCounts();
+        if (tagCountMap == null) {
+            tagCountMap = new HashMap<>();
+        }
 
         Map<String, Integer> top5Tags = tagCountMap.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
@@ -87,14 +81,12 @@ public class ReviewServiceImpl implements ReviewService {
                         LinkedHashMap::new
                 ));
 
-        UserDetailResponseDto userDetails = userDetailService.getUserDetailsById(userId);
-
         return ProfileDto.Builder.profileDto()
-                .withUserId(String.valueOf(userId))
+                .withUserId(userId)
                 .withName(userDetails.getName())
-                .withNumberOfRides(reviews.size()) // Dummy: assuming each review is from a ride
-                .withAvgRating(avgRating)
-                .withNoOfReviews(reviews.size())
+                .withNumberOfRides(userDetails.getTotalReviews()) // Using totalReviews as a proxy for rides
+                .withAvgRating(userDetails.getAvgRating() != null ? userDetails.getAvgRating() : 0.0)
+                .withNoOfReviews(userDetails.getTotalReviews() != null ? userDetails.getTotalReviews() : 0)
                 .withTagCountMap(top5Tags)
                 .build();
     }
@@ -120,30 +112,26 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public RiderProfileDto getCoTravellerProfile(String userId) {
+        UserDetail userDetails = userDetailService.getUserDetailEntity(userId);
+
+        Map<String, Integer> tagCountMap = userDetails.getTagCounts();
+        if (tagCountMap == null) {
+            tagCountMap = new HashMap<>();
+        }
+        
+        // We still need rating breakdown, so we fetch reviews for that
+        // OR we could store rating breakdown in UserDetails as well.
+        // For now, let's keep review fetch for rating breakdown if it's not in UserDetails.
         List<Review> reviews = reviewRepository.findByForUserId(userId);
-
-        Double avgRating = reviews.stream()
-                .mapToInt(Review::getRating)
-                .average()
-                .orElse(0.0);
-
-        Map<String, Integer> tagCountMap = new HashMap<>();
         Map<Integer, Integer> ratingBreakdown = new HashMap<>();
-        reviews.forEach(r -> {
-            if (r.getTags() != null) {
-                r.getTags().forEach(tag -> tagCountMap.merge(tag.name(), 1, Integer::sum));
-            }
-            ratingBreakdown.merge(r.getRating(), 1, Integer::sum);
-        });
-
-        UserDetailResponseDto userDetails = userDetailService.getUserDetailsById(userId);
+        reviews.forEach(r -> ratingBreakdown.merge(r.getRating(), 1, Integer::sum));
 
         return RiderProfileDto.Builder.riderProfileDto()
-                .withUserId(String.valueOf(userId))
+                .withUserId(userId)
                 .withName(userDetails.getName())
-                .withNumberOfRides(reviews.size())
-                .withAvgRating(avgRating)
-                .withNoOfReviews(reviews.size())
+                .withNumberOfRides(userDetails.getTotalReviews())
+                .withAvgRating(userDetails.getAvgRating() != null ? userDetails.getAvgRating() : 0.0)
+                .withNoOfReviews(userDetails.getTotalReviews() != null ? userDetails.getTotalReviews() : 0)
                 .withTagCountMap(tagCountMap)
                 .withTrustScore(null) // Dummy
                 .withRatingBreakdown(ratingBreakdown)
