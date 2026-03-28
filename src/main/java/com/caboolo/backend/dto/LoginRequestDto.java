@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class LoginRequestDto extends GenericEntityDto {
 
     private String idToken;
+    private String phoneNumber;
 
     public LoginRequestDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, String idToken) {
         super(dateCreated, lastModified, isDeleted);
@@ -37,6 +38,7 @@ public class LoginRequestDto extends GenericEntityDto {
     public static interface BuildStep {
         LoginRequestDto build();
     }
+
 
     public static class Builder implements DateCreatedStep, LastModifiedStep, IsDeletedStep, IdTokenStep, BuildStep {
         private LocalDateTime dateCreated;
@@ -78,10 +80,10 @@ public class LoginRequestDto extends GenericEntityDto {
         @Override
         public LoginRequestDto build() {
             return new LoginRequestDto(
-                this.dateCreated,
-                this.lastModified,
-                this.isDeleted,
-                this.idToken
+                    this.dateCreated,
+                    this.lastModified,
+                    this.isDeleted,
+                    this.idToken
             );
         }
     }

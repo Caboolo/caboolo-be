@@ -9,13 +9,13 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RideReviewRequestDto {
-    private String rideId;
+    private Long rideId;
     private String source;
     private String destination;
     private List<MinProfileDto> riders;
 
     public static interface RideIdStep {
-        SourceStep withRideId(String rideId);
+        SourceStep withRideId(Long rideId);
     }
 
     public static interface SourceStep {
@@ -34,8 +34,9 @@ public class RideReviewRequestDto {
         RideReviewRequestDto build();
     }
 
+
     public static class Builder implements RideIdStep, SourceStep, DestinationStep, RidersStep, BuildStep {
-        private String rideId;
+        private Long rideId;
         private String source;
         private String destination;
         private List<MinProfileDto> riders;
@@ -43,12 +44,12 @@ public class RideReviewRequestDto {
         private Builder() {
         }
 
-        public static RideIdStep rideReviewDto() {
+        public static RideIdStep rideReviewRequestDto() {
             return new Builder();
         }
 
         @Override
-        public SourceStep withRideId(String rideId) {
+        public SourceStep withRideId(Long rideId) {
             this.rideId = rideId;
             return this;
         }
@@ -74,10 +75,10 @@ public class RideReviewRequestDto {
         @Override
         public RideReviewRequestDto build() {
             return new RideReviewRequestDto(
-                this.rideId,
-                this.source,
-                this.destination,
-                this.riders
+                    this.rideId,
+                    this.source,
+                    this.destination,
+                    this.riders
             );
         }
     }

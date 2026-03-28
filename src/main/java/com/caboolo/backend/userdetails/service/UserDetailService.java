@@ -1,14 +1,12 @@
 package com.caboolo.backend.userdetails.service;
 
-import com.caboolo.backend.dto.UserProfileRequestDto;
-import com.caboolo.backend.dto.UserProfileResponseDto;
+import com.caboolo.backend.dto.UserDetailRequestDto;
 import com.caboolo.backend.storage.StorageService;
 import com.caboolo.backend.storage.StorageUploadResult;
 import com.caboolo.backend.userLogin.domain.UserLogin;
 import com.caboolo.backend.userLogin.repository.UserLoginRepository;
 import com.caboolo.backend.userdetails.converter.UserDetailsConverter;
 import com.caboolo.backend.userdetails.domain.UserDetails;
-import com.caboolo.backend.userdetails.dto.UserDetailRequestDto;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.repository.UserDetailRepository;
 import org.springframework.stereotype.Service;
@@ -28,13 +26,18 @@ public class UserDetailService {
     private final UserDetailRepository userDetailRepository;
     private final UserLoginRepository userLoginRepository;
     private final StorageService storageService;
+    private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
+    private final UserDetailsConverter userDetailsConverter;
 
     public UserDetailService(UserDetailRepository userDetailRepository,
                              UserLoginRepository userLoginRepository,
-                             StorageService storageService) {
+                             StorageService storageService,
+                             com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator, UserDetailsConverter userDetailsConverter) {
         this.userDetailRepository = userDetailRepository;
         this.userLoginRepository = userLoginRepository;
         this.storageService = storageService;
+        this.sequenceGenerator = sequenceGenerator;
+        this.userDetailsConverter = userDetailsConverter;
     }
 
     public UserDetailResponseDto saveOrUpdateUserDetails(UserDetailRequestDto requestDto) {
@@ -53,6 +56,7 @@ public class UserDetailService {
             details.setEmail(requestDto.getEmail());
         } else {
             details = UserDetails.Builder.userDetails()
+                    .withUserDetailsId(sequenceGenerator.nextId())
                     .withName(requestDto.getName())
                     .withUserId(requestDto.getUserId())
                     .withGender(requestDto.getGender())
@@ -68,7 +72,7 @@ public class UserDetailService {
         }
 
         UserDetails saved = userDetailRepository.save(details);
-        return UserDetailsConverter.toDetailResponseDto(saved);
+        return userDetailsConverter.toDetailResponseDto(saved);
     }
 
     // -----------------------------------------------------------------------
@@ -79,7 +83,7 @@ public class UserDetailService {
      * Get the precise photo URL for a given user ID.
      * Useful for unauthenticated resolve API endpoints.
      */
-    public String getPhotoUrlByUserId(Long userId) {
+    public String getPhotoUrlByUserId(String userId) {
         return userDetailRepository.findByUserId(userId)
                 .map(UserDetails::getImageUrl)
                 .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
@@ -88,21 +92,21 @@ public class UserDetailService {
     /**
      * Get the details for a given user ID.
      */
-    public UserDetailResponseDto getUserDetailsById(Long userId) {
+    public UserDetailResponseDto getUserDetailsById(String userId) {
         return userDetailRepository.findByUserId(userId)
-                .map(UserDetailsConverter::toDetailResponseDto)
+                .map(userDetailsConverter::toDetailResponseDto)
                 .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
     }
 
     /**
      * Fetch the profile for the authenticated user.
      */
-    public UserProfileResponseDto getProfile(String firebaseUid) {
-        UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
-        UserDetails details = userDetailRepository.findByUserId(userLogin.getId()).orElseGet(() ->
+    public UserDetailResponseDto getProfile(String firebaseUid) {
+        UserDetails details = userDetailRepository.findByUserId(firebaseUid).orElseGet(() ->
                 UserDetails.Builder.userDetails()
+                        .withUserDetailsId(sequenceGenerator.nextId())
                         .withName(null)
-                        .withUserId(userLogin.getId())
+                        .withUserId(firebaseUid)
                         .withGender(null)
                         .withImageUrl(null)
                         .withEmail(null)
@@ -114,18 +118,18 @@ public class UserDetailService {
                         .withTagCounts(null)
                         .build()
         );
-        return UserDetailsConverter.toProfileResponse(userLogin, details);
+        return userDetailsConverter.toDetailResponseDto(details);
     }
 
     /**
      * Update display name and/or email.
      */
-    public UserProfileResponseDto updateProfile(String firebaseUid, UserProfileRequestDto request) {
-        UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
-        UserDetails details = userDetailRepository.findByUserId(userLogin.getId())
+    public UserDetailResponseDto updateProfile(String firebaseUid, UserDetailRequestDto request) {
+        UserDetails details = userDetailRepository.findByUserId(firebaseUid)
                 .orElseGet(() -> UserDetails.Builder.userDetails()
+                        .withUserDetailsId(sequenceGenerator.nextId())
                         .withName(null)
-                        .withUserId(userLogin.getId())
+                        .withUserId(firebaseUid)
                         .withGender(null)
                         .withImageUrl(null)
                         .withEmail(null)
@@ -145,7 +149,7 @@ public class UserDetailService {
         }
 
         details = userDetailRepository.save(details);
-        return UserDetailsConverter.toProfileResponse(userLogin, details);
+        return userDetailsConverter.toDetailResponseDto(details);
     }
 
     /**
@@ -153,14 +157,14 @@ public class UserDetailService {
      * The previous photo is soft-replaced: the old file is deleted from the storage
      * provider but the user record itself is never hard-deleted.
      */
-    public UserProfileResponseDto uploadProfilePhoto(String firebaseUid, MultipartFile file) {
+    public UserDetailResponseDto uploadProfilePhoto(String firebaseUid, MultipartFile file) {
         validatePhoto(file);
 
-        UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
-        UserDetails details = userDetailRepository.findByUserId(userLogin.getId())
+        UserDetails details = userDetailRepository.findByUserId(firebaseUid)
                 .orElseGet(() -> UserDetails.Builder.userDetails()
+                        .withUserDetailsId(sequenceGenerator.nextId())
                         .withName(null)
-                        .withUserId(userLogin.getId())
+                        .withUserId(firebaseUid)
                         .withGender(null)
                         .withImageUrl(null)
                         .withEmail(null)
@@ -183,7 +187,7 @@ public class UserDetailService {
         details.setPhotoPublicId(result.getPublicId());
         details = userDetailRepository.save(details);
 
-        return UserDetailsConverter.toProfileResponse(userLogin, details);
+        return userDetailsConverter.toDetailResponseDto(details);
     }
 
     /**

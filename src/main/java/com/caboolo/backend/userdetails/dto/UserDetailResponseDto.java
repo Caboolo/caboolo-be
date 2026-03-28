@@ -11,17 +11,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDetailResponseDto extends GenericEntityDto {
-    private Long id;
     private String name;
-    private Long userId;
+    private String userId;
     private Gender gender;
     private String imageUrl;
     private String email;
     private String phoneNumber;
 
-    public UserDetailResponseDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, Long id, String name, Long userId, Gender gender, String imageUrl, String email, String phoneNumber) {
+    public UserDetailResponseDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, String name, String userId, Gender gender, String imageUrl, String email, String phoneNumber) {
         super(dateCreated, lastModified, isDeleted);
-        this.id = id;
         this.name = name;
         this.userId = userId;
         this.gender = gender;
@@ -39,11 +37,7 @@ public class UserDetailResponseDto extends GenericEntityDto {
     }
 
     public static interface IsDeletedStep {
-        IdStep withIsDeleted(boolean isDeleted);
-    }
-
-    public static interface IdStep {
-        NameStep withId(Long id);
+        NameStep withIsDeleted(boolean isDeleted);
     }
 
     public static interface NameStep {
@@ -51,7 +45,7 @@ public class UserDetailResponseDto extends GenericEntityDto {
     }
 
     public static interface UserIdStep {
-        GenderStep withUserId(Long userId);
+        GenderStep withUserId(String userId);
     }
 
     public static interface GenderStep {
@@ -74,19 +68,20 @@ public class UserDetailResponseDto extends GenericEntityDto {
         UserDetailResponseDto build();
     }
 
-    public static class Builder implements DateCreatedStep, LastModifiedStep, IsDeletedStep, IdStep, NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, BuildStep {
+
+    public static class Builder implements DateCreatedStep, LastModifiedStep, IsDeletedStep, NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, BuildStep {
         private LocalDateTime dateCreated;
         private LocalDateTime lastModified;
         private boolean isDeleted;
-        private Long id;
         private String name;
-        private Long userId;
+        private String userId;
         private Gender gender;
         private String imageUrl;
         private String email;
         private String phoneNumber;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         public static DateCreatedStep userDetailResponseDto() {
             return new Builder();
@@ -105,14 +100,8 @@ public class UserDetailResponseDto extends GenericEntityDto {
         }
 
         @Override
-        public IdStep withIsDeleted(boolean isDeleted) {
+        public NameStep withIsDeleted(boolean isDeleted) {
             this.isDeleted = isDeleted;
-            return this;
-        }
-
-        @Override
-        public NameStep withId(Long id) {
-            this.id = id;
             return this;
         }
 
@@ -123,7 +112,7 @@ public class UserDetailResponseDto extends GenericEntityDto {
         }
 
         @Override
-        public GenderStep withUserId(Long userId) {
+        public GenderStep withUserId(String userId) {
             this.userId = userId;
             return this;
         }
@@ -155,16 +144,15 @@ public class UserDetailResponseDto extends GenericEntityDto {
         @Override
         public UserDetailResponseDto build() {
             return new UserDetailResponseDto(
-                this.dateCreated,
-                this.lastModified,
-                this.isDeleted,
-                this.id,
-                this.name,
-                this.userId,
-                this.gender,
-                this.imageUrl,
-                this.email,
-                this.phoneNumber
+                    this.dateCreated,
+                    this.lastModified,
+                    this.isDeleted,
+                    this.name,
+                    this.userId,
+                    this.gender,
+                    this.imageUrl,
+                    this.email,
+                    this.phoneNumber
             );
         }
     }

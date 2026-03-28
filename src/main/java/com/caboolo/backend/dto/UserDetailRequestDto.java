@@ -2,6 +2,8 @@ package com.caboolo.backend.dto;
 
 import com.caboolo.backend.core.dto.GenericEntityDto;
 import java.time.LocalDateTime;
+
+import com.caboolo.backend.userdetails.domain.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,14 +15,21 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserProfileRequestDto extends GenericEntityDto {
+public class UserDetailRequestDto extends GenericEntityDto {
+
+    private String userId;
+
+    private Gender gender;
 
     private String name;
 
     private String email;
 
-    public UserProfileRequestDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, String name,
-                                 String email) {
+    private String imageUrl;
+
+    private String phoneNumber;
+
+    public UserDetailRequestDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, String name, String email) {
         super(dateCreated, lastModified, isDeleted);
         this.name = name;
         this.email = email;
@@ -47,11 +56,11 @@ public class UserProfileRequestDto extends GenericEntityDto {
     }
 
     public static interface BuildStep {
-        UserProfileRequestDto build();
+        UserDetailRequestDto build();
     }
 
-    public static class Builder
-        implements DateCreatedStep, LastModifiedStep, IsDeletedStep, NameStep, EmailStep, BuildStep {
+
+    public static class Builder implements DateCreatedStep, LastModifiedStep, IsDeletedStep, NameStep, EmailStep, BuildStep {
         private LocalDateTime dateCreated;
         private LocalDateTime lastModified;
         private boolean isDeleted;
@@ -61,7 +70,7 @@ public class UserProfileRequestDto extends GenericEntityDto {
         private Builder() {
         }
 
-        public static DateCreatedStep userProfileRequestDto() {
+        public static DateCreatedStep userDetailRequestDto() {
             return new Builder();
         }
 
@@ -96,13 +105,13 @@ public class UserProfileRequestDto extends GenericEntityDto {
         }
 
         @Override
-        public UserProfileRequestDto build() {
-            return new UserProfileRequestDto(
-                this.dateCreated,
-                this.lastModified,
-                this.isDeleted,
-                this.name,
-                this.email
+        public UserDetailRequestDto build() {
+            return new UserDetailRequestDto(
+                    this.dateCreated,
+                    this.lastModified,
+                    this.isDeleted,
+                    this.name,
+                    this.email
             );
         }
     }

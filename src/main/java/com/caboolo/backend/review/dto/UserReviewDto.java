@@ -1,6 +1,6 @@
 package com.caboolo.backend.review.dto;
 
-import com.caboolo.backend.review.enums.ReviewTag;
+import com.caboolo.backend.review.enums.ReviewTagType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,14 +10,14 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserReviewDto {
-    private Long toUserId;
+    private String toUserId;
     private Integer rating;
     private Boolean rideAgain;
-    private Set<ReviewTag> tags;
+    private Set<ReviewTagType> tags;
     private String comment;
 
     public static interface ToUserIdStep {
-        RatingStep withToUserId(Long toUserId);
+        RatingStep withToUserId(String toUserId);
     }
 
     public static interface RatingStep {
@@ -29,7 +29,7 @@ public class UserReviewDto {
     }
 
     public static interface TagsStep {
-        CommentStep withTags(Set<ReviewTag> tags);
+        CommentStep withTags(Set<ReviewTagType> tags);
     }
 
     public static interface CommentStep {
@@ -41,10 +41,10 @@ public class UserReviewDto {
     }
 
     public static class Builder implements ToUserIdStep, RatingStep, RideAgainStep, TagsStep, CommentStep, BuildStep {
-        private Long toUserId;
+        private String toUserId;
         private Integer rating;
         private Boolean rideAgain;
-        private Set<ReviewTag> tags;
+        private Set<ReviewTagType> tags;
         private String comment;
 
         public static ToUserIdStep builder() {
@@ -52,7 +52,7 @@ public class UserReviewDto {
         }
 
         @Override
-        public RatingStep withToUserId(Long toUserId) {
+        public RatingStep withToUserId(String toUserId) {
             this.toUserId = toUserId;
             return this;
         }
@@ -70,7 +70,7 @@ public class UserReviewDto {
         }
 
         @Override
-        public CommentStep withTags(Set<ReviewTag> tags) {
+        public CommentStep withTags(Set<ReviewTagType> tags) {
             this.tags = tags;
             return this;
         }

@@ -8,12 +8,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MinProfileDto {
-    private Long userId;
+    private String userId;
     private String name;
     private Double avgRating;
 
     public static interface UserIdStep {
-        NameStep withUserId(Long userId);
+        NameStep withUserId(String userId);
     }
 
     public static interface NameStep {
@@ -28,17 +28,21 @@ public class MinProfileDto {
         MinProfileDto build();
     }
 
+
     public static class Builder implements UserIdStep, NameStep, AvgRatingStep, BuildStep {
-        private Long userId;
+        private String userId;
         private String name;
         private Double avgRating;
 
-        public static UserIdStep builder() {
+        private Builder() {
+        }
+
+        public static UserIdStep minProfileDto() {
             return new Builder();
         }
 
         @Override
-        public NameStep withUserId(Long userId) {
+        public NameStep withUserId(String userId) {
             this.userId = userId;
             return this;
         }
@@ -57,7 +61,11 @@ public class MinProfileDto {
 
         @Override
         public MinProfileDto build() {
-            return new MinProfileDto(userId, name, avgRating);
+            return new MinProfileDto(
+                    this.userId,
+                    this.name,
+                    this.avgRating
+            );
         }
     }
 }

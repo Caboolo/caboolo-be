@@ -1,6 +1,6 @@
 package com.caboolo.backend.review.enums;
 
-public enum ReviewTag {
+public enum ReviewTagType {
     // Positive
     PUNCTUAL,
     FRIENDLY,

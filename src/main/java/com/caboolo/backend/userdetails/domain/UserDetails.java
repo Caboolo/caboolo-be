@@ -15,11 +15,14 @@ import com.caboolo.backend.core.domain.GenericIdEntity;
 @EqualsAndHashCode(callSuper = true)
 public class UserDetails extends GenericIdEntity {
 
+    @Column(name = "user_details_id")
+    private Long userDetailsId;
+
     @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "user_id", nullable = false, unique = true)
-    private Long userId;
+    private String userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender", length = 20)
@@ -49,12 +52,16 @@ public class UserDetails extends GenericIdEntity {
     @Column(name = "tag_counts", columnDefinition = "JSON")
     private String tagCounts;
 
+    public static interface UserDetailsIdStep {
+        NameStep withUserDetailsId(Long userDetailsId);
+    }
+
     public static interface NameStep {
         UserIdStep withName(String name);
     }
 
     public static interface UserIdStep {
-        GenderStep withUserId(Long userId);
+        GenderStep withUserId(String userId);
     }
 
     public static interface GenderStep {
@@ -98,9 +105,10 @@ public class UserDetails extends GenericIdEntity {
     }
 
 
-    public static class Builder implements NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, PhotoPublicIdStep, AvgRatingStep, TotalReviewsStep, RideAgainCountStep, TagCountsStep, BuildStep {
+    public static class Builder implements UserDetailsIdStep, NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, PhotoPublicIdStep, AvgRatingStep, TotalReviewsStep, RideAgainCountStep, TagCountsStep, BuildStep {
+        private Long userDetailsId;
         private String name;
-        private Long userId;
+        private String userId;
         private Gender gender;
         private String imageUrl;
         private String email;
@@ -114,8 +122,14 @@ public class UserDetails extends GenericIdEntity {
         private Builder() {
         }
 
-        public static NameStep userDetails() {
+        public static UserDetailsIdStep userDetails() {
             return new Builder();
+        }
+
+        @Override
+        public NameStep withUserDetailsId(Long userDetailsId) {
+            this.userDetailsId = userDetailsId;
+            return this;
         }
 
         @Override
@@ -125,7 +139,7 @@ public class UserDetails extends GenericIdEntity {
         }
 
         @Override
-        public GenderStep withUserId(Long userId) {
+        public GenderStep withUserId(String userId) {
             this.userId = userId;
             return this;
         }
@@ -187,6 +201,7 @@ public class UserDetails extends GenericIdEntity {
         @Override
         public UserDetails build() {
             return new UserDetails(
+                    this.userDetailsId,
                     this.name,
                     this.userId,
                     this.gender,

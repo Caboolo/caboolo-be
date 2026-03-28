@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
     private final UserDetailService userDetailService;
 
     @Override
@@ -25,6 +26,7 @@ public class ReviewServiceImpl implements ReviewService {
     public void submitReview(RideReviewResponseDto request) {
         List<Review> reviews = request.getReviews().stream()
                 .map(item -> Review.Builder.review()
+                        .withReviewId(sequenceGenerator.nextId())
                         .withRideId(request.getRideId())
                         .withForUserId(item.getToUserId())
                         .withByUserId(request.getByUserId())
@@ -39,17 +41,28 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public RideReviewRequestDto getListOfCoPassengers(Long rideId) {
-        // Ride module planned, setting ride details to null for now.
-        return RideReviewRequestDto.Builder.rideReviewDto()
-                .withRideId(String.valueOf(rideId))
-                .withSource(null)
-                .withDestination(null)
-                .withRiders(List.of())
+        // Hardcoded ride details as requested
+        return RideReviewRequestDto.Builder.rideReviewRequestDto()
+                .withRideId(1231L)
+                .withSource("Indira Nagar")
+                .withDestination("Electronic City")
+                .withRiders(List.of(
+                        MinProfileDto.Builder.minProfileDto()
+                                .withUserId("user101")
+                                .withName("Rahul Sharma")
+                                .withAvgRating(4.5)
+                                .build(),
+                        MinProfileDto.Builder.minProfileDto()
+                                .withUserId("user102")
+                                .withName("Priya Singh")
+                                .withAvgRating(4.8)
+                                .build()
+                ))
                 .build();
     }
 
     @Override
-    public UserProfileDto getMyProfileHeader(Long userId) {
+    public UserProfileDto getMyProfileHeader(String userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
         
         Double avgRating = reviews.stream()
@@ -87,7 +100,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<ReviewDto> getMyProfileDetail(Long userId) {
+    public List<ReviewDto> getMyProfileDetail(String userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
 
         return reviews.stream()
@@ -106,7 +119,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public RiderProfileDto getCoTravellerProfile(Long userId) {
+    public RiderProfileDto getCoTravellerProfile(String userId) {
         List<Review> reviews = reviewRepository.findByForUserId(userId);
 
         Double avgRating = reviews.stream()

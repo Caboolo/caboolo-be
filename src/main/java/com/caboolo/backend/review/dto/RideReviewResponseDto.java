@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 public class RideReviewResponseDto {
     private Long rideId;
-    private Long byUserId;
+    private String byUserId;
     private List<UserReviewDto> reviews;
 
     public static interface RideIdStep {
@@ -18,7 +18,7 @@ public class RideReviewResponseDto {
     }
 
     public static interface ByUserIdStep {
-        ReviewsStep withByUserId(Long byUserId);
+        ReviewsStep withByUserId(String byUserId);
     }
 
     public static interface ReviewsStep {
@@ -31,7 +31,7 @@ public class RideReviewResponseDto {
 
     public static class Builder implements RideIdStep, ByUserIdStep, ReviewsStep, BuildStep {
         private Long rideId;
-        private Long byUserId;
+        private String byUserId;
         private List<UserReviewDto> reviews;
 
         public static RideIdStep builder() {
@@ -45,7 +45,7 @@ public class RideReviewResponseDto {
         }
 
         @Override
-        public ReviewsStep withByUserId(Long byUserId) {
+        public ReviewsStep withByUserId(String byUserId) {
             this.byUserId = byUserId;
             return this;
         }

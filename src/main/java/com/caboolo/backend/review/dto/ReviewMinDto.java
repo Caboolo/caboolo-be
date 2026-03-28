@@ -4,37 +4,26 @@ import com.caboolo.backend.review.enums.ReviewTagType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReviewDto {
+public class ReviewMinDto {
     private String byUserId;
-    private String rideId;
-    private String source;
-    private String destination;
-    private LocalDateTime date; // rideDate
+    private String fromToLocation;
+    private LocalDateTime date;
     private Set<ReviewTagType> tags;
     private String comments;
     private Integer rating;
 
     public static interface ByUserIdStep {
-        RideIdStep withByUserId(String byUserId);
+        FromToLocationStep withByUserId(String byUserId);
     }
 
-    public static interface RideIdStep {
-        SourceStep withRideId(String rideId);
-    }
-
-    public static interface SourceStep {
-        DestinationStep withSource(String source);
-    }
-
-    public static interface DestinationStep {
-        DateStep withDestination(String destination);
+    public static interface FromToLocationStep {
+        DateStep withFromToLocation(String fromToLocation);
     }
 
     public static interface DateStep {
@@ -54,49 +43,30 @@ public class ReviewDto {
     }
 
     public static interface BuildStep {
-        ReviewDto build();
+        ReviewMinDto build();
     }
 
-    public static class Builder
-        implements ByUserIdStep, RideIdStep, SourceStep, DestinationStep, DateStep, TagsStep, CommentsStep, RatingStep,
-        BuildStep {
+    public static class Builder implements ByUserIdStep, FromToLocationStep, DateStep, TagsStep, CommentsStep, RatingStep, BuildStep {
         private String byUserId;
-        private String rideId;
-        private String source;
-        private String destination;
+        private String fromToLocation;
         private LocalDateTime date;
         private Set<ReviewTagType> tags;
         private String comments;
         private Integer rating;
 
-        private Builder() {
-        }
-
-        public static ByUserIdStep userReviewDto() {
+        public static ByUserIdStep builder() {
             return new Builder();
         }
 
         @Override
-        public RideIdStep withByUserId(String byUserId) {
+        public FromToLocationStep withByUserId(String byUserId) {
             this.byUserId = byUserId;
             return this;
         }
 
         @Override
-        public SourceStep withRideId(String rideId) {
-            this.rideId = rideId;
-            return this;
-        }
-
-        @Override
-        public DestinationStep withSource(String source) {
-            this.source = source;
-            return this;
-        }
-
-        @Override
-        public DateStep withDestination(String destination) {
-            this.destination = destination;
+        public DateStep withFromToLocation(String fromToLocation) {
+            this.fromToLocation = fromToLocation;
             return this;
         }
 
@@ -125,17 +95,8 @@ public class ReviewDto {
         }
 
         @Override
-        public ReviewDto build() {
-            return new ReviewDto(
-                this.byUserId,
-                this.rideId,
-                this.source,
-                this.destination,
-                this.date,
-                this.tags,
-                this.comments,
-                this.rating
-            );
+        public ReviewMinDto build() {
+            return new ReviewMinDto(byUserId, fromToLocation, date, tags, comments, rating);
         }
     }
 }

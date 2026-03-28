@@ -1,13 +1,13 @@
 package com.caboolo.backend.review.converter;
 
 import com.caboolo.backend.core.converter.AbstractEnumSetConverter;
-import com.caboolo.backend.review.enums.ReviewTag;
+import com.caboolo.backend.review.enums.ReviewTagType;
 import jakarta.persistence.Converter;
 
 @Converter
-public class ReviewTagSetConverter extends AbstractEnumSetConverter<ReviewTag> {
+public class ReviewTagSetConverter extends AbstractEnumSetConverter<ReviewTagType> {
 
     public ReviewTagSetConverter() {
-        super(ReviewTag.class);
+        super(ReviewTagType.class);
     }
 }
