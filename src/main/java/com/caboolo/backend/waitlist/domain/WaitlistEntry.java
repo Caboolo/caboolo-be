@@ -15,17 +15,15 @@ import com.caboolo.backend.core.domain.GenericIdEntity;
 @EqualsAndHashCode(callSuper = true)
 public class WaitlistEntry extends GenericIdEntity {
 
-    @Id
-    @GeneratedValue(generator = "entity-unique-id-generator")
-    @org.hibernate.annotations.GenericGenerator(
-        name = "entity-unique-id-generator",
-        type = com.caboolo.backend.core.idgen.EntityUniqueIdGenerator.class
-    )
     @Column(name = "waitlist_entry_id")
     private Long waitlistEntryId;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
+
+    public static interface WaitlistEntryIdStep {
+        EmailStep withWaitlistEntryId(Long waitlistEntryId);
+    }
 
     public static interface EmailStep {
         BuildStep withEmail(String email);
@@ -35,14 +33,21 @@ public class WaitlistEntry extends GenericIdEntity {
         WaitlistEntry build();
     }
 
-    public static class Builder implements EmailStep, BuildStep {
+    public static class Builder implements WaitlistEntryIdStep, EmailStep, BuildStep {
+        private Long waitlistEntryId;
         private String email;
 
         private Builder() {
         }
 
-        public static EmailStep waitlistEntry() {
+        public static WaitlistEntryIdStep waitlistEntry() {
             return new Builder();
+        }
+
+        @Override
+        public EmailStep withWaitlistEntryId(Long waitlistEntryId) {
+            this.waitlistEntryId = waitlistEntryId;
+            return this;
         }
 
         @Override
@@ -54,6 +59,7 @@ public class WaitlistEntry extends GenericIdEntity {
         @Override
         public WaitlistEntry build() {
             return new WaitlistEntry(
+                    this.waitlistEntryId,
                     this.email
             );
         }

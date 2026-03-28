@@ -28,13 +28,16 @@ public class UserDetailService {
     private final UserDetailRepository userDetailRepository;
     private final UserLoginRepository userLoginRepository;
     private final StorageService storageService;
+    private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
 
     public UserDetailService(UserDetailRepository userDetailRepository,
                              UserLoginRepository userLoginRepository,
-                             StorageService storageService) {
+                             StorageService storageService,
+                             com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator) {
         this.userDetailRepository = userDetailRepository;
         this.userLoginRepository = userLoginRepository;
         this.storageService = storageService;
+        this.sequenceGenerator = sequenceGenerator;
     }
 
     public UserDetailResponseDto saveOrUpdateUserDetails(UserDetailRequestDto requestDto) {
@@ -53,6 +56,7 @@ public class UserDetailService {
             details.setEmail(requestDto.getEmail());
         } else {
             details = UserDetails.Builder.userDetails()
+                    .withUserDetailsId(sequenceGenerator.nextId())
                     .withName(requestDto.getName())
                     .withUserId(requestDto.getUserId())
                     .withGender(requestDto.getGender())
@@ -90,10 +94,11 @@ public class UserDetailService {
      */
     public UserProfileResponseDto getProfile(String firebaseUid) {
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
-        UserDetails details = userDetailRepository.findByUserId(userLogin.getId()).orElseGet(() ->
+        UserDetails details = userDetailRepository.findByUserId(userLogin.getUserLoginId()).orElseGet(() ->
                 UserDetails.Builder.userDetails()
+                        .withUserDetailsId(sequenceGenerator.nextId())
                         .withName(null)
-                        .withUserId(userLogin.getId())
+                        .withUserId(userLogin.getUserLoginId())
                         .withGender(null)
                         .withImageUrl(null)
                         .withEmail(null)
@@ -113,10 +118,11 @@ public class UserDetailService {
      */
     public UserProfileResponseDto updateProfile(String firebaseUid, UserProfileRequestDto request) {
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
-        UserDetails details = userDetailRepository.findByUserId(userLogin.getId())
+        UserDetails details = userDetailRepository.findByUserId(userLogin.getUserLoginId())
                 .orElseGet(() -> UserDetails.Builder.userDetails()
+                        .withUserDetailsId(sequenceGenerator.nextId())
                         .withName(null)
-                        .withUserId(userLogin.getId())
+                        .withUserId(userLogin.getUserLoginId())
                         .withGender(null)
                         .withImageUrl(null)
                         .withEmail(null)
@@ -148,10 +154,11 @@ public class UserDetailService {
         validatePhoto(file);
 
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
-        UserDetails details = userDetailRepository.findByUserId(userLogin.getId())
+        UserDetails details = userDetailRepository.findByUserId(userLogin.getUserLoginId())
                 .orElseGet(() -> UserDetails.Builder.userDetails()
+                        .withUserDetailsId(sequenceGenerator.nextId())
                         .withName(null)
-                        .withUserId(userLogin.getId())
+                        .withUserId(userLogin.getUserLoginId())
                         .withGender(null)
                         .withImageUrl(null)
                         .withEmail(null)

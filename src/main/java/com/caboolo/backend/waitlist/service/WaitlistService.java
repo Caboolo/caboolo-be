@@ -9,9 +9,12 @@ import java.time.LocalDateTime;
 @Service
 public class WaitlistService {
     private final WaitlistRepository waitlistRepository;
+    private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
 
-    public WaitlistService(WaitlistRepository waitlistRepository) {
+    public WaitlistService(WaitlistRepository waitlistRepository,
+                           com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator) {
         this.waitlistRepository = waitlistRepository;
+        this.sequenceGenerator = sequenceGenerator;
     }
 
     public void joinWaitlist(String email) {
@@ -19,6 +22,7 @@ public class WaitlistService {
             throw new IllegalArgumentException("Email is already on the waitlist");
         }
         WaitlistEntry entry = WaitlistEntry.Builder.waitlistEntry()
+                .withWaitlistEntryId(sequenceGenerator.nextId())
                 .withEmail(email)
                 .build();
         waitlistRepository.save(entry);

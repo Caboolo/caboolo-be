@@ -15,12 +15,6 @@ import com.caboolo.backend.core.domain.GenericIdEntity;
 @EqualsAndHashCode(callSuper = true)
 public class UserDetails extends GenericIdEntity {
 
-    @Id
-    @GeneratedValue(generator = "entity-unique-id-generator")
-    @org.hibernate.annotations.GenericGenerator(
-        name = "entity-unique-id-generator",
-        type = com.caboolo.backend.core.idgen.EntityUniqueIdGenerator.class
-    )
     @Column(name = "user_details_id")
     private Long userDetailsId;
 
@@ -57,6 +51,10 @@ public class UserDetails extends GenericIdEntity {
 
     @Column(name = "tag_counts", columnDefinition = "JSON")
     private String tagCounts;
+
+    public static interface UserDetailsIdStep {
+        NameStep withUserDetailsId(Long userDetailsId);
+    }
 
     public static interface NameStep {
         UserIdStep withName(String name);
@@ -107,7 +105,8 @@ public class UserDetails extends GenericIdEntity {
     }
 
 
-    public static class Builder implements NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, PhotoPublicIdStep, AvgRatingStep, TotalReviewsStep, RideAgainCountStep, TagCountsStep, BuildStep {
+    public static class Builder implements UserDetailsIdStep, NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, PhotoPublicIdStep, AvgRatingStep, TotalReviewsStep, RideAgainCountStep, TagCountsStep, BuildStep {
+        private Long userDetailsId;
         private String name;
         private Long userId;
         private Gender gender;
@@ -123,8 +122,14 @@ public class UserDetails extends GenericIdEntity {
         private Builder() {
         }
 
-        public static NameStep userDetails() {
+        public static UserDetailsIdStep userDetails() {
             return new Builder();
+        }
+
+        @Override
+        public NameStep withUserDetailsId(Long userDetailsId) {
+            this.userDetailsId = userDetailsId;
+            return this;
         }
 
         @Override
@@ -196,6 +201,7 @@ public class UserDetails extends GenericIdEntity {
         @Override
         public UserDetails build() {
             return new UserDetails(
+                    this.userDetailsId,
                     this.name,
                     this.userId,
                     this.gender,

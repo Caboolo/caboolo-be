@@ -17,12 +17,14 @@ import java.util.stream.Collectors;
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
 
     @Override
     @Transactional
     public void submitReview(SubmitReviewRequestDto request) {
         List<Review> reviews = request.getReviews().stream()
                 .map(item -> Review.Builder.review()
+                        .withReviewId(sequenceGenerator.nextId())
                         .withRideId(request.getRideId())
                         .withForUserId(item.getToUserId())
                         .withByUserId(request.getByUserId())
