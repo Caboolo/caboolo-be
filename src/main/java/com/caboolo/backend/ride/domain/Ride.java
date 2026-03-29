@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class Ride extends GenericIdEntity {
 
     @Column(name = "ride_id", nullable = false)
-    private String rideId;
+    private Long rideId;
 
     @Column(name = "source_hub_id", nullable = false)
     private String sourceHubId;
@@ -38,7 +38,7 @@ public class Ride extends GenericIdEntity {
     private boolean isWomenOnlyRide;
 
     public static interface RideIdStep {
-        SourceHubIdStep withRideId(String rideId);
+        SourceHubIdStep withRideId(Long rideId);
     }
 
     public static interface SourceHubIdStep {
@@ -71,7 +71,7 @@ public class Ride extends GenericIdEntity {
 
 
     public static class Builder implements RideIdStep, SourceHubIdStep, DestinationHubIdStep, DepartureTimeStep, TotalSeatsStep, StatusStep, IsWomenOnlyRideStep, BuildStep {
-        private String rideId;
+        private Long rideId;
         private String sourceHubId;
         private String destinationHubId;
         private LocalDateTime departureTime;
@@ -87,7 +87,7 @@ public class Ride extends GenericIdEntity {
         }
 
         @Override
-        public SourceHubIdStep withRideId(String rideId) {
+        public SourceHubIdStep withRideId(Long rideId) {
             this.rideId = rideId;
             return this;
         }

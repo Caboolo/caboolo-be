@@ -1,0 +1,22 @@
+package com.caboolo.backend.ride.controller;
+
+import com.caboolo.backend.core.controller.BaseController;
+import com.caboolo.backend.core.dto.RestEntity;
+import com.caboolo.backend.ride.dto.RideRequestDto;
+import com.caboolo.backend.ride.service.RideService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/ride")
+@RequiredArgsConstructor
+public class RideController extends BaseController {
+
+    private final RideService rideService;
+
+    @PostMapping("/create")
+    public RestEntity<Long> createRide(@RequestBody RideRequestDto request) {
+        Long rideId = rideService.createRide(request);
+        return successResponse(rideId, "Ride created successfully");
+    }
+}
