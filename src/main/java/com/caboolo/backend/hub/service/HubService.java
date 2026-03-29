@@ -38,12 +38,12 @@ public class HubService {
     @Transactional
     public void bulkStoreHubs(List<HubDto> hubDtos) {
         List<Hub> hubs = hubDtos.stream()
-                .map(dto -> Hub.builder()
-                        .name(dto.getName())
-                        .type(dto.getType())
-                        .city(dto.getCity())
-                        .latitude(dto.getLatitude())
-                        .longitude(dto.getLongitude())
+                .map(dto -> Hub.Builder.hub()
+                        .withName(dto.getName())
+                        .withType(dto.getType())
+                        .withCity(dto.getCity())
+                        .withLatitude(dto.getLatitude())
+                        .withLongitude(dto.getLongitude())
                         .build())
                 .collect(Collectors.toList());
 
@@ -70,7 +70,7 @@ public class HubService {
                 .includeDistance()
                 .sortAscending();
 
-        GeoResults<RedisGeoCommands.GeoLocation<String>> results = geoOps.radius(REDIS_HUB_KEY, center, radius, args);
+        GeoResults<RedisGeoCommands.GeoLocation<String>> results = geoOps.radius(REDIS_HUB_KEY, center.toString(), radius, args);
 
         if (results == null || results.getContent().isEmpty()) {
             return new ArrayList<>();
