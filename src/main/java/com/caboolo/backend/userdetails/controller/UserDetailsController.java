@@ -5,6 +5,7 @@ import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.dto.UserDetailRequestDto;
 import com.caboolo.backend.review.dto.ProfileDto;
 import com.caboolo.backend.review.dto.ReviewDto;
+import com.caboolo.backend.review.service.ReviewService;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.service.UserDetailService;
 import org.springframework.http.HttpStatus;
@@ -19,9 +20,11 @@ import java.util.List;
 public class UserDetailsController extends BaseController {
 
     private final UserDetailService userDetailService;
+    private final ReviewService reviewService;
 
-    public UserDetailsController(UserDetailService userDetailService) {
+    public UserDetailsController(UserDetailService userDetailService, ReviewService reviewService) {
         this.userDetailService = userDetailService;
+        this.reviewService = reviewService;
     }
 
     @PostMapping
@@ -104,6 +107,6 @@ public class UserDetailsController extends BaseController {
 
     @GetMapping("/review/listing")
     public RestEntity<List<ReviewDto>> getReviewDtoList(@RequestParam String userId) {
-        return successResponse(userDetailService.getReviewDtoList(userId));
+        return successResponse(reviewService.getReviewDtoList(userId));
     }
 }

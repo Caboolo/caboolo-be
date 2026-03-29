@@ -5,7 +5,6 @@ import com.caboolo.backend.dto.UserDetailRequestDto;
 import com.caboolo.backend.review.dto.ProfileDto;
 import com.caboolo.backend.review.dto.ReviewDto;
 import com.caboolo.backend.review.enums.ReviewTag;
-import com.caboolo.backend.review.service.ReviewService;
 import com.caboolo.backend.storage.StorageService;
 import com.caboolo.backend.storage.StorageUploadResult;
 import com.caboolo.backend.userLogin.domain.UserLogin;
@@ -36,19 +35,17 @@ public class UserDetailService {
     private final StorageService storageService;
     private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
     private final UserDetailsConverter userDetailsConverter;
-    private final ReviewService reviewService;
     private final ReviewRepository reviewRepository;
 
     public UserDetailService(UserDetailRepository userDetailRepository, UserLoginRepository userLoginRepository,
                              StorageService storageService, SequenceGenerator sequenceGenerator,
-                             UserDetailsConverter userDetailsConverter, ReviewService reviewService,
+                             UserDetailsConverter userDetailsConverter,
                              ReviewRepository reviewRepository) {
         this.userDetailRepository = userDetailRepository;
         this.userLoginRepository = userLoginRepository;
         this.storageService = storageService;
         this.sequenceGenerator = sequenceGenerator;
         this.userDetailsConverter = userDetailsConverter;
-        this.reviewService = reviewService;
         this.reviewRepository = reviewRepository;
     }
 
@@ -272,10 +269,6 @@ public class UserDetailService {
             .withNoOfReviews(userDetails.getTotalReviews() != null ? userDetails.getTotalReviews() : 0)
             .withTagCountMap(top5Tags)
             .build();
-    }
-
-    public List<ReviewDto> getReviewDtoList(String userId) {
-        return reviewService.getReviewDtoList(userId);
     }
 
     @Async

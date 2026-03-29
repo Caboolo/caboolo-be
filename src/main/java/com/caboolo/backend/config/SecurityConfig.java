@@ -28,6 +28,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/api/waitlist/**").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/swagger-ui.html").permitAll()
+
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/userdetails/*/photo").permitAll()
                 .anyRequest().authenticated()
             )
