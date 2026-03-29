@@ -1,5 +1,6 @@
 package com.caboolo.backend.review.service;
 
+import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.review.domain.Review;
 import com.caboolo.backend.review.dto.*;
 import com.caboolo.backend.review.repository.ReviewRepository;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
+    private final SequenceGenerator sequenceGenerator;
     private final UserDetailService userDetailService;
 
     @Override
