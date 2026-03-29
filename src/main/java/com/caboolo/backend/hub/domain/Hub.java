@@ -7,12 +7,15 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "hubs")
+@Table(name = "hub")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Hub extends GenericIdEntity {
+
+    @Column(name = "hub_id")
+    private Long hubId;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -30,6 +33,10 @@ public class Hub extends GenericIdEntity {
 
     @Column(name = "longitude", nullable = false)
     private Double longitude;
+
+    public static interface HubIdStep {
+        NameStep withHubId(Long hubId);
+    }
 
     public static interface NameStep {
         TypeStep withName(String name);
@@ -56,7 +63,8 @@ public class Hub extends GenericIdEntity {
     }
 
 
-    public static class Builder implements NameStep, TypeStep, CityStep, LatitudeStep, LongitudeStep, BuildStep {
+    public static class Builder implements HubIdStep, NameStep, TypeStep, CityStep, LatitudeStep, LongitudeStep, BuildStep {
+        private Long hubId;
         private String name;
         private HubType type;
         private City city;
@@ -66,8 +74,14 @@ public class Hub extends GenericIdEntity {
         private Builder() {
         }
 
-        public static NameStep hub() {
+        public static HubIdStep hub() {
             return new Builder();
+        }
+
+        @Override
+        public NameStep withHubId(Long hubId) {
+            this.hubId = hubId;
+            return this;
         }
 
         @Override
@@ -103,6 +117,7 @@ public class Hub extends GenericIdEntity {
         @Override
         public Hub build() {
             return new Hub(
+                    this.hubId,
                     this.name,
                     this.type,
                     this.city,

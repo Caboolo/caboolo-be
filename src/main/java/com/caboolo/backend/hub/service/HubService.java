@@ -1,5 +1,6 @@
 package com.caboolo.backend.hub.service;
 
+import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.hub.domain.Hub;
 import com.caboolo.backend.hub.dto.HubDto;
 import com.caboolo.backend.hub.repository.HubRepository;
@@ -26,19 +27,20 @@ public class HubService {
 
     private static final String REDIS_HUB_KEY = "hubs:geo";
     private final HubRepository hubRepository;
-    private final RedisTemplate<String, String> redisTemplate;
     private final GeoOperations<String, String> geoOps;
+    private final SequenceGenerator sequenceGenerator;
 
-    public HubService(HubRepository hubRepository, RedisTemplate<String, String> redisTemplate) {
+    public HubService(HubRepository hubRepository, GeoOperations<String, String> geoOps, SequenceGenerator sequenceGenerator) {
         this.hubRepository = hubRepository;
-        this.redisTemplate = redisTemplate;
-        this.geoOps = redisTemplate.opsForGeo();
+        this.geoOps = geoOps;
+        this.sequenceGenerator = sequenceGenerator;
     }
 
     @Transactional
     public void bulkStoreHubs(List<HubDto> hubDtos) {
         List<Hub> hubs = hubDtos.stream()
                 .map(dto -> Hub.Builder.hub()
+                        .withHubId(sequenceGenerator.nextId())
                         .withName(dto.getName())
                         .withType(dto.getType())
                         .withCity(dto.getCity())
