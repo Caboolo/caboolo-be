@@ -34,6 +34,9 @@ public class Ride extends GenericIdEntity {
     @Column(name = "status", nullable = false)
     private RideStatus status;
 
+    @Column(name = "is_women_only_ride", nullable = false)
+    private boolean isWomenOnlyRide;
+
     public static interface RideIdStep {
         SourceHubIdStep withRideId(String rideId);
     }
@@ -55,7 +58,11 @@ public class Ride extends GenericIdEntity {
     }
 
     public static interface StatusStep {
-        BuildStep withStatus(RideStatus status);
+        IsWomenOnlyRideStep withStatus(RideStatus status);
+    }
+
+    public static interface IsWomenOnlyRideStep {
+        BuildStep withIsWomenOnlyRide(boolean isWomenOnlyRide);
     }
 
     public static interface BuildStep {
@@ -63,13 +70,14 @@ public class Ride extends GenericIdEntity {
     }
 
 
-    public static class Builder implements RideIdStep, SourceHubIdStep, DestinationHubIdStep, DepartureTimeStep, TotalSeatsStep, StatusStep, BuildStep {
+    public static class Builder implements RideIdStep, SourceHubIdStep, DestinationHubIdStep, DepartureTimeStep, TotalSeatsStep, StatusStep, IsWomenOnlyRideStep, BuildStep {
         private String rideId;
         private String sourceHubId;
         private String destinationHubId;
         private LocalDateTime departureTime;
         private Integer totalSeats;
         private RideStatus status;
+        private boolean isWomenOnlyRide;
 
         private Builder() {
         }
@@ -109,8 +117,14 @@ public class Ride extends GenericIdEntity {
         }
 
         @Override
-        public BuildStep withStatus(RideStatus status) {
+        public IsWomenOnlyRideStep withStatus(RideStatus status) {
             this.status = status;
+            return this;
+        }
+
+        @Override
+        public BuildStep withIsWomenOnlyRide(boolean isWomenOnlyRide) {
+            this.isWomenOnlyRide = isWomenOnlyRide;
             return this;
         }
 
@@ -122,7 +136,8 @@ public class Ride extends GenericIdEntity {
                     this.destinationHubId,
                     this.departureTime,
                     this.totalSeats,
-                    this.status
+                    this.status,
+                    this.isWomenOnlyRide
             );
         }
     }

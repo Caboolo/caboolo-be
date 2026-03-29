@@ -8,7 +8,5 @@ import java.util.List;
 
 @Repository
 public interface RideUserMappingRepository extends JpaRepository<RideUserMapping, Long> {
-    List<RideUserMapping> findByRideId(String rideId);
-    List<RideUserMapping> findByUserId(String userId);
-    List<RideUserMapping> findByRideIdAndIsCreatorTrue(String rideId);
+
 }
