@@ -1,0 +1,8 @@
+package com.caboolo.backend.ride.enums;
+
+public enum RideUserMappingStatus {
+    PENDING,
+    ACCEPTED,
+    LEFT,
+    CANCELLED
+}
