@@ -58,7 +58,7 @@ public class RideUserMappingService {
         return rideUserMappingRepository.findAllByUserIdAndStatusWithRideParticipants(userId, rideUserMappingStatus);
     }
 
-    public List<RideUserMapping> findByRideIdInAndStatusIn(Set<Long> activeRideIds, List<RideUserMappingStatus> rideUserMappingStatuses) {
+    public List<RideUserMapping> findByRideIdInAndStatusIn(Set<Long> activeRideIds, Set<RideUserMappingStatus> rideUserMappingStatuses) {
         return rideUserMappingRepository.findByRideIdInAndStatusIn(activeRideIds, rideUserMappingStatuses);
     }
 }

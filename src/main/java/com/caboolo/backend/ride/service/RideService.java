@@ -155,9 +155,7 @@ public class RideService {
 
         // 3. Bulk Fetch all participant mappings for these rides
         List<RideUserMapping> allParticipantMappings = rideUserMappingService.findByRideIdInAndStatusIn(
-                activeRideIds,
-                Arrays.asList(RideUserMappingStatus.CREATED, RideUserMappingStatus.ACCEPTED)
-        );
+                activeRideIds, RideUserMappingStatus.ACTIVE_STATUSES);
 
         Map<Long, List<RideUserMapping>> mappingsByRideId = allParticipantMappings.stream()
                 .collect(Collectors.groupingBy(RideUserMapping::getRideId));
