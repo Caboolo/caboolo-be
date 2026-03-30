@@ -33,7 +33,7 @@ public class UserDetailService {
     private final UserDetailRepository userDetailRepository;
     private final UserLoginRepository userLoginRepository;
     private final StorageService storageService;
-    private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
+    private final SequenceGenerator sequenceGenerator;
     private final UserDetailsConverter userDetailsConverter;
     private final ReviewRepository reviewRepository;
 
