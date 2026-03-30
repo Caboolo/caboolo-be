@@ -21,7 +21,7 @@ public interface RideUserMappingRepository extends JpaRepository<RideUserMapping
 
     List<RideUserMapping> findByUserIdAndStatus(String userId, RideUserMappingStatus rideUserMappingStatus);
 
-    @Query("SELECT um FROM RideUserMapping um WHERE um.rideId IN " +
-           "(SELECT rum.rideId FROM RideUserMapping rum WHERE rum.userId = :userId AND rum.status = :status)")
+    @Query("SELECT um FROM rideUserMapping um WHERE um.rideId IN " +
+           "(SELECT rum.rideId FROM rideUserMapping rum WHERE rum.userId = :userId AND rum.status = :status)")
     List<RideUserMapping> findAllByUserIdAndStatusWithRideParticipants(@Param("userId") String userId, @Param("status") RideUserMappingStatus status);
 }
