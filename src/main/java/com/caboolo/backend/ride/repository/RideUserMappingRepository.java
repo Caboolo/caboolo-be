@@ -3,6 +3,8 @@ package com.caboolo.backend.ride.repository;
 import com.caboolo.backend.ride.domain.RideUserMapping;
 import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,4 +20,8 @@ public interface RideUserMappingRepository extends JpaRepository<RideUserMapping
     List<RideUserMapping> findByRideIdIn(List<Long> rideIds);
 
     List<RideUserMapping> findByUserIdAndStatus(String userId, RideUserMappingStatus rideUserMappingStatus);
+
+    @Query("SELECT um FROM RideUserMapping um WHERE um.rideId IN " +
+           "(SELECT rum.rideId FROM RideUserMapping rum WHERE rum.userId = :userId AND rum.status = :status)")
+    List<RideUserMapping> findAllByUserIdAndStatusWithRideParticipants(@Param("userId") String userId, @Param("status") RideUserMappingStatus status);
 }

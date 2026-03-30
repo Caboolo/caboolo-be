@@ -56,11 +56,15 @@ public class RideService {
     }
 
     public List<MyRequestResponseDto> getMyRequests(String userId) {
-        List<RideUserMapping> userMappings = rideUserMappingRepository.findByUserIdAndStatus(userId, RideUserMappingStatus.PENDING);
-        if (userMappings.isEmpty()) {
+        List<RideUserMapping> allMappings = rideUserMappingRepository.findAllByUserIdAndStatusWithRideParticipants(userId, RideUserMappingStatus.PENDING);
+        if (allMappings.isEmpty()) {
             return Collections.emptyList();
         }
 
+        // Separate user's own pending requests from other participants
+        List<RideUserMapping> userMappings = allMappings.stream()
+                .filter(um -> um.getUserId().equals(userId) && um.getStatus() == RideUserMappingStatus.PENDING)
+                .collect(Collectors.toList());
 
         List<Long> rideIds = userMappings.stream()
                 .map(RideUserMapping::getRideId)
@@ -69,23 +73,15 @@ public class RideService {
 
         List<Ride> rides = rideRepository.findByRideIdIn(rideIds);
         Map<Long, Ride> rideMap = rides.stream()
-                .collect(Collectors.toMap(Ride::getRideId, r -> r));
+                .collect(Collectors.toMap(Ride::getRideId, ride -> ride));
 
-        Set<String> hubNames = new HashSet<>();
-        rides.forEach(r -> {
-            hubNames.add(r.getSourceHubId());
-            hubNames.add(r.getDestinationHubId());
-        });
-        List<Hub> hubs = hubRepository.findAllByNameIn(new ArrayList<>(hubNames));
-        Map<String, String> hubNameMap = hubs.stream()
-                .collect(Collectors.toMap(Hub::getName, Hub::getName)); // HubId is actually Name string in Ride entity
-
-        List<RideUserMapping> allRideMappings = rideUserMappingRepository.findByRideIdIn(rideIds);
-        Map<Long, List<RideUserMapping>> rideToMappingsMap = allRideMappings.stream()
+        // Group all accepted mappings by rideId for available seats and active passengers
+        Map<Long, List<RideUserMapping>> acceptedMappingsByRide = allMappings.stream()
+                .filter(um -> um.getStatus() == RideUserMappingStatus.ACCEPTED)
                 .collect(Collectors.groupingBy(RideUserMapping::getRideId));
 
-        Set<String> allActiveUserIds = allRideMappings.stream()
-                .filter(m -> m.getStatus() == RideUserMappingStatus.ACCEPTED)
+        Set<String> allActiveUserIds = acceptedMappingsByRide.values().stream()
+                .flatMap(List::stream)
                 .map(RideUserMapping::getUserId)
                 .collect(Collectors.toSet());
         
@@ -98,9 +94,8 @@ public class RideService {
                     Ride ride = rideMap.get(um.getRideId());
                     if (ride == null) return null;
 
-                    List<RideUserMapping> rideMappings = rideToMappingsMap.getOrDefault(ride.getRideId(), Collections.emptyList());
-                    List<PassengerInfoDto> activePassengers = rideMappings.stream()
-                            .filter(m -> m.getStatus() == RideUserMappingStatus.ACCEPTED)
+                    List<RideUserMapping> acceptedMappings = acceptedMappingsByRide.getOrDefault(um.getRideId(), Collections.emptyList());
+                    List<PassengerInfoDto> activePassengers = acceptedMappings.stream()
                             .map(m -> {
                                 UserDetail ud = userDetailMap.get(m.getUserId());
                                 return ud == null ? null : PassengerInfoDto.Builder.passengerInfoDto()
@@ -113,7 +108,7 @@ public class RideService {
                             .filter(Objects::nonNull)
                             .collect(Collectors.toList());
 
-                    int acceptedCount = activePassengers.size();
+                    int acceptedCount = acceptedMappings.size();
 
                     return MyRequestResponseDto.Builder.myRequestResponseDto()
                             .withRequestStatus(um.getStatus())
