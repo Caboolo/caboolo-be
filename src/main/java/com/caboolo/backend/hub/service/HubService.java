@@ -67,7 +67,7 @@ public class HubService {
     public List<HubDto> findNearestHubs(double longitude, double latitude, double radiusKm) {
         Point center = new Point(longitude, latitude);
         Distance radius = new Distance(radiusKm, RedisGeoCommands.DistanceUnit.KILOMETERS);
-        
+
         RedisGeoCommands.GeoRadiusCommandArgs args = RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs()
                 .includeDistance()
                 .sortAscending();
@@ -90,7 +90,7 @@ public class HubService {
         for (GeoResult<RedisGeoCommands.GeoLocation<String>> result : results) {
             String name = result.getContent().getName();
             Hub hub = hubMap.get(name);
-            
+
             if (hub != null) {
                 nearestHubs.add(HubDto.builder()
                         .name(name)
@@ -103,5 +103,11 @@ public class HubService {
             }
         }
         return nearestHubs;
+    }
+
+    public String getHubName(Long hubId) {
+        return hubRepository.findByHubId(hubId)
+                .map(Hub::getName)
+                .orElse("Unknown Hub");
     }
 }
