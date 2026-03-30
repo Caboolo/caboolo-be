@@ -6,10 +6,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface HubRepository extends JpaRepository<Hub, Long> {
-    Optional<Hub> findByHubId(Long hubId);
-    List<Hub> findAllByHubIdIn(Collection<Long> hubIds);
+    List<Hub> findByHubIdIn(Collection<Long> hubIds);
 }

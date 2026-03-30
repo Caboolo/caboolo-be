@@ -15,7 +15,7 @@ public class MyRideResponseDto {
     private LocalDateTime departureTime;
     private String sourceHubName;
     private String destinationHubName;
-    private List<PassengerInfoDto> participants;
+    private List<RiderInfoDto> participants;
     private Integer availableSeats;
     private BigDecimal poolPrice;
 
@@ -36,7 +36,7 @@ public class MyRideResponseDto {
     }
 
     public static interface ParticipantsStep {
-        AvailableSeatsStep withParticipants(List<PassengerInfoDto> participants);
+        AvailableSeatsStep withParticipants(List<RiderInfoDto> participants);
     }
 
     public static interface AvailableSeatsStep {
@@ -57,7 +57,7 @@ public class MyRideResponseDto {
         private LocalDateTime departureTime;
         private String sourceHubName;
         private String destinationHubName;
-        private List<PassengerInfoDto> participants;
+        private List<RiderInfoDto> participants;
         private Integer availableSeats;
         private BigDecimal poolPrice;
 
@@ -93,7 +93,7 @@ public class MyRideResponseDto {
         }
 
         @Override
-        public AvailableSeatsStep withParticipants(List<PassengerInfoDto> participants) {
+        public AvailableSeatsStep withParticipants(List<RiderInfoDto> participants) {
             this.participants = participants;
             return this;
         }

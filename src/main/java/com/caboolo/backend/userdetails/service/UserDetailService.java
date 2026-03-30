@@ -3,7 +3,6 @@ package com.caboolo.backend.userdetails.service;
 import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.dto.UserDetailRequestDto;
 import com.caboolo.backend.review.dto.ProfileDto;
-import com.caboolo.backend.review.dto.ReviewDto;
 import com.caboolo.backend.review.enums.ReviewTag;
 import com.caboolo.backend.storage.StorageService;
 import com.caboolo.backend.storage.StorageUploadResult;
@@ -311,7 +310,7 @@ public class UserDetailService {
     }
 
 
-    public List<UserDetail> findAllByUserIdIn(Set<String> participantUserIds) {
-        return userDetailRepository.findAllByUserIdIn(participantUserIds);
+    public List<UserDetail> findByUserIdIn(Set<String> participantUserIds) {
+        return userDetailRepository.findByUserIdIn(participantUserIds);
     }
 }

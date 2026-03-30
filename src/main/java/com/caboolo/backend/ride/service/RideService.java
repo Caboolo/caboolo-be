@@ -4,7 +4,7 @@ import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.ride.domain.Ride;
 import com.caboolo.backend.ride.domain.RideUserMapping;
 import com.caboolo.backend.ride.dto.MyRequestResponseDto;
-import com.caboolo.backend.ride.dto.PassengerInfoDto;
+import com.caboolo.backend.ride.dto.RiderInfoDto;
 import com.caboolo.backend.ride.dto.MyRideResponseDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
 import com.caboolo.backend.ride.enums.RideStatus;
@@ -63,7 +63,7 @@ public class RideService {
     }
 
     public List<MyRequestResponseDto> getMyRequests(String userId) {
-        List<RideUserMapping> allMappings = rideUserMappingService.findAllByUserIdAndStatusWithRideParticipants(userId, RideUserMappingStatus.PENDING);
+        List<RideUserMapping> allMappings = rideUserMappingService.findByUserIdAndStatus(userId, RideUserMappingStatus.PENDING);
         if (allMappings.isEmpty()) {
             return Collections.emptyList();
         }
@@ -93,7 +93,7 @@ public class RideService {
                 .collect(Collectors.toSet());
 
 
-        Map<String, UserDetail> userDetailMap = userDetailService.findAllByUserIdIn(allActiveUserIds).stream()
+        Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(allActiveUserIds).stream()
                 .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
         return userMappings.stream()
@@ -102,10 +102,10 @@ public class RideService {
                     if (ride == null) return null;
 
                     List<RideUserMapping> acceptedMappings = acceptedMappingsByRide.getOrDefault(um.getRideId(), Collections.emptyList());
-                    List<PassengerInfoDto> activePassengers = acceptedMappings.stream()
+                    List<RiderInfoDto> activePassengers = acceptedMappings.stream()
                             .map(m -> {
                                 UserDetail ud = userDetailMap.get(m.getUserId());
-                                return ud == null ? null : PassengerInfoDto.Builder.passengerInfoDto()
+                                return ud == null ? null : RiderInfoDto.Builder.passengerInfoDto()
                                         .withUserId(ud.getUserId())
                                         .withName(ud.getName())
                                         .withImageUrl(ud.getImageUrl())
@@ -133,7 +133,7 @@ public class RideService {
 
     public List<MyRideResponseDto> getMyRides(String userId) {
         // 1. Find all rides where the user is the "lead" (CREATED status)
-        List<RideUserMapping> leadMappings = rideUserMappingService.findAllByUserIdAndStatusWithRideParticipants(userId, RideUserMappingStatus.CREATED);
+        List<RideUserMapping> leadMappings = rideUserMappingService.findByUserIdAndStatus(userId, RideUserMappingStatus.CREATED);
         if (leadMappings.isEmpty()) {
             return new ArrayList<>();
         }
@@ -173,7 +173,7 @@ public class RideService {
 
         // 5. Bulk Fetch User Details and Hub Names
         Map<String, UserDetail> userDetailsMap =
-                userDetailService.findAllByUserIdIn(participantUserIds)
+                userDetailService.findByUserIdIn(participantUserIds)
                         .stream()
                         .collect(Collectors.toMap(
                                 UserDetail::getUserId,
@@ -187,10 +187,10 @@ public class RideService {
                 .map(ride -> {
                     List<RideUserMapping> pMapping = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
 
-                    List<PassengerInfoDto> participants = pMapping.stream()
+                    List<RiderInfoDto> participants = pMapping.stream()
                             .map(pm -> {
                                 UserDetail detail = userDetailsMap.get(pm.getUserId());
-                                return PassengerInfoDto.Builder.passengerInfoDto()
+                                return RiderInfoDto.Builder.passengerInfoDto()
                                         .withUserId(pm.getUserId())
                                         .withName(detail.getName())
                                         .withImageUrl(detail.getImageUrl())

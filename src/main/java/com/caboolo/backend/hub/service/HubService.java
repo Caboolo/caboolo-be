@@ -11,8 +11,6 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.GeoOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.domain.geo.GeoLocation;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,8 +72,8 @@ public class HubService {
                 .sortAscending();
 
         // Use Circle for searching from a point instead of a member
-        org.springframework.data.redis.connection.RedisGeoCommands.GeoRadiusCommandArgs geoArgs = 
-            org.springframework.data.redis.connection.RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs()
+        RedisGeoCommands.GeoRadiusCommandArgs geoArgs =
+            RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs()
                 .includeDistance()
                 .includeCoordinates()
                 .sortAscending();
@@ -91,7 +89,7 @@ public class HubService {
                 .collect(Collectors.toList());
 
         // Fetch details from MySQL using hubIds
-        Map<Long, Hub> hubMap = hubRepository.findAllByHubIdIn(nearestIds).stream()
+        Map<Long, Hub> hubMap = hubRepository.findByHubIdIn(nearestIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, h -> h));
 
         List<HubDto> nearestHubs = new ArrayList<>();
@@ -114,7 +112,7 @@ public class HubService {
     }
 
     public Map<Long, String> getHubNames(Collection<Long> hubIds) {
-        return hubRepository.findAllByHubIdIn(hubIds).stream()
+        return hubRepository.findByHubIdIn(hubIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, Hub::getName));
     }
 }

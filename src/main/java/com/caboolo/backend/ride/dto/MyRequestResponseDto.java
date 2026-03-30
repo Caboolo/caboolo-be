@@ -1,6 +1,5 @@
 package com.caboolo.backend.ride.dto;
 
-import com.caboolo.backend.ride.enums.RideStatus;
 import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import lombok.*;
 
@@ -16,7 +15,7 @@ public class MyRequestResponseDto {
     private String sourceHubName;
     private String destinationHubName;
     private LocalDateTime departureTime;
-    private List<PassengerInfoDto> activePassengers;
+    private List<RiderInfoDto> activePassengers;
     private Integer availableSeats;
     private BigDecimal poolPrice;
 
@@ -37,7 +36,7 @@ public class MyRequestResponseDto {
     }
 
     public static interface ActivePassengersStep {
-        AvailableSeatsStep withActivePassengers(List<PassengerInfoDto> activePassengers);
+        AvailableSeatsStep withActivePassengers(List<RiderInfoDto> activePassengers);
     }
     
     public static interface AvailableSeatsStep {
@@ -58,7 +57,7 @@ public class MyRequestResponseDto {
         private String sourceHubName;
         private String destinationHubName;
         private LocalDateTime departureTime;
-        private List<PassengerInfoDto> activePassengers;
+        private List<RiderInfoDto> activePassengers;
         private Integer availableSeats;
         private BigDecimal poolPrice;
 
@@ -94,7 +93,7 @@ public class MyRequestResponseDto {
         }
 
         @Override
-        public AvailableSeatsStep withActivePassengers(List<PassengerInfoDto> activePassengers) {
+        public AvailableSeatsStep withActivePassengers(List<RiderInfoDto> activePassengers) {
             this.activePassengers = activePassengers;
             return this;
         }

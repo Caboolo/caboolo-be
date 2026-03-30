@@ -5,7 +5,7 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PassengerInfoDto {
+public class RiderInfoDto {
     private String userId;
     private String name;
     private String imageUrl;
@@ -28,7 +28,7 @@ public class PassengerInfoDto {
     }
 
     public static interface BuildStep {
-        PassengerInfoDto build();
+        RiderInfoDto build();
     }
 
 
@@ -70,8 +70,8 @@ public class PassengerInfoDto {
         }
 
         @Override
-        public PassengerInfoDto build() {
-            return new PassengerInfoDto(
+        public RiderInfoDto build() {
+            return new RiderInfoDto(
                     this.userId,
                     this.name,
                     this.imageUrl,

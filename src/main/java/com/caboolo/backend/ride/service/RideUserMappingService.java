@@ -50,12 +50,8 @@ public class RideUserMappingService {
         rideUserMappingRepository.save(mapping);
     }
 
-    public Optional<RideUserMapping> findByRideIdAndUserId(Long rideId, String userId) {
-        return rideUserMappingRepository.findByRideIdAndUserId(rideId, userId);
-    }
-
-    public List<RideUserMapping> findAllByUserIdAndStatusWithRideParticipants(String userId, RideUserMappingStatus rideUserMappingStatus) {
-        return rideUserMappingRepository.findAllByUserIdAndStatusWithRideParticipants(userId, rideUserMappingStatus);
+    public List<RideUserMapping> findByUserIdAndStatus(String userId, RideUserMappingStatus rideUserMappingStatus) {
+        return rideUserMappingRepository.findByUserIdAndStatus(userId, rideUserMappingStatus);
     }
 
     public List<RideUserMapping> findByRideIdInAndStatusIn(Set<Long> activeRideIds, Set<RideUserMappingStatus> rideUserMappingStatuses) {
