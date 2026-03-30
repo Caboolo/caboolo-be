@@ -5,6 +5,7 @@ import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -14,46 +15,87 @@ public class MyRequestResponseDto {
     private RideUserMappingStatus requestStatus;
     private RideStatus rideStatus;
     private List<PassengerInfoDto> activePassengers;
+    private Integer availableSeats;
+    private BigDecimal poolPrice;
 
-    public Long getRideId() { return rideId; }
-    public String getSourceHubName() { return sourceHubName; }
-    public String getDestinationHubName() { return destinationHubName; }
-    public LocalDateTime getDepartureTime() { return departureTime; }
-    public Integer getTotalSeats() { return totalSeats; }
-    public Integer getAvailableSeats() { return availableSeats; }
-    public Integer getPoolPrice() { return poolPrice; }
-    public RideUserMappingStatus getRequestStatus() { return requestStatus; }
-    public RideStatus getRideStatus() { return rideStatus; }
-    public List<PassengerInfoDto> getActivePassengers() { return activePassengers; }
-
-    public static Builder builder() {
-        return new Builder();
+    public static interface RequestStatusStep {
+        RideStatusStep withRequestStatus(RideUserMappingStatus requestStatus);
     }
 
-    public static class Builder {
-        private Long rideId;
-        private String sourceHubName;
-        private String destinationHubName;
-        private LocalDateTime departureTime;
-        private Integer totalSeats;
-        private Integer availableSeats;
-        private Integer poolPrice;
+    public static interface RideStatusStep {
+        ActivePassengersStep withRideStatus(RideStatus rideStatus);
+    }
+
+    public static interface ActivePassengersStep {
+        AvailableSeatsStep withActivePassengers(List<PassengerInfoDto> activePassengers);
+    }
+    
+    public static interface AvailableSeatsStep {
+        PoolPriceStep withAvailableSeats(Integer availableSeats);
+    }
+    
+    public static interface PoolPriceStep {
+        BuildStep withPoolPrice(BigDecimal poolPrice);
+    }
+
+    public static interface BuildStep {
+        MyRequestResponseDto build();
+    }
+
+
+    public static class Builder implements RequestStatusStep, RideStatusStep, ActivePassengersStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
         private RideUserMappingStatus requestStatus;
         private RideStatus rideStatus;
         private List<PassengerInfoDto> activePassengers;
+        private Integer availableSeats;
+        private BigDecimal poolPrice;
 
-        public Builder rideId(Long rideId) { this.rideId = rideId; return this; }
-        public Builder sourceHubName(String sourceHubName) { this.sourceHubName = sourceHubName; return this; }
-        public Builder destinationHubName(String destinationHubName) { this.destinationHubName = destinationHubName; return this; }
-        public Builder departureTime(LocalDateTime departureTime) { this.departureTime = departureTime; return this; }
-        public Builder totalSeats(Integer totalSeats) { this.totalSeats = totalSeats; return this; }
-        public Builder availableSeats(Integer availableSeats) { this.availableSeats = availableSeats; return this; }
-        public Builder poolPrice(Integer poolPrice) { this.poolPrice = poolPrice; return this; }
-        public Builder requestStatus(RideUserMappingStatus requestStatus) { this.requestStatus = requestStatus; return this; }
-        public Builder rideStatus(RideStatus rideStatus) { this.rideStatus = rideStatus; return this; }
-        public Builder activePassengers(List<PassengerInfoDto> activePassengers) { this.activePassengers = activePassengers; return this; }
+        private Builder() {
+        }
+
+        public static RequestStatusStep myRequestResponseDto() {
+            return new Builder();
+        }
+
+        @Override
+        public RideStatusStep withRequestStatus(RideUserMappingStatus requestStatus) {
+            this.requestStatus = requestStatus;
+            return this;
+        }
+
+        @Override
+        public ActivePassengersStep withRideStatus(RideStatus rideStatus) {
+            this.rideStatus = rideStatus;
+            return this;
+        }
+
+        @Override
+        public AvailableSeatsStep withActivePassengers(List<PassengerInfoDto> activePassengers) {
+            this.activePassengers = activePassengers;
+            return this;
+        }
+
+        @Override
+        public PoolPriceStep withAvailableSeats(Integer availableSeats) {
+            this.availableSeats = availableSeats;
+            return this;
+        }
+
+        @Override
+        public BuildStep withPoolPrice(BigDecimal poolPrice) {
+            this.poolPrice = poolPrice;
+            return this;
+        }
+
+        @Override
         public MyRequestResponseDto build() {
-            return new MyRequestResponseDto(rideId, sourceHubName, destinationHubName, departureTime, totalSeats, availableSeats, poolPrice, requestStatus, rideStatus, activePassengers);
+            return new MyRequestResponseDto(
+                    this.requestStatus,
+                    this.rideStatus,
+                    this.activePassengers,
+                    this.availableSeats,
+                    this.poolPrice
+            );
         }
     }
 }

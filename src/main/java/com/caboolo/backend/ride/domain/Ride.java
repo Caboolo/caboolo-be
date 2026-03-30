@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "ride")
@@ -38,24 +39,7 @@ public class Ride extends GenericIdEntity {
     private boolean isWomenOnlyRide;
 
     @Column(name = "pool_price")
-    private Integer poolPrice;
-
-    public Long getRideId() { return rideId; }
-    public void setRideId(Long rideId) { this.rideId = rideId; }
-    public String getSourceHubId() { return sourceHubId; }
-    public void setSourceHubId(String sourceHubId) { this.sourceHubId = sourceHubId; }
-    public String getDestinationHubId() { return destinationHubId; }
-    public void setDestinationHubId(String destinationHubId) { this.destinationHubId = destinationHubId; }
-    public LocalDateTime getDepartureTime() { return departureTime; }
-    public void setDepartureTime(LocalDateTime departureTime) { this.departureTime = departureTime; }
-    public Integer getTotalSeats() { return totalSeats; }
-    public void setTotalSeats(Integer totalSeats) { this.totalSeats = totalSeats; }
-    public RideStatus getStatus() { return status; }
-    public void setStatus(RideStatus status) { this.status = status; }
-    public boolean isWomenOnlyRide() { return isWomenOnlyRide; }
-    public void setWomenOnlyRide(boolean womenOnlyRide) { isWomenOnlyRide = womenOnlyRide; }
-    public Integer getPoolPrice() { return poolPrice; }
-    public void setPoolPrice(Integer poolPrice) { this.poolPrice = poolPrice; }
+    private BigDecimal poolPrice;
 
     public static interface RideIdStep {
         SourceHubIdStep withRideId(Long rideId);
@@ -86,7 +70,7 @@ public class Ride extends GenericIdEntity {
     }
 
     public static interface PoolPriceStep {
-        BuildStep withPoolPrice(Integer poolPrice);
+        BuildStep withPoolPrice(BigDecimal poolPrice);
     }
 
     public static interface BuildStep {
@@ -94,7 +78,7 @@ public class Ride extends GenericIdEntity {
     }
 
 
-    public static class Builder implements RideIdStep, SourceHubIdStep, DestinationHubIdStep, DepartureTimeStep, TotalSeatsStep, StatusStep, IsWomenOnlyRideStep, BuildStep {
+    public static class Builder implements RideIdStep, SourceHubIdStep, DestinationHubIdStep, DepartureTimeStep, TotalSeatsStep, StatusStep, IsWomenOnlyRideStep, PoolPriceStep, BuildStep {
         private Long rideId;
         private String sourceHubId;
         private String destinationHubId;
@@ -102,7 +86,7 @@ public class Ride extends GenericIdEntity {
         private Integer totalSeats;
         private RideStatus status;
         private boolean isWomenOnlyRide;
-        private Integer poolPrice;
+        private BigDecimal poolPrice;
 
         private Builder() {
         }
@@ -154,7 +138,7 @@ public class Ride extends GenericIdEntity {
         }
 
         @Override
-        public BuildStep withPoolPrice(Integer poolPrice) {
+        public BuildStep withPoolPrice(BigDecimal poolPrice) {
             this.poolPrice = poolPrice;
             return this;
         }

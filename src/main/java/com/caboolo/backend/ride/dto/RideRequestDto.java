@@ -2,6 +2,7 @@ package com.caboolo.backend.ride.dto;
 
 import lombok.*;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -14,5 +15,5 @@ public class RideRequestDto {
     private LocalDateTime departureTime;
     private Integer totalSeats;
     private boolean isWomenOnlyRide;
-    private Integer poolPrice;
+    private BigDecimal poolPrice;
 }
