@@ -13,8 +13,11 @@ import com.caboolo.backend.ride.repository.RideRepository;
 import com.caboolo.backend.userdetails.domain.UserDetail;
 import com.caboolo.backend.hub.service.HubService;
 import com.caboolo.backend.userdetails.service.UserDetailService;
+
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -207,5 +210,14 @@ public class RideService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void updatePoolPrice(Long rideId, String userId, BigDecimal poolPrice) {
+        // 2. Fetch and update the ride
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+        ride.setPoolPrice(poolPrice);
+        rideRepository.save(ride);
     }
 }

@@ -9,6 +9,7 @@ import com.caboolo.backend.ride.service.RideService;
 import com.caboolo.backend.ride.service.RideUserMappingService;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -38,6 +39,12 @@ public class RideController extends BaseController {
     public RestEntity<Void> withdrawRequest(@PathVariable Long rideId, @RequestParam String userId) {
         rideUserMappingService.withdrawRequest(rideId, userId);
         return successResponse("Request withdrawn successfully");
+    }
+
+    @PatchMapping("/{rideId}/pool-price")
+    public RestEntity<Void> updatePoolPrice(@PathVariable Long rideId, @RequestParam String userId, @RequestParam BigDecimal poolPrice) {
+        rideService.updatePoolPrice(rideId, userId, poolPrice);
+        return successResponse("Pool price updated successfully");
     }
 
     @GetMapping("/my-rides")
