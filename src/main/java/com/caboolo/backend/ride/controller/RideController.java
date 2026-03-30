@@ -3,20 +3,26 @@ package com.caboolo.backend.ride.controller;
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.ride.dto.MyRequestResponseDto;
+import com.caboolo.backend.ride.dto.MyRideResponseDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
 import com.caboolo.backend.ride.service.RideService;
 import com.caboolo.backend.ride.service.RideUserMappingService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/ride")
-@RequiredArgsConstructor
 public class RideController extends BaseController {
 
     private final RideService rideService;
     private final RideUserMappingService rideUserMappingService;
+
+    public RideController(RideService rideService, RideUserMappingService rideUserMappingService) {
+        this.rideService = rideService;
+        this.rideUserMappingService = rideUserMappingService;
+    }
 
     @PostMapping("/create")
     public RestEntity<Long> createRide(@RequestBody RideRequestDto request) {
@@ -33,5 +39,16 @@ public class RideController extends BaseController {
     public RestEntity<Void> withdrawRequest(@PathVariable Long rideId, @RequestParam String userId) {
         rideUserMappingService.withdrawRequest(rideId, userId);
         return successResponse("Request withdrawn successfully");
+    }
+
+    @PatchMapping("/{rideId}/pool-price")
+    public RestEntity<Void> updatePoolPrice(@PathVariable Long rideId, @RequestParam String userId, @RequestParam BigDecimal poolPrice) {
+        rideService.updatePoolPrice(rideId, userId, poolPrice);
+        return successResponse("Pool price updated successfully");
+    }
+
+    @GetMapping("/my-rides")
+    public RestEntity<List<MyRideResponseDto>> getMyRides(@RequestParam String userId) {
+        return successResponse(rideService.getMyRides(userId), "My rides retrieved successfully");
     }
 }

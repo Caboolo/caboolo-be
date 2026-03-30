@@ -6,12 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface RideRepository extends JpaRepository<Ride, Long> {
     List<Ride> findByRideIdIn(List<Long> rideIds);
-
-    Optional<Ride> findByRideId(Long rideId);
+    List<Ride> findByStatusAndRideIdIn(RideStatus status, Collection<Long> rideIds);
 }
