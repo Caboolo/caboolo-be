@@ -113,12 +113,6 @@ public class HubService {
         return nearestHubs;
     }
 
-    public String getHubName(Long hubId) {
-        return hubRepository.findByHubId(hubId)
-                .map(Hub::getName)
-                .orElse("Unknown Hub");
-    }
-
     public Map<Long, String> getHubNames(Collection<Long> hubIds) {
         return hubRepository.findAllByHubIdIn(hubIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, Hub::getName));
