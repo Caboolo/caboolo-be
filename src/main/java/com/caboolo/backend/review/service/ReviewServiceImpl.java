@@ -16,12 +16,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final SequenceGenerator sequenceGenerator;
     private final UserDetailService userDetailService;
+
+    public ReviewServiceImpl(ReviewRepository reviewRepository, SequenceGenerator sequenceGenerator,
+                             UserDetailService userDetailService) {
+        this.reviewRepository = reviewRepository;
+        this.sequenceGenerator = sequenceGenerator;
+        this.userDetailService = userDetailService;
+    }
 
     @Override
     @Transactional
