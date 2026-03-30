@@ -37,6 +37,26 @@ public class Ride extends GenericIdEntity {
     @Column(name = "is_women_only_ride", nullable = false)
     private boolean isWomenOnlyRide;
 
+    @Column(name = "pool_price")
+    private Integer poolPrice;
+
+    public Long getRideId() { return rideId; }
+    public void setRideId(Long rideId) { this.rideId = rideId; }
+    public String getSourceHubId() { return sourceHubId; }
+    public void setSourceHubId(String sourceHubId) { this.sourceHubId = sourceHubId; }
+    public String getDestinationHubId() { return destinationHubId; }
+    public void setDestinationHubId(String destinationHubId) { this.destinationHubId = destinationHubId; }
+    public LocalDateTime getDepartureTime() { return departureTime; }
+    public void setDepartureTime(LocalDateTime departureTime) { this.departureTime = departureTime; }
+    public Integer getTotalSeats() { return totalSeats; }
+    public void setTotalSeats(Integer totalSeats) { this.totalSeats = totalSeats; }
+    public RideStatus getStatus() { return status; }
+    public void setStatus(RideStatus status) { this.status = status; }
+    public boolean isWomenOnlyRide() { return isWomenOnlyRide; }
+    public void setWomenOnlyRide(boolean womenOnlyRide) { isWomenOnlyRide = womenOnlyRide; }
+    public Integer getPoolPrice() { return poolPrice; }
+    public void setPoolPrice(Integer poolPrice) { this.poolPrice = poolPrice; }
+
     public static interface RideIdStep {
         SourceHubIdStep withRideId(Long rideId);
     }
@@ -62,7 +82,11 @@ public class Ride extends GenericIdEntity {
     }
 
     public static interface IsWomenOnlyRideStep {
-        BuildStep withIsWomenOnlyRide(boolean isWomenOnlyRide);
+        PoolPriceStep withIsWomenOnlyRide(boolean isWomenOnlyRide);
+    }
+
+    public static interface PoolPriceStep {
+        BuildStep withPoolPrice(Integer poolPrice);
     }
 
     public static interface BuildStep {
@@ -78,6 +102,7 @@ public class Ride extends GenericIdEntity {
         private Integer totalSeats;
         private RideStatus status;
         private boolean isWomenOnlyRide;
+        private Integer poolPrice;
 
         private Builder() {
         }
@@ -123,8 +148,14 @@ public class Ride extends GenericIdEntity {
         }
 
         @Override
-        public BuildStep withIsWomenOnlyRide(boolean isWomenOnlyRide) {
+        public PoolPriceStep withIsWomenOnlyRide(boolean isWomenOnlyRide) {
             this.isWomenOnlyRide = isWomenOnlyRide;
+            return this;
+        }
+
+        @Override
+        public BuildStep withPoolPrice(Integer poolPrice) {
+            this.poolPrice = poolPrice;
             return this;
         }
 
@@ -137,7 +168,8 @@ public class Ride extends GenericIdEntity {
                     this.departureTime,
                     this.totalSeats,
                     this.status,
-                    this.isWomenOnlyRide
+                    this.isWomenOnlyRide,
+                    this.poolPrice
             );
         }
     }

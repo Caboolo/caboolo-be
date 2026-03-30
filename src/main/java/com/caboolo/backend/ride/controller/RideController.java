@@ -13,10 +13,22 @@ import org.springframework.web.bind.annotation.*;
 public class RideController extends BaseController {
 
     private final RideService rideService;
+    private final com.caboolo.backend.ride.service.RideUserMappingService rideUserMappingService;
 
     @PostMapping("/create")
     public RestEntity<Long> createRide(@RequestBody RideRequestDto request) {
         Long rideId = rideService.createRide(request);
         return successResponse(rideId, "Ride created successfully");
+    }
+
+    @GetMapping("/my-requests")
+    public RestEntity<java.util.List<com.caboolo.backend.ride.dto.MyRequestResponseDto>> getMyRequests(@RequestParam String userId) {
+        return successResponse(rideService.getMyRequests(userId));
+    }
+
+    @PutMapping("/request/{rideId}/withdraw")
+    public RestEntity<Void> withdrawRequest(@PathVariable Long rideId, @RequestParam String userId) {
+        rideUserMappingService.withdrawRequest(rideId, userId);
+        return successResponse("Request withdrawn successfully");
     }
 }

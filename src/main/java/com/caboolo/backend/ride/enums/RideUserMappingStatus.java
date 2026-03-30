@@ -4,5 +4,6 @@ public enum RideUserMappingStatus {
     PENDING,
     ACCEPTED,
     LEFT,
-    REJECTED
+    REJECTED,
+    WITHDRAWN
 }

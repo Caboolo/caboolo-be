@@ -5,6 +5,7 @@ import com.caboolo.backend.ride.domain.RideUserMapping;
 import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import lombok.RequiredArgsConstructor;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,22 @@ public class RideUserMappingService {
                 .withStatus(status)
                 .build();
         
+        rideUserMappingRepository.save(mapping);
+    }
+
+    @Transactional
+    public void withdrawRequest(Long rideId, String userId) {
+        Optional<RideUserMapping> mappingOpt = rideUserMappingRepository.findByRideIdAndUserId(rideId, userId);
+        if (mappingOpt.isEmpty()) {
+            throw new RuntimeException("Ride request not found");
+        }
+        
+        RideUserMapping mapping = mappingOpt.get();
+        if (mapping.getStatus() != RideUserMappingStatus.PENDING) {
+            throw new RuntimeException("Only pending requests can be withdrawn");
+        }
+        
+        mapping.setStatus(RideUserMappingStatus.WITHDRAWN);
         rideUserMappingRepository.save(mapping);
     }
 }

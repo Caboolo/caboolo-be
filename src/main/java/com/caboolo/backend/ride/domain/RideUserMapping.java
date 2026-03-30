@@ -26,6 +26,15 @@ public class RideUserMapping extends GenericIdEntity {
     @Column(name = "status", nullable = false)
     private RideUserMappingStatus status;
 
+    public Long getRideUserMappingId() { return rideUserMappingId; }
+    public void setRideUserMappingId(Long rideUserMappingId) { this.rideUserMappingId = rideUserMappingId; }
+    public Long getRideId() { return rideId; }
+    public void setRideId(Long rideId) { this.rideId = rideId; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public RideUserMappingStatus getStatus() { return status; }
+    public void setStatus(RideUserMappingStatus status) { this.status = status; }
+
     public static interface RideUserMappingIdStep {
         RideIdStep withRideUserMappingId(Long rideUserMappingId);
     }

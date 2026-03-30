@@ -14,4 +14,5 @@ public class RideRequestDto {
     private LocalDateTime departureTime;
     private Integer totalSeats;
     private boolean isWomenOnlyRide;
+    private Integer poolPrice;
 }

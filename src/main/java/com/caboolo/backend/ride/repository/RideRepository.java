@@ -10,4 +10,7 @@ import java.util.List;
 
 @Repository
 public interface RideRepository extends JpaRepository<Ride, Long> {
+    List<Ride> findByRideIdIn(List<Long> rideIds);
+
+    Optional<Ride> findByRideId(Long rideId);
 }
