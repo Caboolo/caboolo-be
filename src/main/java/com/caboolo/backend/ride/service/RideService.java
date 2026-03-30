@@ -207,6 +207,8 @@ public class RideService {
                             .withSourceHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getSourceHubId()), "Unknown Hub"))
                             .withDestinationHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getDestinationHubId()), "Unknown Hub"))
                             .withParticipants(participants)
+                            .withAvailableSeats(ride.getTotalSeats() - allParticipantMappings.size())
+                            .withPoolPrice(ride.getPoolPrice())
                             .build();
                 })
                 .collect(Collectors.toList());

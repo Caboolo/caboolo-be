@@ -1,6 +1,8 @@
 package com.caboolo.backend.ride.dto;
 
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -14,6 +16,8 @@ public class MyRideResponseDto {
     private String sourceHubName;
     private String destinationHubName;
     private List<PassengerInfoDto> participants;
+    private Integer availableSeats;
+    private BigDecimal poolPrice;
 
     public static interface RideIdStep {
         DepartureTimeStep withRideId(Long rideId);
@@ -32,7 +36,15 @@ public class MyRideResponseDto {
     }
 
     public static interface ParticipantsStep {
-        BuildStep withParticipants(List<PassengerInfoDto> participants);
+        AvailableSeatsStep withParticipants(List<PassengerInfoDto> participants);
+    }
+
+    public static interface AvailableSeatsStep {
+        PoolPriceStep withAvailableSeats(Integer availableSeats);
+    }
+
+    public static interface PoolPriceStep {
+        BuildStep withPoolPrice(BigDecimal poolPrice);
     }
 
     public static interface BuildStep {
@@ -40,12 +52,14 @@ public class MyRideResponseDto {
     }
 
 
-    public static class Builder implements RideIdStep, DepartureTimeStep, SourceHubNameStep, DestinationHubNameStep, ParticipantsStep, BuildStep {
+    public static class Builder implements RideIdStep, DepartureTimeStep, SourceHubNameStep, DestinationHubNameStep, ParticipantsStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
         private Long rideId;
         private LocalDateTime departureTime;
         private String sourceHubName;
         private String destinationHubName;
         private List<PassengerInfoDto> participants;
+        private Integer availableSeats;
+        private BigDecimal poolPrice;
 
         private Builder() {
         }
@@ -79,8 +93,20 @@ public class MyRideResponseDto {
         }
 
         @Override
-        public BuildStep withParticipants(List<PassengerInfoDto> participants) {
+        public AvailableSeatsStep withParticipants(List<PassengerInfoDto> participants) {
             this.participants = participants;
+            return this;
+        }
+
+        @Override
+        public PoolPriceStep withAvailableSeats(Integer availableSeats) {
+            this.availableSeats = availableSeats;
+            return this;
+        }
+
+        @Override
+        public BuildStep withPoolPrice(BigDecimal poolPrice) {
+            this.poolPrice = poolPrice;
             return this;
         }
 
@@ -91,7 +117,9 @@ public class MyRideResponseDto {
                     this.departureTime,
                     this.sourceHubName,
                     this.destinationHubName,
-                    this.participants
+                    this.participants,
+                    this.availableSeats,
+                    this.poolPrice
             );
         }
     }
