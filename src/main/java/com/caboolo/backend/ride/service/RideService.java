@@ -56,7 +56,7 @@ public class RideService {
     }
 
     public List<MyRequestResponseDto> getMyRequests(String userId) {
-        List<RideUserMapping> userMappings = rideUserMappingRepository.findByUserId(userId);
+        List<RideUserMapping> userMappings = rideUserMappingRepository.findByUserIdAndStatus(userId, RideUserMappingStatus.PENDING);
         if (userMappings.isEmpty()) {
             return Collections.emptyList();
         }
@@ -117,7 +117,9 @@ public class RideService {
 
                     return MyRequestResponseDto.Builder.myRequestResponseDto()
                             .withRequestStatus(um.getStatus())
-                            .withRideStatus(ride.getStatus())
+                            .withSourceHubName(ride.getSourceHubId())
+                            .withDestinationHubName(ride.getDestinationHubId())
+                            .withDepartureTime(ride.getDepartureTime())
                             .withActivePassengers(activePassengers)
                             .withAvailableSeats(ride.getTotalSeats() - acceptedCount)
                             .withPoolPrice(ride.getPoolPrice())

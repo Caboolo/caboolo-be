@@ -13,17 +13,27 @@ import java.util.List;
 @NoArgsConstructor
 public class MyRequestResponseDto {
     private RideUserMappingStatus requestStatus;
-    private RideStatus rideStatus;
+    private String sourceHubName;
+    private String destinationHubName;
+    private LocalDateTime departureTime;
     private List<PassengerInfoDto> activePassengers;
     private Integer availableSeats;
     private BigDecimal poolPrice;
 
     public static interface RequestStatusStep {
-        RideStatusStep withRequestStatus(RideUserMappingStatus requestStatus);
+        SourceHubNameStep withRequestStatus(RideUserMappingStatus requestStatus);
     }
 
-    public static interface RideStatusStep {
-        ActivePassengersStep withRideStatus(RideStatus rideStatus);
+    public static interface SourceHubNameStep {
+        DestinationHubNameStep withSourceHubName(String sourceHubName);
+    }
+
+    public static interface DestinationHubNameStep {
+        DepartureTimeStep withDestinationHubName(String destinationHubName);
+    }
+
+    public static interface DepartureTimeStep {
+        ActivePassengersStep withDepartureTime(LocalDateTime departureTime);
     }
 
     public static interface ActivePassengersStep {
@@ -43,9 +53,11 @@ public class MyRequestResponseDto {
     }
 
 
-    public static class Builder implements RequestStatusStep, RideStatusStep, ActivePassengersStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
+    public static class Builder implements RequestStatusStep, SourceHubNameStep, DestinationHubNameStep, DepartureTimeStep, ActivePassengersStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
         private RideUserMappingStatus requestStatus;
-        private RideStatus rideStatus;
+        private String sourceHubName;
+        private String destinationHubName;
+        private LocalDateTime departureTime;
         private List<PassengerInfoDto> activePassengers;
         private Integer availableSeats;
         private BigDecimal poolPrice;
@@ -58,14 +70,26 @@ public class MyRequestResponseDto {
         }
 
         @Override
-        public RideStatusStep withRequestStatus(RideUserMappingStatus requestStatus) {
+        public SourceHubNameStep withRequestStatus(RideUserMappingStatus requestStatus) {
             this.requestStatus = requestStatus;
             return this;
         }
 
         @Override
-        public ActivePassengersStep withRideStatus(RideStatus rideStatus) {
-            this.rideStatus = rideStatus;
+        public DestinationHubNameStep withSourceHubName(String sourceHubName) {
+            this.sourceHubName = sourceHubName;
+            return this;
+        }
+
+        @Override
+        public DepartureTimeStep withDestinationHubName(String destinationHubName) {
+            this.destinationHubName = destinationHubName;
+            return this;
+        }
+
+        @Override
+        public ActivePassengersStep withDepartureTime(LocalDateTime departureTime) {
+            this.departureTime = departureTime;
             return this;
         }
 
@@ -91,7 +115,9 @@ public class MyRequestResponseDto {
         public MyRequestResponseDto build() {
             return new MyRequestResponseDto(
                     this.requestStatus,
-                    this.rideStatus,
+                    this.sourceHubName,
+                    this.destinationHubName,
+                    this.departureTime,
                     this.activePassengers,
                     this.availableSeats,
                     this.poolPrice

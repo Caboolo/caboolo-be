@@ -2,10 +2,13 @@ package com.caboolo.backend.ride.controller;
 
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
+import com.caboolo.backend.ride.dto.MyRequestResponseDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
 import com.caboolo.backend.ride.service.RideService;
+import com.caboolo.backend.ride.service.RideUserMappingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/ride")
@@ -13,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class RideController extends BaseController {
 
     private final RideService rideService;
-    private final com.caboolo.backend.ride.service.RideUserMappingService rideUserMappingService;
+    private final RideUserMappingService rideUserMappingService;
 
     @PostMapping("/create")
     public RestEntity<Long> createRide(@RequestBody RideRequestDto request) {
@@ -22,7 +25,7 @@ public class RideController extends BaseController {
     }
 
     @GetMapping("/my-requests")
-    public RestEntity<java.util.List<com.caboolo.backend.ride.dto.MyRequestResponseDto>> getMyRequests(@RequestParam String userId) {
+    public RestEntity<List<MyRequestResponseDto>> getMyRequests(@RequestParam String userId) {
         return successResponse(rideService.getMyRequests(userId));
     }
 
