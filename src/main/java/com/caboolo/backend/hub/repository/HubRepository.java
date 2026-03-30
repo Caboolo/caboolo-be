@@ -12,5 +12,4 @@ import java.util.Optional;
 public interface HubRepository extends JpaRepository<Hub, Long> {
     Optional<Hub> findByHubId(Long hubId);
     List<Hub> findAllByHubIdIn(Collection<Long> hubIds);
-    List<Hub> findAllByNameIn(List<String> names);
 }

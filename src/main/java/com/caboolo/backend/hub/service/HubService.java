@@ -56,7 +56,7 @@ public class HubService {
         // 2. Store in Redis GEO
         List<RedisGeoCommands.GeoLocation<String>> locations = hubs.stream()
                 .map(hub -> new RedisGeoCommands.GeoLocation<>(
-                        hub.getName(),
+                        hub.getHubId().toString(),
                         new Point(hub.getLongitude(), hub.getLatitude())
                 ))
                 .collect(Collectors.toList());
@@ -73,28 +73,35 @@ public class HubService {
                 .includeDistance()
                 .sortAscending();
 
-        GeoResults<RedisGeoCommands.GeoLocation<String>> results = geoOps.radius(REDIS_HUB_KEY, center.toString(), radius, args);
+        // Use Circle for searching from a point instead of a member
+        org.springframework.data.redis.connection.RedisGeoCommands.GeoRadiusCommandArgs geoArgs = 
+            org.springframework.data.redis.connection.RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs()
+                .includeDistance()
+                .includeCoordinates()
+                .sortAscending();
+
+        GeoResults<RedisGeoCommands.GeoLocation<String>> results = geoOps.radius(REDIS_HUB_KEY, new org.springframework.data.geo.Circle(center, radius), geoArgs);
 
         if (results == null || results.getContent().isEmpty()) {
             return new ArrayList<>();
         }
 
-        List<String> nearestNames = results.getContent().stream()
-                .map(res -> res.getContent().getName())
+        List<Long> nearestIds = results.getContent().stream()
+                .map(res -> Long.valueOf(res.getContent().getName()))
                 .collect(Collectors.toList());
 
-        // Fetch details from MySQL to get type and city
-        Map<String, Hub> hubMap = hubRepository.findAllByNameIn(nearestNames).stream()
-                .collect(Collectors.toMap(Hub::getName, h -> h));
+        // Fetch details from MySQL using hubIds
+        Map<Long, Hub> hubMap = hubRepository.findAllByHubIdIn(nearestIds).stream()
+                .collect(Collectors.toMap(Hub::getHubId, h -> h));
 
         List<HubDto> nearestHubs = new ArrayList<>();
         for (GeoResult<RedisGeoCommands.GeoLocation<String>> result : results) {
-            String name = result.getContent().getName();
-            Hub hub = hubMap.get(name);
+            Long hubId = Long.valueOf(result.getContent().getName());
+            Hub hub = hubMap.get(hubId);
 
             if (hub != null) {
                 nearestHubs.add(HubDto.builder()
-                        .name(name)
+                        .name(hub.getName())
                         .type(hub.getType())
                         .city(hub.getCity())
                         .longitude(result.getContent().getPoint().getX())
