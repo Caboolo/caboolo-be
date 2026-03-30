@@ -11,4 +11,5 @@ import java.util.List;
 public interface RideUserMappingRepository extends JpaRepository<RideUserMapping, Long> {
     List<RideUserMapping> findByUserIdAndStatus(String userId, com.caboolo.backend.ride.enums.RideUserMappingStatus status);
     List<RideUserMapping> findByRideIdAndStatusIn(Long rideId, Collection<com.caboolo.backend.ride.enums.RideUserMappingStatus> statuses);
+    List<RideUserMapping> findByRideIdInAndStatusIn(Collection<Long> rideIds, Collection<com.caboolo.backend.ride.enums.RideUserMappingStatus> statuses);
 }

@@ -13,13 +13,10 @@ import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import com.caboolo.backend.hub.service.HubService;
 import com.caboolo.backend.userdetails.domain.UserDetail;
 import com.caboolo.backend.userdetails.service.UserDetailService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,8 +29,8 @@ public class RideService {
     private final HubService hubService;
     private final SequenceGenerator sequenceGenerator;
 
-    public RideService(RideRepository rideRepository, RideUserMappingRepository rideUserMappingRepository, 
-                       RideUserMappingService rideUserMappingService, UserDetailService userDetailService, 
+    public RideService(RideRepository rideRepository, RideUserMappingRepository rideUserMappingRepository,
+                       RideUserMappingService rideUserMappingService, UserDetailService userDetailService,
                        HubService hubService, SequenceGenerator sequenceGenerator) {
         this.rideRepository = rideRepository;
         this.rideUserMappingRepository = rideUserMappingRepository;
@@ -46,7 +43,7 @@ public class RideService {
     @Transactional
     public Long createRide(RideRequestDto request) {
         Long rideId = sequenceGenerator.nextId();
-        
+
         // 1. Create and Save Ride
         Ride ride = Ride.Builder.ride()
                 .withRideId(rideId)
@@ -57,7 +54,7 @@ public class RideService {
                 .withStatus(RideStatus.SCHEDULED)
                 .withIsWomenOnlyRide(request.isWomenOnlyRide())
                 .build();
-        
+
         rideRepository.save(ride);
 
         // 2. Create and Save RideUserMapping for the creator via the specialized service
@@ -69,56 +66,81 @@ public class RideService {
     public List<MyRideResponseDto> getMyRides(String userId) {
         // 1. Find all rides where the user is the "lead" (CREATED status)
         List<RideUserMapping> leadMappings = rideUserMappingRepository.findByUserIdAndStatus(userId, RideUserMappingStatus.CREATED);
-        
-        List<MyRideResponseDto> myRides = new ArrayList<>();
-        
-        for (RideUserMapping leadMapping : leadMappings) {
-            Long rideId = leadMapping.getRideId();
-            
-            // 2. Get Ride Details
-            rideRepository.findById(rideId).ifPresent(ride -> {
-                // 3. Filter for active rides (SCHEDULED or ONGOING)
-                if (ride.getStatus() != RideStatus.SCHEDULED && ride.getStatus() != RideStatus.ONGOING) {
-                    return;
-                }
+        if (leadMappings.isEmpty()) {
+            return new ArrayList<>();
+        }
 
-                // 4. Get all participants for this ride with CREATED or ACCEPTED status
-                List<RideUserMapping> participantMappings = rideUserMappingRepository.findByRideIdAndStatusIn(
-                        rideId, 
-                        Arrays.asList(RideUserMappingStatus.CREATED, RideUserMappingStatus.ACCEPTED)
-                );
-                
-                // 4. Enrich participants with UserDetails
-                List<RideParticipantDto> participants = participantMappings.stream()
-                        .map(pm -> {
-                            try {
-                                UserDetail detail = userDetailService.getUserDetailEntity(pm.getUserId());
+        List<Long> rideIds = leadMappings.stream()
+                .map(RideUserMapping::getRideId)
+                .collect(Collectors.toList());
+
+        // 2. Bulk Fetch Ride Details with status SCHEDULED directly from DB
+        List<Ride> activeRides = rideRepository.findByStatusAndRideIdIn(RideStatus.SCHEDULED, rideIds);
+
+        if (activeRides.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Long> activeRideIds = activeRides.stream()
+                .map(Ride::getRideId)
+                .collect(Collectors.toList());
+
+        // 3. Bulk Fetch all participant mappings for these rides
+        List<RideUserMapping> allParticipantMappings = rideUserMappingRepository.findByRideIdInAndStatusIn(
+                activeRideIds,
+                Arrays.asList(RideUserMappingStatus.CREATED, RideUserMappingStatus.ACCEPTED)
+        );
+
+        Map<Long, List<RideUserMapping>> mappingsByRideId = allParticipantMappings.stream()
+                .collect(Collectors.groupingBy(RideUserMapping::getRideId));
+
+        // 4. Collect all User IDs and Hub IDs for bulk lookup
+        Set<String> participantUserIds = allParticipantMappings.stream()
+                .map(RideUserMapping::getUserId)
+                .collect(Collectors.toSet());
+
+        Set<Long> hubIds = new HashSet<>();
+        activeRides.forEach(ride -> {
+            hubIds.add(Long.valueOf(ride.getSourceHubId()));
+            hubIds.add(Long.valueOf(ride.getDestinationHubId()));
+        });
+
+        // 5. Bulk Fetch User Details and Hub Names
+        Map<String, UserDetail> userDetailsMap =
+                userDetailService.findAllByUserIdIn(participantUserIds)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                UserDetail::getUserId,
+                                ud -> ud
+                        ));
+
+        Map<Long, String> hubNamesMap = hubService.getHubNames(hubIds);
+
+        // 6. Construct the Response
+        return activeRides.stream()
+                .map(ride -> {
+                    List<RideUserMapping> pMapping = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
+
+                    List<RideParticipantDto> participants = pMapping.stream()
+                            .map(pm -> {
+                                UserDetail detail = userDetailsMap.get(pm.getUserId());
                                 return RideParticipantDto.builder()
                                         .userId(pm.getUserId())
                                         .name(detail.getName())
                                         .avgRating(detail.getAvgRating())
                                         .imageUrl(detail.getImageUrl())
                                         .build();
-                            } catch (Exception e) {
-                                // Fallback for users without details if necessary
-                                return RideParticipantDto.builder()
-                                        .userId(pm.getUserId())
-                                        .name("Unknown")
-                                        .build();
-                            }
-                        })
-                        .collect(Collectors.toList());
-                
-                myRides.add(MyRideResponseDto.builder()
-                        .rideId(rideId)
-                        .departureTime(ride.getDepartureTime())
-                        .sourceHubName(hubService.getHubName(Long.valueOf(ride.getSourceHubId())))
-                        .destinationHubName(hubService.getHubName(Long.valueOf(ride.getDestinationHubId())))
-                        .participants(participants)
-                        .build());
-            });
-        }
-        
-        return myRides;
+                            })
+                            .collect(Collectors.toList());
+
+                    return MyRideResponseDto.builder()
+                            .rideId(ride.getRideId())
+                            .departureTime(ride.getDepartureTime())
+                            .sourceHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getSourceHubId()), "Unknown Hub"))
+                            .destinationHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getDestinationHubId()), "Unknown Hub"))
+                            .participants(participants)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -109,5 +110,10 @@ public class HubService {
         return hubRepository.findByHubId(hubId)
                 .map(Hub::getName)
                 .orElse("Unknown Hub");
+    }
+
+    public Map<Long, String> getHubNames(Collection<Long> hubIds) {
+        return hubRepository.findAllByHubIdIn(hubIds).stream()
+                .collect(Collectors.toMap(Hub::getHubId, Hub::getName));
     }
 }

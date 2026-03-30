@@ -309,4 +309,9 @@ public class UserDetailService {
 
         userDetailRepository.save(details);
     }
+
+
+    public List<UserDetail> findAllByUserIdIn(Set<String> participantUserIds) {
+        userDetailRepository.findAllByUserIdIn(participantUserIds);
+    }
 }
