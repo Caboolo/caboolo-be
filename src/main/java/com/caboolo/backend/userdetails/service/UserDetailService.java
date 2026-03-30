@@ -312,6 +312,6 @@ public class UserDetailService {
 
 
     public List<UserDetail> findAllByUserIdIn(Set<String> participantUserIds) {
-        userDetailRepository.findAllByUserIdIn(participantUserIds);
+        return userDetailRepository.findAllByUserIdIn(participantUserIds);
     }
 }

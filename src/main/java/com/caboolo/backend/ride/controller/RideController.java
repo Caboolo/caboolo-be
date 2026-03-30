@@ -2,9 +2,11 @@ package com.caboolo.backend.ride.controller;
 
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
+import com.caboolo.backend.ride.dto.MyRequestResponseDto;
 import com.caboolo.backend.ride.dto.MyRideResponseDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
 import com.caboolo.backend.ride.service.RideService;
+import com.caboolo.backend.ride.service.RideUserMappingService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,15 +16,28 @@ import java.util.List;
 public class RideController extends BaseController {
 
     private final RideService rideService;
+    private final RideUserMappingService rideUserMappingService;
 
-    public RideController(RideService rideService) {
+    public RideController(RideService rideService, RideUserMappingService rideUserMappingService) {
         this.rideService = rideService;
+        this.rideUserMappingService = rideUserMappingService;
     }
 
     @PostMapping("/create")
     public RestEntity<Long> createRide(@RequestBody RideRequestDto request) {
         Long rideId = rideService.createRide(request);
         return successResponse(rideId, "Ride created successfully");
+    }
+
+    @GetMapping("/my-requests")
+    public RestEntity<List<MyRequestResponseDto>> getMyRequests(@RequestParam String userId) {
+        return successResponse(rideService.getMyRequests(userId));
+    }
+
+    @PutMapping("/request/{rideId}/withdraw")
+    public RestEntity<Void> withdrawRequest(@PathVariable Long rideId, @RequestParam String userId) {
+        rideUserMappingService.withdrawRequest(rideId, userId);
+        return successResponse("Request withdrawn successfully");
     }
 
     @GetMapping("/my-rides")

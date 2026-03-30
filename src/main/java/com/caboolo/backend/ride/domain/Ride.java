@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "ride")
@@ -37,6 +38,9 @@ public class Ride extends GenericIdEntity {
     @Column(name = "is_women_only_ride", nullable = false)
     private boolean isWomenOnlyRide;
 
+    @Column(name = "pool_price")
+    private BigDecimal poolPrice;
+
     public static interface RideIdStep {
         SourceHubIdStep withRideId(Long rideId);
     }
@@ -62,7 +66,11 @@ public class Ride extends GenericIdEntity {
     }
 
     public static interface IsWomenOnlyRideStep {
-        BuildStep withIsWomenOnlyRide(boolean isWomenOnlyRide);
+        PoolPriceStep withIsWomenOnlyRide(boolean isWomenOnlyRide);
+    }
+
+    public static interface PoolPriceStep {
+        BuildStep withPoolPrice(BigDecimal poolPrice);
     }
 
     public static interface BuildStep {
@@ -70,7 +78,7 @@ public class Ride extends GenericIdEntity {
     }
 
 
-    public static class Builder implements RideIdStep, SourceHubIdStep, DestinationHubIdStep, DepartureTimeStep, TotalSeatsStep, StatusStep, IsWomenOnlyRideStep, BuildStep {
+    public static class Builder implements RideIdStep, SourceHubIdStep, DestinationHubIdStep, DepartureTimeStep, TotalSeatsStep, StatusStep, IsWomenOnlyRideStep, PoolPriceStep, BuildStep {
         private Long rideId;
         private String sourceHubId;
         private String destinationHubId;
@@ -78,6 +86,7 @@ public class Ride extends GenericIdEntity {
         private Integer totalSeats;
         private RideStatus status;
         private boolean isWomenOnlyRide;
+        private BigDecimal poolPrice;
 
         private Builder() {
         }
@@ -123,8 +132,14 @@ public class Ride extends GenericIdEntity {
         }
 
         @Override
-        public BuildStep withIsWomenOnlyRide(boolean isWomenOnlyRide) {
+        public PoolPriceStep withIsWomenOnlyRide(boolean isWomenOnlyRide) {
             this.isWomenOnlyRide = isWomenOnlyRide;
+            return this;
+        }
+
+        @Override
+        public BuildStep withPoolPrice(BigDecimal poolPrice) {
+            this.poolPrice = poolPrice;
             return this;
         }
 
@@ -137,7 +152,8 @@ public class Ride extends GenericIdEntity {
                     this.departureTime,
                     this.totalSeats,
                     this.status,
-                    this.isWomenOnlyRide
+                    this.isWomenOnlyRide,
+                    this.poolPrice
             );
         }
     }

@@ -3,37 +3,32 @@ package com.caboolo.backend.ride.service;
 import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.ride.domain.Ride;
 import com.caboolo.backend.ride.domain.RideUserMapping;
+import com.caboolo.backend.ride.dto.MyRequestResponseDto;
+import com.caboolo.backend.ride.dto.PassengerInfoDto;
 import com.caboolo.backend.ride.dto.MyRideResponseDto;
-import com.caboolo.backend.ride.dto.RideParticipantDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
 import com.caboolo.backend.ride.enums.RideStatus;
 import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import com.caboolo.backend.ride.repository.RideRepository;
-import com.caboolo.backend.ride.repository.RideUserMappingRepository;
-import com.caboolo.backend.hub.service.HubService;
 import com.caboolo.backend.userdetails.domain.UserDetail;
+import com.caboolo.backend.hub.service.HubService;
 import com.caboolo.backend.userdetails.service.UserDetailService;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RideService {
 
     private final RideRepository rideRepository;
-    private final RideUserMappingRepository rideUserMappingRepository;
     private final RideUserMappingService rideUserMappingService;
     private final UserDetailService userDetailService;
     private final HubService hubService;
     private final SequenceGenerator sequenceGenerator;
 
-    public RideService(RideRepository rideRepository, RideUserMappingRepository rideUserMappingRepository,
-                       RideUserMappingService rideUserMappingService, UserDetailService userDetailService,
-                       HubService hubService, SequenceGenerator sequenceGenerator) {
+    public RideService(RideRepository rideRepository, RideUserMappingService rideUserMappingService, UserDetailService userDetailService, HubService hubService, SequenceGenerator sequenceGenerator) {
         this.rideRepository = rideRepository;
-        this.rideUserMappingRepository = rideUserMappingRepository;
         this.rideUserMappingService = rideUserMappingService;
         this.userDetailService = userDetailService;
         this.hubService = hubService;
@@ -53,6 +48,7 @@ public class RideService {
                 .withTotalSeats(request.getTotalSeats())
                 .withStatus(RideStatus.SCHEDULED)
                 .withIsWomenOnlyRide(request.isWomenOnlyRide())
+                .withPoolPrice(request.getPoolPrice())
                 .build();
 
         rideRepository.save(ride);
@@ -63,9 +59,78 @@ public class RideService {
         return rideId;
     }
 
+    public List<MyRequestResponseDto> getMyRequests(String userId) {
+        List<RideUserMapping> allMappings = rideUserMappingService.findAllByUserIdAndStatusWithRideParticipants(userId, RideUserMappingStatus.PENDING);
+        if (allMappings.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Separate user's own pending requests from other participants
+        List<RideUserMapping> userMappings = allMappings.stream()
+                .filter(um -> um.getUserId().equals(userId) && um.getStatus() == RideUserMappingStatus.PENDING)
+                .toList();
+
+        List<Long> rideIds = userMappings.stream()
+                .map(RideUserMapping::getRideId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<Ride> rides = rideRepository.findByRideIdIn(rideIds);
+        Map<Long, Ride> rideMap = rides.stream()
+                .collect(Collectors.toMap(Ride::getRideId, ride -> ride));
+
+        // Group all accepted mappings by rideId for available seats and active passengers
+        Map<Long, List<RideUserMapping>> acceptedMappingsByRide = allMappings.stream()
+                .filter(um -> um.getStatus() == RideUserMappingStatus.ACCEPTED)
+                .collect(Collectors.groupingBy(RideUserMapping::getRideId));
+
+        Set<String> allActiveUserIds = acceptedMappingsByRide.values().stream()
+                .flatMap(List::stream)
+                .map(RideUserMapping::getUserId)
+                .collect(Collectors.toSet());
+
+
+        Map<String, UserDetail> userDetailMap = userDetailService.findAllByUserIdIn(allActiveUserIds).stream()
+                .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
+
+        return userMappings.stream()
+                .map(um -> {
+                    Ride ride = rideMap.get(um.getRideId());
+                    if (ride == null) return null;
+
+                    List<RideUserMapping> acceptedMappings = acceptedMappingsByRide.getOrDefault(um.getRideId(), Collections.emptyList());
+                    List<PassengerInfoDto> activePassengers = acceptedMappings.stream()
+                            .map(m -> {
+                                UserDetail ud = userDetailMap.get(m.getUserId());
+                                return ud == null ? null : PassengerInfoDto.Builder.passengerInfoDto()
+                                        .withUserId(ud.getUserId())
+                                        .withName(ud.getName())
+                                        .withImageUrl(ud.getImageUrl())
+                                        .withAvgRating(ud.getAvgRating())
+                                        .build();
+                            })
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+
+                    int acceptedCount = acceptedMappings.size();
+
+                    return MyRequestResponseDto.Builder.myRequestResponseDto()
+                            .withRequestStatus(um.getStatus())
+                            .withSourceHubName(ride.getSourceHubId())
+                            .withDestinationHubName(ride.getDestinationHubId())
+                            .withDepartureTime(ride.getDepartureTime())
+                            .withActivePassengers(activePassengers)
+                            .withAvailableSeats(ride.getTotalSeats() - acceptedCount)
+                            .withPoolPrice(ride.getPoolPrice())
+                            .build();
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
     public List<MyRideResponseDto> getMyRides(String userId) {
         // 1. Find all rides where the user is the "lead" (CREATED status)
-        List<RideUserMapping> leadMappings = rideUserMappingRepository.findByUserIdAndStatus(userId, RideUserMappingStatus.CREATED);
+        List<RideUserMapping> leadMappings = rideUserMappingService.findAllByUserIdAndStatusWithRideParticipants(userId, RideUserMappingStatus.CREATED);
         if (leadMappings.isEmpty()) {
             return new ArrayList<>();
         }
@@ -81,12 +146,12 @@ public class RideService {
             return new ArrayList<>();
         }
 
-        List<Long> activeRideIds = activeRides.stream()
+        Set<Long> activeRideIds = activeRides.stream()
                 .map(Ride::getRideId)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         // 3. Bulk Fetch all participant mappings for these rides
-        List<RideUserMapping> allParticipantMappings = rideUserMappingRepository.findByRideIdInAndStatusIn(
+        List<RideUserMapping> allParticipantMappings = rideUserMappingService.findByRideIdInAndStatusIn(
                 activeRideIds,
                 Arrays.asList(RideUserMappingStatus.CREATED, RideUserMappingStatus.ACCEPTED)
         );
@@ -121,24 +186,24 @@ public class RideService {
                 .map(ride -> {
                     List<RideUserMapping> pMapping = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
 
-                    List<RideParticipantDto> participants = pMapping.stream()
+                    List<PassengerInfoDto> participants = pMapping.stream()
                             .map(pm -> {
                                 UserDetail detail = userDetailsMap.get(pm.getUserId());
-                                return RideParticipantDto.builder()
-                                        .userId(pm.getUserId())
-                                        .name(detail.getName())
-                                        .avgRating(detail.getAvgRating())
-                                        .imageUrl(detail.getImageUrl())
+                                return PassengerInfoDto.Builder.passengerInfoDto()
+                                        .withUserId(pm.getUserId())
+                                        .withName(detail.getName())
+                                        .withImageUrl(detail.getImageUrl())
+                                        .withAvgRating(detail.getAvgRating())
                                         .build();
                             })
                             .collect(Collectors.toList());
 
-                    return MyRideResponseDto.builder()
-                            .rideId(ride.getRideId())
-                            .departureTime(ride.getDepartureTime())
-                            .sourceHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getSourceHubId()), "Unknown Hub"))
-                            .destinationHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getDestinationHubId()), "Unknown Hub"))
-                            .participants(participants)
+                    return MyRideResponseDto.Builder.myRideResponseDto()
+                            .withRideId(ride.getRideId())
+                            .withDepartureTime(ride.getDepartureTime())
+                            .withSourceHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getSourceHubId()), "Unknown Hub"))
+                            .withDestinationHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getDestinationHubId()), "Unknown Hub"))
+                            .withParticipants(participants)
                             .build();
                 })
                 .collect(Collectors.toList());
