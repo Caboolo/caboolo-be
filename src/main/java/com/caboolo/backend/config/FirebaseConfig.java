@@ -19,10 +19,8 @@ public class FirebaseConfig {
     @PostConstruct
     public void initialize() {
         try {
-            String firebaseConfig = System.getenv("FIREBASE_CREDENTIALS");
-
-            if (firebaseConfig == null || firebaseConfig.trim().isEmpty()) {
-                System.err.println("Firebase credentials not found in environment variable FIREBASE_CREDENTIALS.");
+            if (credentialsPath == null || credentialsPath.trim().isEmpty()) {
+                System.err.println("Firebase credentials not found in environment variable FIREBASE_CREDENTIALS_PATH.");
                 return;
             }
 
