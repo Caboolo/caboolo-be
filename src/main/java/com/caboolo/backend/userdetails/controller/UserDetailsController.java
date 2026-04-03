@@ -69,7 +69,7 @@ public class UserDetailsController extends BaseController {
      * Content-Type: multipart/form-data  —  field name: "file"
      */
     @PostMapping("/profile/photo")
-    public RestEntity<UserDetailResponseDto> uploadPhoto(
+    public RestEntity<String> uploadPhoto(
             @AuthenticationPrincipal String firebaseUid,
             @RequestParam("file") MultipartFile file) {
         return successResponse(userDetailService.uploadProfilePhoto(firebaseUid, file), "Photo uploaded successfully");

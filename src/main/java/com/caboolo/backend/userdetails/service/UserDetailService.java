@@ -173,7 +173,7 @@ public class UserDetailService {
      * The previous photo is soft-replaced: the old file is deleted from the storage
      * provider but the user record itself is never hard-deleted.
      */
-    public UserDetailResponseDto uploadProfilePhoto(String firebaseUid, MultipartFile file) {
+    public String uploadProfilePhoto(String firebaseUid, MultipartFile file) {
         validatePhoto(file);
 
         UserDetail details = userDetailRepository.findByUserId(firebaseUid)
@@ -201,9 +201,9 @@ public class UserDetailService {
 
         details.setImageUrl(result.getUrl());
         details.setPhotoPublicId(result.getPublicId());
-        details = userDetailRepository.save(details);
+        userDetailRepository.save(details);
 
-        return userDetailsConverter.toDetailResponseDto(details);
+        return details.getImageUrl();
     }
 
     /**
