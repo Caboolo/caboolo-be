@@ -10,6 +10,6 @@ public class AuthService {
 
     public FirebaseToken verifyToken(String idToken) throws FirebaseAuthException {
         // This will verify the token's signature and expiration with Firebase
-        return FirebaseAuth.getInstance().verifyIdToken(idToken, true);
+        return FirebaseAuth.getInstance().verifyIdToken(idToken);
     }
 }
