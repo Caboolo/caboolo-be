@@ -3,10 +3,12 @@ package com.caboolo.backend.waitlist.service;
 import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.waitlist.domain.WaitlistEntry;
 import com.caboolo.backend.waitlist.repository.WaitlistRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 public class WaitlistService {
     private final WaitlistRepository waitlistRepository;
