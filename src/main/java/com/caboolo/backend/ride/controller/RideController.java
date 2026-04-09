@@ -7,11 +7,13 @@ import com.caboolo.backend.ride.dto.MyRideResponseDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
 import com.caboolo.backend.ride.service.RideService;
 import com.caboolo.backend.ride.service.RideUserMappingService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/ride")
 public class RideController extends BaseController {
@@ -26,7 +28,9 @@ public class RideController extends BaseController {
 
     @PostMapping("/create")
     public RestEntity<Long> createRide(@RequestBody RideRequestDto request) {
+        log.info("Creating new ride for user: {}", request.getUserId());
         Long rideId = rideService.createRide(request);
+        log.info("Ride created successfully with id: {}", rideId);
         return successResponse(rideId, "Ride created successfully");
     }
 

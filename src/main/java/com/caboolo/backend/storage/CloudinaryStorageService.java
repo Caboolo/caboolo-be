@@ -2,6 +2,7 @@ package com.caboolo.backend.storage;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,6 +14,7 @@ import java.util.Map;
  * Cloudinary-backed implementation of {@link StorageService}.
  * Active when {@code storage.provider=cloudinary} (or when the property is absent — default).
  */
+@Slf4j
 @Service
 @ConditionalOnProperty(name = "storage.provider", havingValue = "cloudinary", matchIfMissing = true)
 public class CloudinaryStorageService implements StorageService {

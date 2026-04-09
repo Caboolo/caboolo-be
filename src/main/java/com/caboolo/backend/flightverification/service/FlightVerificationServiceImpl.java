@@ -8,6 +8,7 @@ import com.caboolo.backend.flightverification.dto.FlightVerificationRequestDto;
 import com.caboolo.backend.flightverification.dto.FlightVerificationResponseDto;
 import com.caboolo.backend.flightverification.enums.VerificationStatus;
 import com.caboolo.backend.flightverification.repository.FlightVerificationRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class FlightVerificationServiceImpl implements FlightVerificationService {
 

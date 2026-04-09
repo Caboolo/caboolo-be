@@ -14,6 +14,8 @@ import com.caboolo.backend.userdetails.domain.UserDetail;
 import com.caboolo.backend.hub.service.HubService;
 import com.caboolo.backend.userdetails.service.UserDetailService;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class RideService {
 

@@ -3,6 +3,7 @@ package com.caboolo.backend.security;
 import com.caboolo.backend.auth.service.AuthService;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 
+@Slf4j
 @Component
 public class FirebaseTokenFilter extends OncePerRequestFilter {
 
@@ -33,16 +35,18 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String idToken = authHeader.substring(7);
+            log.debug("Authenticating request with Firebase token");
             try {
                 FirebaseToken decodedToken = authService.verifyToken(idToken);
                 String uid = decodedToken.getUid();
+                log.debug("Found valid token for user: {}", uid);
                 
                 UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(uid, idToken, new ArrayList<>());
                 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (FirebaseAuthException e) {
-                System.err.println("Firebase token verification failed: " + e.getMessage());
+                log.error("Firebase token verification failed: {}", e.getMessage());
             }
         }
 
