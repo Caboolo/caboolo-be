@@ -38,7 +38,7 @@ public class FirebaseConfig {
                 log.info("Firebase Admin SDK already initialized.");
             }
         } catch (Exception e) {
-            log.error("Firebase initialization failed: {}", e.getMessage(), e);
+            log.error("Firebase initialization failed : ", e);
         }
     }
 }
