@@ -11,6 +11,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.GeoOperations;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,11 +28,14 @@ public class HubService {
     private static final String REDIS_HUB_KEY = "hubs:geo";
     private final HubRepository hubRepository;
     private final GeoOperations<String, String> geoOps;
+    private final ZSetOperations<String, String> zSetOps;
     private final SequenceGenerator sequenceGenerator;
 
-    public HubService(HubRepository hubRepository, GeoOperations<String, String> geoOps, SequenceGenerator sequenceGenerator) {
+    public HubService(HubRepository hubRepository, GeoOperations<String, String> geoOps,
+                      ZSetOperations<String, String> zSetOps, SequenceGenerator sequenceGenerator) {
         this.hubRepository = hubRepository;
         this.geoOps = geoOps;
+        this.zSetOps = zSetOps;
         this.sequenceGenerator = sequenceGenerator;
     }
 
@@ -43,6 +47,7 @@ public class HubService {
                         .withName(dto.getName())
                         .withType(dto.getType())
                         .withCity(dto.getCity())
+                        .withPriority(dto.getPriority())
                         .withLatitude(dto.getLatitude())
                         .withLongitude(dto.getLongitude())
                         .build())
@@ -102,6 +107,7 @@ public class HubService {
                         .name(hub.getName())
                         .type(hub.getType())
                         .city(hub.getCity())
+                        .priority(hub.getPriority())
                         .longitude(result.getContent().getPoint().getX())
                         .latitude(result.getContent().getPoint().getY())
                         .distance(result.getDistance().getValue())
@@ -109,6 +115,51 @@ public class HubService {
             }
         }
         return nearestHubs;
+    }
+
+    public List<HubDto> getAllHubs() {
+        // 1. Enumerate all hub IDs from Redis GEO (backed by a sorted set)
+        java.util.Set<String> members = zSetOps.range(REDIS_HUB_KEY, 0, -1);
+        if (members == null || members.isEmpty()) {
+            log.warn("Hub cache is empty — returning empty list");
+            return new ArrayList<>();
+        }
+
+        List<Long> hubIds = members.stream()
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+
+        // 2. Fetch coordinates from Redis in one call
+        List<String> memberList = members.stream().toList();
+        List<Point> positions = geoOps.position(REDIS_HUB_KEY,
+                memberList.toArray(new String[0]));
+
+        // 3. Bulk-resolve name / type / city from DB
+        Map<Long, Hub> hubMap = hubRepository.findByHubIdIn(hubIds).stream()
+                .collect(Collectors.toMap(Hub::getHubId, h -> h));
+
+        List<HubDto> result = new ArrayList<>();
+        for (int i = 0; i < memberList.size(); i++) {
+            Long hubId = Long.valueOf(memberList.get(i));
+            Hub hub = hubMap.get(hubId);
+            Point point = (positions != null) ? positions.get(i) : null;
+            if (hub == null) continue;
+            result.add(HubDto.builder()
+                    .name(hub.getName())
+                    .type(hub.getType())
+                    .city(hub.getCity())
+                    .priority(hub.getPriority())
+                    .longitude(point != null ? point.getX() : hub.getLongitude())
+                    .latitude(point != null ? point.getY() : hub.getLatitude())
+                    .build());
+        }
+        return result;
+    }
+
+    public List<HubDto> getHubsByPriority(int minPriority, int maxPriority) {
+        return getAllHubs().stream()
+                .filter(hub -> hub.getPriority() != null && hub.getPriority() >= minPriority && hub.getPriority() <= maxPriority)
+                .collect(Collectors.toList());
     }
 
     public Map<Long, String> getHubNames(Collection<Long> hubIds) {

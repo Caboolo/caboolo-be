@@ -6,6 +6,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.GeoOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -32,5 +33,10 @@ public class RedisConfig {
     @Bean
     public GeoOperations<String, String> geoOperations(RedisConnectionFactory connectionFactory) {
         return new StringRedisTemplate(connectionFactory).opsForGeo();
+    }
+
+    @Bean
+    public ZSetOperations<String, String> zSetOperations(RedisConnectionFactory connectionFactory) {
+        return new StringRedisTemplate(connectionFactory).opsForZSet();
     }
 }
