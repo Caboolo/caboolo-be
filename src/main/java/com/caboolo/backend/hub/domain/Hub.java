@@ -28,6 +28,9 @@ public class Hub extends GenericIdEntity {
     @Column(name = "city", nullable = false)
     private City city;
 
+    @Column(name = "priority")
+    private Integer priority;
+
     @Column(name = "latitude", nullable = false)
     private Double latitude;
 
@@ -47,7 +50,11 @@ public class Hub extends GenericIdEntity {
     }
 
     public static interface CityStep {
-        LatitudeStep withCity(City city);
+        PriorityStep withCity(City city);
+    }
+
+    public static interface PriorityStep {
+        LatitudeStep withPriority(Integer priority);
     }
 
     public static interface LatitudeStep {
@@ -63,11 +70,12 @@ public class Hub extends GenericIdEntity {
     }
 
 
-    public static class Builder implements HubIdStep, NameStep, TypeStep, CityStep, LatitudeStep, LongitudeStep, BuildStep {
+    public static class Builder implements HubIdStep, NameStep, TypeStep, CityStep, PriorityStep, LatitudeStep, LongitudeStep, BuildStep {
         private Long hubId;
         private String name;
         private HubType type;
         private City city;
+        private Integer priority;
         private Double latitude;
         private Double longitude;
 
@@ -97,8 +105,14 @@ public class Hub extends GenericIdEntity {
         }
 
         @Override
-        public LatitudeStep withCity(City city) {
+        public PriorityStep withCity(City city) {
             this.city = city;
+            return this;
+        }
+
+        @Override
+        public LatitudeStep withPriority(Integer priority) {
+            this.priority = priority;
             return this;
         }
 
@@ -121,6 +135,7 @@ public class Hub extends GenericIdEntity {
                     this.name,
                     this.type,
                     this.city,
+                    this.priority,
                     this.latitude,
                     this.longitude
             );

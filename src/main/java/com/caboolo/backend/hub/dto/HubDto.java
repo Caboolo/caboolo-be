@@ -12,6 +12,7 @@ public class HubDto {
     private String name;
     private HubType type;
     private City city;
+    private Integer priority;
     private Double longitude;
     private Double latitude;
     private Double distance; // For search results

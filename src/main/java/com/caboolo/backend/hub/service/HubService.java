@@ -47,6 +47,7 @@ public class HubService {
                         .withName(dto.getName())
                         .withType(dto.getType())
                         .withCity(dto.getCity())
+                        .withPriority(dto.getPriority())
                         .withLatitude(dto.getLatitude())
                         .withLongitude(dto.getLongitude())
                         .build())
@@ -106,6 +107,7 @@ public class HubService {
                         .name(hub.getName())
                         .type(hub.getType())
                         .city(hub.getCity())
+                        .priority(hub.getPriority())
                         .longitude(result.getContent().getPoint().getX())
                         .latitude(result.getContent().getPoint().getY())
                         .distance(result.getDistance().getValue())
@@ -146,6 +148,7 @@ public class HubService {
                     .name(hub.getName())
                     .type(hub.getType())
                     .city(hub.getCity())
+                    .priority(hub.getPriority())
                     .longitude(point != null ? point.getX() : hub.getLongitude())
                     .latitude(point != null ? point.getY() : hub.getLatitude())
                     .build());
