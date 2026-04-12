@@ -6,6 +6,9 @@ import com.caboolo.backend.ride.domain.RideUserMapping;
 import com.caboolo.backend.ride.dto.MyRequestResponseDto;
 import com.caboolo.backend.ride.dto.RiderInfoDto;
 import com.caboolo.backend.ride.dto.MyRideResponseDto;
+import com.caboolo.backend.ride.dto.MyRideDetailResponseDto;
+import com.caboolo.backend.ride.dto.CrewMemberDto;
+import com.caboolo.backend.ride.dto.PendingRequestDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
 import com.caboolo.backend.ride.enums.RideStatus;
 import com.caboolo.backend.ride.enums.RideUserMappingStatus;
@@ -202,17 +205,109 @@ public class RideService {
                             })
                             .collect(Collectors.toList());
 
+                    int rideParticipantCount = pMapping.size();
+
                     return MyRideResponseDto.Builder.myRideResponseDto()
                             .withRideId(ride.getRideId())
                             .withDepartureTime(ride.getDepartureTime())
                             .withSourceHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getSourceHubId()), "Unknown Hub"))
                             .withDestinationHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getDestinationHubId()), "Unknown Hub"))
                             .withParticipants(participants)
-                            .withAvailableSeats(ride.getTotalSeats() - allParticipantMappings.size())
+                            .withAvailableSeats(ride.getTotalSeats() - rideParticipantCount)
                             .withPoolPrice(ride.getPoolPrice())
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    public MyRideDetailResponseDto getMyRideDetail(Long rideId) {
+        // 1. Fetch the ride
+        Ride ride = rideRepository.findByRideId(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found: " + rideId));
+
+        // 2. Fetch all mappings for this ride
+        List<RideUserMapping> allMappings = rideUserMappingService.findByRideId(rideId);
+
+        // 3. Separate into crew (CREATED + ACCEPTED) and pending (PENDING)
+        List<RideUserMapping> crewMappings = allMappings.stream()
+                .filter(m -> RideUserMappingStatus.ACTIVE_STATUSES.contains(m.getStatus()))
+                .toList();
+
+        List<RideUserMapping> pendingMappings = allMappings.stream()
+                .filter(m -> m.getStatus() == RideUserMappingStatus.PENDING)
+                .toList();
+
+        // 4. Collect all user IDs for bulk lookup
+        Set<String> allUserIds = allMappings.stream()
+                .filter(m -> RideUserMappingStatus.ACTIVE_STATUSES.contains(m.getStatus())
+                        || m.getStatus() == RideUserMappingStatus.PENDING)
+                .map(RideUserMapping::getUserId)
+                .collect(Collectors.toSet());
+
+        Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(allUserIds).stream()
+                .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
+
+        // 5. Resolve hub details (name + lat/lng)
+        Set<Long> hubIds = new HashSet<>();
+        Long sourceHubIdLong = Long.valueOf(ride.getSourceHubId());
+        Long destHubIdLong = Long.valueOf(ride.getDestinationHubId());
+        hubIds.add(sourceHubIdLong);
+        hubIds.add(destHubIdLong);
+        Map<Long, com.caboolo.backend.hub.domain.Hub> hubMap = hubService.getHubsByIds(hubIds);
+
+        com.caboolo.backend.hub.domain.Hub sourceHub = hubMap.get(sourceHubIdLong);
+        com.caboolo.backend.hub.domain.Hub destHub = hubMap.get(destHubIdLong);
+
+        // 6. Build crew member DTOs
+        List<CrewMemberDto> crewMembers = crewMappings.stream()
+                .map(m -> {
+                    UserDetail ud = userDetailMap.get(m.getUserId());
+                    if (ud == null) return null;
+                    return CrewMemberDto.Builder.crewMemberDto()
+                            .withUserId(ud.getUserId())
+                            .withName(ud.getName())
+                            .withImageUrl(ud.getImageUrl())
+                            .withAvgRating(ud.getAvgRating())
+                            .withTotalRides(ud.getTotalReviews())
+                            .build();
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        // 7. Build pending request DTOs
+        List<PendingRequestDto> pendingRequests = pendingMappings.stream()
+                .map(m -> {
+                    UserDetail ud = userDetailMap.get(m.getUserId());
+                    if (ud == null) return null;
+                    return PendingRequestDto.Builder.pendingRequestDto()
+                            .withUserId(ud.getUserId())
+                            .withName(ud.getName())
+                            .withImageUrl(ud.getImageUrl())
+                            .withAvgRating(ud.getAvgRating())
+                            .withTotalRides(ud.getTotalReviews())
+                            .withStatus(m.getStatus())
+                            .build();
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        // 8. Build response
+        int crewCount = crewMappings.size();
+        return MyRideDetailResponseDto.Builder.myRideDetailResponseDto()
+                .withRideId(ride.getRideId())
+                .withDepartureTime(ride.getDepartureTime())
+                .withSourceHubName(sourceHub != null ? sourceHub.getName() : "Unknown Hub")
+                .withSourceHubLatitude(sourceHub != null ? sourceHub.getLatitude() : null)
+                .withSourceHubLongitude(sourceHub != null ? sourceHub.getLongitude() : null)
+                .withDestinationHubName(destHub != null ? destHub.getName() : "Unknown Hub")
+                .withDestinationHubLatitude(destHub != null ? destHub.getLatitude() : null)
+                .withDestinationHubLongitude(destHub != null ? destHub.getLongitude() : null)
+                .withPoolPrice(ride.getPoolPrice())
+                .withTotalSeats(ride.getTotalSeats())
+                .withAvailableSeats(ride.getTotalSeats() - crewCount)
+                .withCrewMembers(crewMembers)
+                .withPendingRequests(pendingRequests)
+                .build();
     }
 
     @Transactional

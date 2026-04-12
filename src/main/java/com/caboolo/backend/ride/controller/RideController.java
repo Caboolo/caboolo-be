@@ -4,6 +4,7 @@ import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.ride.dto.MyRequestResponseDto;
 import com.caboolo.backend.ride.dto.MyRideResponseDto;
+import com.caboolo.backend.ride.dto.MyRideDetailResponseDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
 import com.caboolo.backend.ride.service.RideService;
 import com.caboolo.backend.ride.service.RideUserMappingService;
@@ -54,5 +55,11 @@ public class RideController extends BaseController {
     @GetMapping("/my-rides")
     public RestEntity<List<MyRideResponseDto>> getMyRides(@RequestParam String userId) {
         return successResponse(rideService.getMyRides(userId), "My rides retrieved successfully");
+    }
+
+    @GetMapping("/my-rides/{rideId}")
+    public RestEntity<MyRideDetailResponseDto> getMyRideDetail(@PathVariable Long rideId) {
+        log.info("Fetching ride detail for rideId: {} ", rideId);
+        return successResponse(rideService.getMyRideDetail(rideId), "Ride detail retrieved successfully");
     }
 }
