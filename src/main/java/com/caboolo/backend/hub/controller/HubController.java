@@ -24,6 +24,11 @@ public class HubController extends BaseController {
         return successResponse("Hubs stored successfully in Redis and MySQL");
     }
 
+    @GetMapping("/all")
+    public RestEntity<List<HubDto>> getAllHubs() {
+        return successResponse(hubService.getAllHubs(), "All hubs retrieved successfully");
+    }
+
     @GetMapping("/nearest")
     public RestEntity<List<HubDto>> getNearestHubs(
             @RequestParam double longitude,
