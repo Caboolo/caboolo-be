@@ -64,13 +64,15 @@ public class RideController extends BaseController {
             @RequestParam String userId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime time,
             @RequestParam(required = false, defaultValue = "15") Integer timeWindow,
-            @RequestParam Double latitude,
-            @RequestParam Double longitude,
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
             @RequestParam String airportHubId,
             @RequestParam Boolean isFromAirport,
+            @RequestParam(required = false) String sourceOrDestinationHubId,
+            @RequestParam(required = false, defaultValue = "false") Boolean includeSourceOrDestinationHub,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         
-        return successResponse(rideService.getAvailableRides(userId, time, timeWindow, latitude, longitude, airportHubId, isFromAirport, page, size), "Available rides retrieved successfully");
+        return successResponse(rideService.getAvailableRides(userId, time, timeWindow, latitude, longitude, airportHubId, isFromAirport, sourceOrDestinationHubId, includeSourceOrDestinationHub, page, size), "Available rides retrieved successfully");
     }
 }

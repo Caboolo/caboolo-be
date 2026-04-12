@@ -221,13 +221,19 @@ public class RideService {
                 .collect(Collectors.toList());
     }
 
-    public Page<MyRideResponseDto> getAvailableRides(String userId, LocalDateTime time, Integer timeWindow, Double latitude, Double longitude, String airportHubId, Boolean isFromAirport, int page, int size) {
+    public Page<MyRideResponseDto> getAvailableRides(String userId, LocalDateTime time, Integer timeWindow, Double latitude, Double longitude, String airportHubId, Boolean isFromAirport, String sourceOrDestinationHubId, Boolean includeSourceOrDestinationHub, int page, int size) {
         LocalDateTime minTime = time.minusMinutes(timeWindow);
         LocalDateTime maxTime = time.plusMinutes(timeWindow);
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Ride> ridesPage = rideRepository.findAvailableRidesSortedByDistanceAndPaginated(
-                RideStatus.SCHEDULED, minTime, maxTime, airportHubId, isFromAirport, latitude, longitude, userId, pageable);
+        Page<Ride> ridesPage;
+        if (Boolean.TRUE.equals(includeSourceOrDestinationHub) && sourceOrDestinationHubId != null) {
+            ridesPage = rideRepository.findAvailableRidesByExactHubsAndPaginated(
+                    RideStatus.SCHEDULED, minTime, maxTime, airportHubId, isFromAirport, sourceOrDestinationHubId, userId, pageable);
+        } else {
+            ridesPage = rideRepository.findAvailableRidesSortedByDistanceAndPaginated(
+                    RideStatus.SCHEDULED, minTime, maxTime, airportHubId, isFromAirport, latitude, longitude, userId, pageable);
+        }
 
         List<Ride> availableRides = ridesPage.getContent();
         if (availableRides.isEmpty()) {

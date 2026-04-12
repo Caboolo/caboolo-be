@@ -17,12 +17,6 @@ import java.util.Optional;
 @Repository
 public interface RideRepository extends JpaRepository<Ride, Long> {
     List<Ride> findByRideIdIn(List<Long> rideIds);
-    List<Ride> findByStatus(RideStatus status);
-    List<Ride> findByStatusAndDepartureTimeBetween(RideStatus status, LocalDateTime start, LocalDateTime end);
-    List<Ride> findByStatusAndSourceHubId(RideStatus status, String sourceHubId);
-    List<Ride> findByStatusAndDestinationHubId(RideStatus status, String destinationHubId);
-    List<Ride> findByStatusAndDepartureTimeBetweenAndSourceHubId(RideStatus status, LocalDateTime start, LocalDateTime end, String sourceHubId);
-    List<Ride> findByStatusAndDepartureTimeBetweenAndDestinationHubId(RideStatus status, LocalDateTime start, LocalDateTime end, String destinationHubId);
     List<Ride> findByStatusAndRideIdIn(RideStatus status, Collection<Long> rideIds);
 
     @Query(value = "SELECT r.* FROM ride r " +
@@ -33,9 +27,9 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             "WHERE r.status = :#{#status.name()} " +
             "  AND r.departure_time BETWEEN :startTime AND :endTime " +
             "  AND ( " +
-            "    (:isFromAirport = true AND r.source_hub_id = :targetHubId) " +
+            "    (:isFromAirport = true AND r.source_hub_id = :airportHubId) " +
             "    OR " +
-            "    (:isFromAirport = false AND r.destination_hub_id = :targetHubId) " +
+            "    (:isFromAirport = false AND r.destination_hub_id = :airportHubId) " +
             "  ) " +
             "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
             "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId) " +
@@ -44,9 +38,9 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             "WHERE r.status = :#{#status.name()} " +
             "  AND r.departure_time BETWEEN :startTime AND :endTime " +
             "  AND ( " +
-            "    (:isFromAirport = true AND r.source_hub_id = :targetHubId) " +
+            "    (:isFromAirport = true AND r.source_hub_id = :airportHubId) " +
             "    OR " +
-            "    (:isFromAirport = false AND r.destination_hub_id = :targetHubId) " +
+            "    (:isFromAirport = false AND r.destination_hub_id = :airportHubId) " +
             "  ) " +
             "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
             "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId)",
@@ -55,10 +49,42 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             @Param("status") RideStatus status,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
-            @Param("targetHubId") String targetHubId,
+            @Param("airportHubId") String airportHubId,
             @Param("isFromAirport") boolean isFromAirport,
             @Param("latitude") Double latitude,
             @Param("longitude") Double longitude,
+            @Param("userId") String userId,
+            Pageable pageable);
+
+    @Query(value = "SELECT r.* FROM ride r " +
+            "WHERE r.status = :#{#status.name()} " +
+            "  AND r.departure_time BETWEEN :startTime AND :endTime " +
+            "  AND ( " +
+            "    (:isFromAirport = true AND r.source_hub_id = :airportHubId AND r.destination_hub_id = :sourceOrDestinationHubId) " +
+            "    OR " +
+            "    (:isFromAirport = false AND r.destination_hub_id = :airportHubId AND r.source_hub_id = :sourceOrDestinationHubId) " +
+            "  ) " +
+            "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
+            "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId) " +
+            "ORDER BY r.departure_time ASC",
+            countQuery = "SELECT count(r.ride_id) FROM ride r " +
+            "WHERE r.status = :#{#status.name()} " +
+            "  AND r.departure_time BETWEEN :startTime AND :endTime " +
+            "  AND ( " +
+            "    (:isFromAirport = true AND r.source_hub_id = :airportHubId AND r.destination_hub_id = :sourceOrDestinationHubId) " +
+            "    OR " +
+            "    (:isFromAirport = false AND r.destination_hub_id = :airportHubId AND r.source_hub_id = :sourceOrDestinationHubId) " +
+            "  ) " +
+            "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
+            "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId)",
+            nativeQuery = true)
+    Page<Ride> findAvailableRidesByExactHubsAndPaginated(
+            @Param("status") RideStatus status,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
+            @Param("airportHubId") String airportHubId,
+            @Param("isFromAirport") boolean isFromAirport,
+            @Param("sourceOrDestinationHubId") String sourceOrDestinationHubId,
             @Param("userId") String userId,
             Pageable pageable);
 }
