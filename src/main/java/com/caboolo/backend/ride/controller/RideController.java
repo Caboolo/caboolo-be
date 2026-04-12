@@ -9,8 +9,10 @@ import com.caboolo.backend.ride.service.RideService;
 import com.caboolo.backend.ride.service.RideUserMappingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -54,5 +56,18 @@ public class RideController extends BaseController {
     @GetMapping("/my-rides")
     public RestEntity<List<MyRideResponseDto>> getMyRides(@RequestParam String userId) {
         return successResponse(rideService.getMyRides(userId), "My rides retrieved successfully");
+    }
+
+    @GetMapping("/listing")
+    public RestEntity<List<MyRideResponseDto>> getAvailableRides(
+            @RequestParam String userId,
+            @RequestParam@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime time,
+            @RequestParam(required = false, defaultValue = "15") Integer timeWindow,
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam String airportHubId,
+            @RequestParam Boolean isFromAirport) {
+        
+        return successResponse(rideService.getAvailableRides(userId, time, timeWindow, latitude, longitude, airportHubId, isFromAirport), "Available rides retrieved successfully");
     }
 }

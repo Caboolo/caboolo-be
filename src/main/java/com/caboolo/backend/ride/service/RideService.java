@@ -1,6 +1,7 @@
 package com.caboolo.backend.ride.service;
 
 import com.caboolo.backend.core.idgen.SequenceGenerator;
+import com.caboolo.backend.hub.domain.Hub;
 import com.caboolo.backend.ride.domain.Ride;
 import com.caboolo.backend.ride.domain.RideUserMapping;
 import com.caboolo.backend.ride.dto.MyRequestResponseDto;
@@ -17,6 +18,7 @@ import com.caboolo.backend.userdetails.service.UserDetailService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -213,6 +215,145 @@ public class RideService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    public List<MyRideResponseDto> getAvailableRides(String userId, LocalDateTime time, Integer timeWindow, Double latitude, Double longitude, String airportHubId, Boolean isFromAirport) {
+        // 1. Fetch active (SCHEDULED) rides, optionally filtered by time window and hubs
+        List<Ride> allActiveRides;
+        LocalDateTime minTime = time.minusMinutes(timeWindow);
+        LocalDateTime maxTime = time.plusMinutes(timeWindow);
+
+        if (isFromAirport) {
+            allActiveRides = rideRepository.findByStatusAndDepartureTimeBetweenAndSourceHubId(RideStatus.SCHEDULED, minTime, maxTime, airportHubId);
+        } else {
+            allActiveRides = rideRepository.findByStatusAndDepartureTimeBetweenAndDestinationHubId(RideStatus.SCHEDULED, minTime, maxTime, airportHubId);
+        }
+
+        if (allActiveRides.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        Set<Long> activeRideIds = allActiveRides.stream()
+                .map(Ride::getRideId)
+                .collect(Collectors.toSet());
+
+        // 2. Fetch ALL mappings for these rides
+        // We fetch all mapping statuses to see if the user has ANY history with the ride,
+        // or we can just fetch ACTIVE + PENDING to see if they are currently involved.
+        List<RideUserMapping> allMappings = rideUserMappingService.findByRideIdInAndStatusIn(
+                activeRideIds,
+                Set.of(RideUserMappingStatus.CREATED, RideUserMappingStatus.ACCEPTED, RideUserMappingStatus.PENDING)
+        );
+
+        Map<Long, List<RideUserMapping>> mappingsByRideId = allMappings.stream()
+                .collect(Collectors.groupingBy(RideUserMapping::getRideId));
+
+        // 3. Filter rides to those where the user is NOT a participant, and seats are available
+        List<Ride> availableRides = allActiveRides.stream()
+                .filter(ride -> {
+                    List<RideUserMapping> pm = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
+
+                    // User must not be in this list
+                    boolean isUserParticipating = pm.stream().anyMatch(m -> m.getUserId().equals(userId));
+                    if (isUserParticipating) return false;
+
+                    // Seats must be available (only CREATED and ACCEPTED take up seats)
+                    long acceptedCount = pm.stream()
+                            .filter(m -> m.getStatus() == RideUserMappingStatus.CREATED || m.getStatus() == RideUserMappingStatus.ACCEPTED)
+                            .count();
+
+                    return (ride.getTotalSeats() - acceptedCount) > 0;
+                })
+                .collect(Collectors.toList());
+
+        if (availableRides.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 4. Collect needed User IDs and Hub IDs for bulk lookup
+        Set<String> participantUserIds = new HashSet<>();
+        availableRides.forEach(ride -> {
+            List<RideUserMapping> pm = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
+            pm.stream()
+                    .filter(m -> m.getStatus() == RideUserMappingStatus.CREATED || m.getStatus() == RideUserMappingStatus.ACCEPTED)
+                    .forEach(m -> participantUserIds.add(m.getUserId()));
+        });
+
+        Set<Long> hubIds = new HashSet<>();
+        availableRides.forEach(ride -> {
+            hubIds.add(Long.valueOf(ride.getSourceHubId()));
+            hubIds.add(Long.valueOf(ride.getDestinationHubId()));
+        });
+
+        // 5. Bulk Fetch User Details and Hubs
+        Map<String, UserDetail> userDetailsMap = participantUserIds.isEmpty() ? new HashMap<>() :
+                userDetailService.findByUserIdIn(participantUserIds)
+                        .stream()
+                        .collect(Collectors.toMap(UserDetail::getUserId, ud -> ud));
+
+        Map<Long, Hub> hubsMap = hubService.getHubsMap(hubIds);
+
+        // Sort by distance if latitude and longitude are provided
+        if (latitude != null && longitude != null) {
+            availableRides.sort((r1, r2) -> {
+                Hub targetHub1 = isFromAirport ? hubsMap.get(Long.valueOf(r1.getDestinationHubId())) : hubsMap.get(Long.valueOf(r1.getSourceHubId()));
+                double dist1 = targetHub1 != null ? calculateDistance(latitude, longitude, targetHub1.getLatitude(), targetHub1.getLongitude()) : Double.MAX_VALUE;
+
+                Hub targetHub2 = isFromAirport ? hubsMap.get(Long.valueOf(r2.getDestinationHubId())) : hubsMap.get(Long.valueOf(r2.getSourceHubId()));
+                double dist2 = targetHub2 != null ? calculateDistance(latitude, longitude, targetHub2.getLatitude(), targetHub2.getLongitude()) : Double.MAX_VALUE;
+
+                return Double.compare(dist1, dist2);
+            });
+        }
+
+        // 6. Construct the Response
+        return availableRides.stream()
+                .map(ride -> {
+                    List<RideUserMapping> pMapping = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
+
+                    // Only return accepted participants (CREATED/ACCEPTED)
+                    List<RiderInfoDto> participants = pMapping.stream()
+                            .filter(pm -> pm.getStatus() == RideUserMappingStatus.CREATED || pm.getStatus() == RideUserMappingStatus.ACCEPTED)
+                            .map(pm -> {
+                                UserDetail detail = userDetailsMap.get(pm.getUserId());
+                                if (detail == null) return null;
+                                return RiderInfoDto.Builder.passengerInfoDto()
+                                        .withUserId(pm.getUserId())
+                                        .withName(detail.getName())
+                                        .withImageUrl(detail.getImageUrl())
+                                        .withAvgRating(detail.getAvgRating())
+                                        .build();
+                            })
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+
+                    int availableSeats = ride.getTotalSeats() - participants.size();
+
+                    Hub srcHub = hubsMap.get(Long.valueOf(ride.getSourceHubId()));
+                    Hub destHub = hubsMap.get(Long.valueOf(ride.getDestinationHubId()));
+
+                    return MyRideResponseDto.Builder.myRideResponseDto()
+                            .withRideId(ride.getRideId())
+                            .withDepartureTime(ride.getDepartureTime())
+                            .withSourceHubName(srcHub.getName())
+                            .withDestinationHubName(destHub.getName())
+                            .withParticipants(participants)
+                            .withAvailableSeats(availableSeats)
+                            .withPoolPrice(ride.getPoolPrice())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // Radius of the earth in km
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
 
     @Transactional
