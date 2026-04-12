@@ -10,6 +10,7 @@ import com.caboolo.backend.ride.service.RideUserMappingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -59,15 +60,17 @@ public class RideController extends BaseController {
     }
 
     @GetMapping("/listing")
-    public RestEntity<List<MyRideResponseDto>> getAvailableRides(
+    public RestEntity<Page<MyRideResponseDto>> getAvailableRides(
             @RequestParam String userId,
-            @RequestParam@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime time,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime time,
             @RequestParam(required = false, defaultValue = "15") Integer timeWindow,
             @RequestParam Double latitude,
             @RequestParam Double longitude,
             @RequestParam String airportHubId,
-            @RequestParam Boolean isFromAirport) {
+            @RequestParam Boolean isFromAirport,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         
-        return successResponse(rideService.getAvailableRides(userId, time, timeWindow, latitude, longitude, airportHubId, isFromAirport), "Available rides retrieved successfully");
+        return successResponse(rideService.getAvailableRides(userId, time, timeWindow, latitude, longitude, airportHubId, isFromAirport, page, size), "Available rides retrieved successfully");
     }
 }

@@ -22,6 +22,10 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -217,29 +221,24 @@ public class RideService {
                 .collect(Collectors.toList());
     }
 
-    public List<MyRideResponseDto> getAvailableRides(String userId, LocalDateTime time, Integer timeWindow, Double latitude, Double longitude, String airportHubId, Boolean isFromAirport) {
-        // 1. Fetch active (SCHEDULED) rides, optionally filtered by time window and hubs
-        List<Ride> allActiveRides;
+    public Page<MyRideResponseDto> getAvailableRides(String userId, LocalDateTime time, Integer timeWindow, Double latitude, Double longitude, String airportHubId, Boolean isFromAirport, int page, int size) {
         LocalDateTime minTime = time.minusMinutes(timeWindow);
         LocalDateTime maxTime = time.plusMinutes(timeWindow);
+        Pageable pageable = PageRequest.of(page, size);
 
-        if (isFromAirport) {
-            allActiveRides = rideRepository.findByStatusAndDepartureTimeBetweenAndSourceHubId(RideStatus.SCHEDULED, minTime, maxTime, airportHubId);
-        } else {
-            allActiveRides = rideRepository.findByStatusAndDepartureTimeBetweenAndDestinationHubId(RideStatus.SCHEDULED, minTime, maxTime, airportHubId);
+        Page<Ride> ridesPage = rideRepository.findAvailableRidesSortedByDistanceAndPaginated(
+                RideStatus.SCHEDULED, minTime, maxTime, airportHubId, isFromAirport, latitude, longitude, userId, pageable);
+
+        List<Ride> availableRides = ridesPage.getContent();
+        if (availableRides.isEmpty()) {
+            return Page.empty(pageable);
         }
 
-        if (allActiveRides.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        Set<Long> activeRideIds = allActiveRides.stream()
+        Set<Long> activeRideIds = availableRides.stream()
                 .map(Ride::getRideId)
                 .collect(Collectors.toSet());
 
-        // 2. Fetch ALL mappings for these rides
-        // We fetch all mapping statuses to see if the user has ANY history with the ride,
-        // or we can just fetch ACTIVE + PENDING to see if they are currently involved.
+        // 2. Fetch mappings to get participants for the DTO
         List<RideUserMapping> allMappings = rideUserMappingService.findByRideIdInAndStatusIn(
                 activeRideIds,
                 Set.of(RideUserMappingStatus.CREATED, RideUserMappingStatus.ACCEPTED, RideUserMappingStatus.PENDING)
@@ -248,29 +247,7 @@ public class RideService {
         Map<Long, List<RideUserMapping>> mappingsByRideId = allMappings.stream()
                 .collect(Collectors.groupingBy(RideUserMapping::getRideId));
 
-        // 3. Filter rides to those where the user is NOT a participant, and seats are available
-        List<Ride> availableRides = allActiveRides.stream()
-                .filter(ride -> {
-                    List<RideUserMapping> pm = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
-
-                    // User must not be in this list
-                    boolean isUserParticipating = pm.stream().anyMatch(m -> m.getUserId().equals(userId));
-                    if (isUserParticipating) return false;
-
-                    // Seats must be available (only CREATED and ACCEPTED take up seats)
-                    long acceptedCount = pm.stream()
-                            .filter(m -> m.getStatus() == RideUserMappingStatus.CREATED || m.getStatus() == RideUserMappingStatus.ACCEPTED)
-                            .count();
-
-                    return (ride.getTotalSeats() - acceptedCount) > 0;
-                })
-                .collect(Collectors.toList());
-
-        if (availableRides.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // 4. Collect needed User IDs and Hub IDs for bulk lookup
+        // 3. Collect needed User IDs and Hub IDs for bulk lookup
         Set<String> participantUserIds = new HashSet<>();
         availableRides.forEach(ride -> {
             List<RideUserMapping> pm = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
@@ -285,7 +262,7 @@ public class RideService {
             hubIds.add(Long.valueOf(ride.getDestinationHubId()));
         });
 
-        // 5. Bulk Fetch User Details and Hubs
+        // 4. Bulk Fetch User Details and Hubs
         Map<String, UserDetail> userDetailsMap = participantUserIds.isEmpty() ? new HashMap<>() :
                 userDetailService.findByUserIdIn(participantUserIds)
                         .stream()
@@ -293,21 +270,8 @@ public class RideService {
 
         Map<Long, Hub> hubsMap = hubService.getHubsMap(hubIds);
 
-        // Sort by distance if latitude and longitude are provided
-        if (latitude != null && longitude != null) {
-            availableRides.sort((r1, r2) -> {
-                Hub targetHub1 = isFromAirport ? hubsMap.get(Long.valueOf(r1.getDestinationHubId())) : hubsMap.get(Long.valueOf(r1.getSourceHubId()));
-                double dist1 = targetHub1 != null ? calculateDistance(latitude, longitude, targetHub1.getLatitude(), targetHub1.getLongitude()) : Double.MAX_VALUE;
-
-                Hub targetHub2 = isFromAirport ? hubsMap.get(Long.valueOf(r2.getDestinationHubId())) : hubsMap.get(Long.valueOf(r2.getSourceHubId()));
-                double dist2 = targetHub2 != null ? calculateDistance(latitude, longitude, targetHub2.getLatitude(), targetHub2.getLongitude()) : Double.MAX_VALUE;
-
-                return Double.compare(dist1, dist2);
-            });
-        }
-
-        // 6. Construct the Response
-        return availableRides.stream()
+        // 5. Construct the Response
+        List<MyRideResponseDto> dtoList = availableRides.stream()
                 .map(ride -> {
                     List<RideUserMapping> pMapping = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
 
@@ -343,17 +307,8 @@ public class RideService {
                             .build();
                 })
                 .collect(Collectors.toList());
-    }
 
-    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        final int R = 6371; // Radius of the earth in km
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
+        return new PageImpl<>(dtoList, pageable, ridesPage.getTotalElements());
     }
 
     @Transactional
