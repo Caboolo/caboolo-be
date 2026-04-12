@@ -13,7 +13,11 @@ public class MyRideDetailResponseDto {
     private Long rideId;
     private LocalDateTime departureTime;
     private String sourceHubName;
+    private Double sourceHubLatitude;
+    private Double sourceHubLongitude;
     private String destinationHubName;
+    private Double destinationHubLatitude;
+    private Double destinationHubLongitude;
     private BigDecimal poolPrice;
     private Integer totalSeats;
     private Integer availableSeats;
@@ -29,11 +33,27 @@ public class MyRideDetailResponseDto {
     }
 
     public static interface SourceHubNameStep {
-        DestinationHubNameStep withSourceHubName(String sourceHubName);
+        SourceHubLatitudeStep withSourceHubName(String sourceHubName);
+    }
+
+    public static interface SourceHubLatitudeStep {
+        SourceHubLongitudeStep withSourceHubLatitude(Double sourceHubLatitude);
+    }
+
+    public static interface SourceHubLongitudeStep {
+        DestinationHubNameStep withSourceHubLongitude(Double sourceHubLongitude);
     }
 
     public static interface DestinationHubNameStep {
-        PoolPriceStep withDestinationHubName(String destinationHubName);
+        DestinationHubLatitudeStep withDestinationHubName(String destinationHubName);
+    }
+
+    public static interface DestinationHubLatitudeStep {
+        DestinationHubLongitudeStep withDestinationHubLatitude(Double destinationHubLatitude);
+    }
+
+    public static interface DestinationHubLongitudeStep {
+        PoolPriceStep withDestinationHubLongitude(Double destinationHubLongitude);
     }
 
     public static interface PoolPriceStep {
@@ -60,11 +80,15 @@ public class MyRideDetailResponseDto {
         MyRideDetailResponseDto build();
     }
 
-    public static class Builder implements RideIdStep, DepartureTimeStep, SourceHubNameStep, DestinationHubNameStep, PoolPriceStep, TotalSeatsStep, AvailableSeatsStep, CrewMembersStep, PendingRequestsStep, BuildStep {
+    public static class Builder implements RideIdStep, DepartureTimeStep, SourceHubNameStep, SourceHubLatitudeStep, SourceHubLongitudeStep, DestinationHubNameStep, DestinationHubLatitudeStep, DestinationHubLongitudeStep, PoolPriceStep, TotalSeatsStep, AvailableSeatsStep, CrewMembersStep, PendingRequestsStep, BuildStep {
         private Long rideId;
         private LocalDateTime departureTime;
         private String sourceHubName;
+        private Double sourceHubLatitude;
+        private Double sourceHubLongitude;
         private String destinationHubName;
+        private Double destinationHubLatitude;
+        private Double destinationHubLongitude;
         private BigDecimal poolPrice;
         private Integer totalSeats;
         private Integer availableSeats;
@@ -91,14 +115,38 @@ public class MyRideDetailResponseDto {
         }
 
         @Override
-        public DestinationHubNameStep withSourceHubName(String sourceHubName) {
+        public SourceHubLatitudeStep withSourceHubName(String sourceHubName) {
             this.sourceHubName = sourceHubName;
             return this;
         }
 
         @Override
-        public PoolPriceStep withDestinationHubName(String destinationHubName) {
+        public SourceHubLongitudeStep withSourceHubLatitude(Double sourceHubLatitude) {
+            this.sourceHubLatitude = sourceHubLatitude;
+            return this;
+        }
+
+        @Override
+        public DestinationHubNameStep withSourceHubLongitude(Double sourceHubLongitude) {
+            this.sourceHubLongitude = sourceHubLongitude;
+            return this;
+        }
+
+        @Override
+        public DestinationHubLatitudeStep withDestinationHubName(String destinationHubName) {
             this.destinationHubName = destinationHubName;
+            return this;
+        }
+
+        @Override
+        public DestinationHubLongitudeStep withDestinationHubLatitude(Double destinationHubLatitude) {
+            this.destinationHubLatitude = destinationHubLatitude;
+            return this;
+        }
+
+        @Override
+        public PoolPriceStep withDestinationHubLongitude(Double destinationHubLongitude) {
+            this.destinationHubLongitude = destinationHubLongitude;
             return this;
         }
 
@@ -138,7 +186,11 @@ public class MyRideDetailResponseDto {
                     this.rideId,
                     this.departureTime,
                     this.sourceHubName,
+                    this.sourceHubLatitude,
+                    this.sourceHubLongitude,
                     this.destinationHubName,
+                    this.destinationHubLatitude,
+                    this.destinationHubLongitude,
                     this.poolPrice,
                     this.totalSeats,
                     this.availableSeats,

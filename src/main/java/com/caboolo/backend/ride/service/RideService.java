@@ -247,11 +247,16 @@ public class RideService {
         Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(allUserIds).stream()
                 .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
-        // 5. Resolve hub names
+        // 5. Resolve hub details (name + lat/lng)
         Set<Long> hubIds = new HashSet<>();
-        hubIds.add(Long.valueOf(ride.getSourceHubId()));
-        hubIds.add(Long.valueOf(ride.getDestinationHubId()));
-        Map<Long, String> hubNamesMap = hubService.getHubNames(hubIds);
+        Long sourceHubIdLong = Long.valueOf(ride.getSourceHubId());
+        Long destHubIdLong = Long.valueOf(ride.getDestinationHubId());
+        hubIds.add(sourceHubIdLong);
+        hubIds.add(destHubIdLong);
+        Map<Long, com.caboolo.backend.hub.domain.Hub> hubMap = hubService.getHubsByIds(hubIds);
+
+        com.caboolo.backend.hub.domain.Hub sourceHub = hubMap.get(sourceHubIdLong);
+        com.caboolo.backend.hub.domain.Hub destHub = hubMap.get(destHubIdLong);
 
         // 6. Build crew member DTOs
         List<CrewMemberDto> crewMembers = crewMappings.stream()
@@ -291,8 +296,12 @@ public class RideService {
         return MyRideDetailResponseDto.Builder.myRideDetailResponseDto()
                 .withRideId(ride.getRideId())
                 .withDepartureTime(ride.getDepartureTime())
-                .withSourceHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getSourceHubId()), "Unknown Hub"))
-                .withDestinationHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getDestinationHubId()), "Unknown Hub"))
+                .withSourceHubName(sourceHub != null ? sourceHub.getName() : "Unknown Hub")
+                .withSourceHubLatitude(sourceHub != null ? sourceHub.getLatitude() : null)
+                .withSourceHubLongitude(sourceHub != null ? sourceHub.getLongitude() : null)
+                .withDestinationHubName(destHub != null ? destHub.getName() : "Unknown Hub")
+                .withDestinationHubLatitude(destHub != null ? destHub.getLatitude() : null)
+                .withDestinationHubLongitude(destHub != null ? destHub.getLongitude() : null)
                 .withPoolPrice(ride.getPoolPrice())
                 .withTotalSeats(ride.getTotalSeats())
                 .withAvailableSeats(ride.getTotalSeats() - crewCount)
