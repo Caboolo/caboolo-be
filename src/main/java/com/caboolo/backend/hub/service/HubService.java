@@ -167,8 +167,7 @@ public class HubService {
                 .collect(Collectors.toMap(Hub::getHubId, Hub::getName));
     }
 
-    public Map<Long, Hub> getHubsMap(Collection<Long> hubIds) {
-        return hubRepository.findByHubIdIn(hubIds).stream()
-                .collect(Collectors.toMap(Hub::getHubId, h -> h));
+    public Map<Long, String> getHubsMap(Collection<Long> hubIds) {
+        return hubRepository.findHubIdAndNameByHubIdIn(hubIds);
     }
 }

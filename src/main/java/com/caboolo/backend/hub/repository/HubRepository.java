@@ -8,6 +8,6 @@ import java.util.Collection;
 import java.util.List;
 
 @Repository
-public interface HubRepository extends JpaRepository<Hub, Long> {
+public interface HubRepository extends JpaRepository<Hub, Long>, HubRepositoryCustom {
     List<Hub> findByHubIdIn(Collection<Long> hubIds);
 }

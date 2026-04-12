@@ -274,7 +274,7 @@ public class RideService {
                         .stream()
                         .collect(Collectors.toMap(UserDetail::getUserId, ud -> ud));
 
-        Map<Long, Hub> hubsMap = hubService.getHubsMap(hubIds);
+        Map<Long, String> hubsMap = hubService.getHubsMap(hubIds);
 
         // 5. Construct the Response
         List<MyRideResponseDto> dtoList = availableRides.stream()
@@ -299,14 +299,14 @@ public class RideService {
 
                     int availableSeats = ride.getTotalSeats() - participants.size();
 
-                    Hub srcHub = hubsMap.get(Long.valueOf(ride.getSourceHubId()));
-                    Hub destHub = hubsMap.get(Long.valueOf(ride.getDestinationHubId()));
+                    String srcHubName = hubsMap.get(Long.valueOf(ride.getSourceHubId()));
+                    String destHubName = hubsMap.get(Long.valueOf(ride.getDestinationHubId()));
 
                     return MyRideResponseDto.Builder.myRideResponseDto()
                             .withRideId(ride.getRideId())
                             .withDepartureTime(ride.getDepartureTime())
-                            .withSourceHubName(srcHub.getName())
-                            .withDestinationHubName(destHub.getName())
+                            .withSourceHubName(srcHubName)
+                            .withDestinationHubName(destHubName)
                             .withParticipants(participants)
                             .withAvailableSeats(availableSeats)
                             .withPoolPrice(ride.getPoolPrice())
