@@ -29,6 +29,14 @@ public class HubController extends BaseController {
         return successResponse(hubService.getAllHubs(), "All hubs retrieved successfully");
     }
 
+    @GetMapping("/preferred")
+    public RestEntity<List<HubDto>> getHubsByPriority(
+            @RequestParam(defaultValue = "1") int minPriority,
+            @RequestParam(defaultValue = "7") int maxPriority) {
+        List<HubDto> hubs = hubService.getHubsByPriority(minPriority, maxPriority);
+        return successResponse(hubs, "Hubs by priority retrieved successfully from cache");
+    }
+
     @GetMapping("/nearest")
     public RestEntity<List<HubDto>> getNearestHubs(
             @RequestParam double longitude,

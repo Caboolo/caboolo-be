@@ -156,6 +156,12 @@ public class HubService {
         return result;
     }
 
+    public List<HubDto> getHubsByPriority(int minPriority, int maxPriority) {
+        return getAllHubs().stream()
+                .filter(hub -> hub.getPriority() != null && hub.getPriority() >= minPriority && hub.getPriority() <= maxPriority)
+                .collect(Collectors.toList());
+    }
+
     public Map<Long, String> getHubNames(Collection<Long> hubIds) {
         return hubRepository.findByHubIdIn(hubIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, Hub::getName));
