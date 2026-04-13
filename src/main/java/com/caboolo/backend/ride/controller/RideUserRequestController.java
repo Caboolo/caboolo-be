@@ -33,8 +33,9 @@ public class RideUserRequestController extends BaseController {
     /**
      * PUT /api/v1/ride-request/{rideId}/accept?acceptingUserId=...&requesterId=...
      *
-     * Marks the row for this pair as ACCEPTED. If all participants have
-     * accepted, the requester is promoted to an active ride member.
+     * Marks the row for this voter as ACCEPTED. If 50% or more of participants
+     * have accepted, the requester is promoted to an active ride member.
+     * Individual rows for other voters are not modified.
      */
     @PutMapping("/{rideId}/accept")
     public RestEntity<Void> acceptRideRequest(
@@ -48,8 +49,9 @@ public class RideUserRequestController extends BaseController {
     /**
      * PUT /api/v1/ride-request/{rideId}/reject?rejectingUserId=...&requesterId=...
      *
-     * Immediately rejects the request globally — all PENDING rows for this
-     * (rideId, requesterId) are set to REJECTED.
+     * Marks the row for this voter as REJECTED. If 50% or more of participants
+     * have rejected, the requester's join request is rejected globally.
+     * Individual rows for other voters are not modified.
      */
     @PutMapping("/{rideId}/reject")
     public RestEntity<Void> rejectRideRequest(
