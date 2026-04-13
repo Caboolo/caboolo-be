@@ -15,26 +15,26 @@ import java.util.Optional;
 @Repository
 public interface RideUserRequestMappingRepository extends JpaRepository<RideUserRequestMapping, Long> {
 
-    List<RideUserRequestMapping> findByRideIdAndSourceUserId(Long rideId, String sourceUserId);
+    List<RideUserRequestMapping> findByRideIdAndRequestorId(Long rideId, String requestorId);
 
-    Optional<RideUserRequestMapping> findByRideIdAndSourceUserIdAndDestinationUserId(
-            Long rideId, String sourceUserId, String destinationUserId);
+    Optional<RideUserRequestMapping> findByRideIdAndRequestorIdAndApproverId(
+            Long rideId, String requestorId, String approverId);
 
-    List<RideUserRequestMapping> findBySourceUserIdAndStatus(String sourceUserId, RideUserRequestStatus status);
+    List<RideUserRequestMapping> findByRequestorIdAndStatus(String requestorId, RideUserRequestStatus status);
 
-    List<RideUserRequestMapping> findByRideIdAndSourceUserIdAndStatus(
-            Long rideId, String sourceUserId, RideUserRequestStatus status);
+    List<RideUserRequestMapping> findByRideIdAndRequestorIdAndStatus(
+            Long rideId, String requestorId, RideUserRequestStatus status);
 
-    boolean existsByRideIdAndSourceUserIdAndStatus(Long rideId, String sourceUserId, RideUserRequestStatus status);
+    boolean existsByRideIdAndRequestorIdAndStatus(Long rideId, String requestorId, RideUserRequestStatus status);
 
     /**
-     * Fetches all request rows for a (rideId, sourceUserId) pair with a pessimistic
+     * Fetches all request rows for a (rideId, requestorId) pair with a pessimistic
      * write lock to prevent concurrent accept/reject decisions from producing
      * duplicate or inconsistent results.
      */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT r FROM RideUserRequestMapping r WHERE r.rideId = :rideId AND r.sourceUserId = :sourceUserId")
-    List<RideUserRequestMapping> findByRideIdAndSourceUserIdWithLock(
+    @Query("SELECT r FROM RideUserRequestMapping r WHERE r.rideId = :rideId AND r.requestorId = :requestorId")
+    List<RideUserRequestMapping> findByRideIdAndRequestorIdWithLock(
             @Param("rideId") Long rideId,
-            @Param("sourceUserId") String sourceUserId);
+            @Param("requestorId") String requestorId);
+
 }
