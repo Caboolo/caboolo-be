@@ -94,6 +94,14 @@ public class RideUserRequestMappingService {
      */
     @Transactional
     public void acceptRideRequest(Long rideId, String acceptingUserId, String requesterId) {
+        // Guard: parent mapping must still be PENDING
+        RideUserMapping requesterMapping = rideUserMappingRepository
+                .findByRideIdAndUserId(rideId, requesterId)
+                .orElseThrow(() -> new RuntimeException("Requester's RideUserMapping not found"));
+        if (requesterMapping.getStatus() != RideUserMappingStatus.PENDING) {
+            throw new RuntimeException("Request is no longer pending — cannot accept");
+        }
+
         RideUserRequestMapping requestRow = requestMappingRepository
                 .findByRideIdAndSourceUserIdAndDestinationUserId(rideId, requesterId, acceptingUserId)
                 .orElseThrow(() -> new RuntimeException("Join request row not found"));
@@ -117,14 +125,16 @@ public class RideUserRequestMappingService {
 
         // 50% or more accepted → promote to ACCEPTED globally
         if (acceptedCount * 2 >= totalVoters) {
-            RideUserMapping requesterMapping = rideUserMappingRepository
+            RideUserMapping userMapping = rideUserMappingRepository
                     .findByRideIdAndUserId(rideId, requesterId)
                     .orElseThrow(() -> new RuntimeException("Requester's RideUserMapping not found"));
-            if (requesterMapping.getStatus() == RideUserMappingStatus.PENDING) {
-                requesterMapping.setStatus(RideUserMappingStatus.ACCEPTED);
-                rideUserMappingRepository.save(requesterMapping);
+            if (userMapping.getStatus() != RideUserMappingStatus.PENDING) {
+                throw new RuntimeException("Request is no longer pending");
             }
+            userMapping.setStatus(RideUserMappingStatus.ACCEPTED);
+            rideUserMappingRepository.save(userMapping);
         }
+
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -132,15 +142,23 @@ public class RideUserRequestMappingService {
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Marks the rejection of {@code requesterId}'s join request by
-     * {@code rejectingUserId}.
+     * Immediately rejects {@code requesterId}'s join request.
      * <p>
-     * If 50% or more of the destination users have rejected, the requester's
-     * {@link RideUserMapping} is marked {@code REJECTED}.
-     * Individual request rows for other voters are left untouched.
+     * One rejection = global rejection: the parent row
+     * (rideId, requesterId) is set to {@code REJECTED}, and the requester's
+     * {@link RideUserMapping} is also marked {@code REJECTED}.
+     * The remaining rows remain unaffected.
      */
     @Transactional
     public void rejectRideRequest(Long rideId, String rejectingUserId, String requesterId) {
+        // Guard: parent mapping must still be PENDING
+        RideUserMapping requesterMapping = rideUserMappingRepository
+                .findByRideIdAndUserId(rideId, requesterId)
+                .orElseThrow(() -> new RuntimeException("Requester's RideUserMapping not found"));
+        if (requesterMapping.getStatus() != RideUserMappingStatus.PENDING) {
+            throw new RuntimeException("Request is no longer pending — cannot reject");
+        }
+
         RideUserRequestMapping requestRow = requestMappingRepository
                 .findByRideIdAndSourceUserIdAndDestinationUserId(rideId, requesterId, rejectingUserId)
                 .orElseThrow(() -> new RuntimeException("Join request row not found"));
@@ -153,25 +171,9 @@ public class RideUserRequestMappingService {
         requestRow.setStatus(RideUserRequestStatus.REJECTED);
         requestMappingRepository.save(requestRow);
 
-        // Evaluate final decision under a pessimistic lock
-        List<RideUserRequestMapping> allRows =
-                requestMappingRepository.findByRideIdAndSourceUserIdWithLock(rideId, requesterId);
-
-        long totalVoters = allRows.size();
-        long rejectedCount = allRows.stream()
-                .filter(r -> r.getStatus() == RideUserRequestStatus.REJECTED)
-                .count();
-
-        // 50% or more rejected → reject globally
-        if (rejectedCount * 2 >= totalVoters) {
-            RideUserMapping requesterMapping = rideUserMappingRepository
-                    .findByRideIdAndUserId(rideId, requesterId)
-                    .orElseThrow(() -> new RuntimeException("Requester's RideUserMapping not found"));
-            if (requesterMapping.getStatus() == RideUserMappingStatus.PENDING) {
-                requesterMapping.setStatus(RideUserMappingStatus.REJECTED);
-                rideUserMappingRepository.save(requesterMapping);
-            }
-        }
+        // Reject the requester's placeholder mapping
+        requesterMapping.setStatus(RideUserMappingStatus.REJECTED);
+        rideUserMappingRepository.save(requesterMapping);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
