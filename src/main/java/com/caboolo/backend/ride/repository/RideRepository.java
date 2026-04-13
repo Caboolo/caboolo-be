@@ -18,6 +18,7 @@ import java.util.Optional;
 public interface RideRepository extends JpaRepository<Ride, Long> {
     List<Ride> findByRideIdIn(List<Long> rideIds);
     List<Ride> findByStatusAndRideIdIn(RideStatus status, Collection<Long> rideIds);
+    Optional<Ride> findByRideId(Long rideId);
 
     @Query(value = "SELECT r.* FROM ride r " +
             "JOIN hub h ON r.destination_hub_id = h.hub_id " +

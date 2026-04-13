@@ -25,8 +25,6 @@ public interface RideUserRequestMappingRepository extends JpaRepository<RideUser
     List<RideUserRequestMapping> findByRideIdAndRequestorIdAndStatus(
             Long rideId, String requestorId, RideUserRequestStatus status);
 
-    boolean existsByRideIdAndRequestorIdAndStatus(Long rideId, String requestorId, RideUserRequestStatus status);
-
     /**
      * Fetches all request rows for a (rideId, requestorId) pair with a pessimistic
      * write lock to prevent concurrent accept/reject decisions from producing
