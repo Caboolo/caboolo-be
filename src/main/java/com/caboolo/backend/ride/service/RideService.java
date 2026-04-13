@@ -128,8 +128,8 @@ public class RideService {
 
                     return MyRequestResponseDto.Builder.myRequestResponseDto()
                             .withRequestStatus(um.getStatus())
-                            .withSourceHubName(ride.getSourceHubId())
-                            .withDestinationHubName(ride.getDestinationHubId())
+                            .withSourceHubName(ride.getSourceHubId().toString())
+                            .withDestinationHubName(ride.getDestinationHubId().toString())
                             .withDepartureTime(ride.getDepartureTime())
                             .withActivePassengers(activePassengers)
                             .withAvailableSeats(ride.getTotalSeats() - acceptedCount)
@@ -176,8 +176,8 @@ public class RideService {
 
         Set<Long> hubIds = new HashSet<>();
         activeRides.forEach(ride -> {
-            hubIds.add(Long.valueOf(ride.getSourceHubId()));
-            hubIds.add(Long.valueOf(ride.getDestinationHubId()));
+            hubIds.add(ride.getSourceHubId());
+            hubIds.add(ride.getDestinationHubId());
         });
 
         // 5. Bulk Fetch User Details and Hub Names
@@ -211,8 +211,8 @@ public class RideService {
                     return MyRideResponseDto.Builder.myRideResponseDto()
                             .withRideId(ride.getRideId())
                             .withDepartureTime(ride.getDepartureTime())
-                            .withSourceHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getSourceHubId()), "Unknown Hub"))
-                            .withDestinationHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getDestinationHubId()), "Unknown Hub"))
+                            .withSourceHubName(hubNamesMap.getOrDefault(ride.getSourceHubId(), "Unknown Hub"))
+                            .withDestinationHubName(hubNamesMap.getOrDefault(ride.getDestinationHubId(), "Unknown Hub"))
                             .withParticipants(participants)
                             .withAvailableSeats(ride.getTotalSeats() - allParticipantMappings.size())
                             .withPoolPrice(ride.getPoolPrice())
@@ -221,18 +221,28 @@ public class RideService {
                 .collect(Collectors.toList());
     }
 
-    public Page<MyRideResponseDto> getAvailableRides(String userId, LocalDateTime time, Integer timeWindow, Double latitude, Double longitude, String airportHubId, Boolean isFromAirport, String sourceOrDestinationHubId, Boolean includeSourceOrDestinationHub, int page, int size) {
+    public Page<MyRideResponseDto> getAvailableRides(String userId, LocalDateTime time, Integer timeWindow, Double latitude, Double longitude, Long airportHubId, Boolean isFromAirport, Long sourceOrDestinationHubId, Boolean includeSourceOrDestinationHub, int page, int size) {
         LocalDateTime minTime = time.minusMinutes(timeWindow);
         LocalDateTime maxTime = time.plusMinutes(timeWindow);
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Ride> ridesPage;
         if (Boolean.TRUE.equals(includeSourceOrDestinationHub) && sourceOrDestinationHubId != null) {
-            ridesPage = rideRepository.findAvailableRidesByExactHubsAndPaginated(
-                    RideStatus.SCHEDULED, minTime, maxTime, airportHubId, isFromAirport, sourceOrDestinationHubId, userId, pageable);
+            if (Boolean.TRUE.equals(isFromAirport)) {
+                ridesPage = rideRepository.findAvailableRidesFromAirportByExactHubs(
+                        RideStatus.SCHEDULED.name(), minTime, maxTime, airportHubId, sourceOrDestinationHubId, userId, pageable);
+            } else {
+                ridesPage = rideRepository.findAvailableRidesToAirportByExactHubs(
+                        RideStatus.SCHEDULED.name(), minTime, maxTime, airportHubId, sourceOrDestinationHubId, userId, pageable);
+            }
         } else {
-            ridesPage = rideRepository.findAvailableRidesSortedByDistanceAndPaginated(
-                    RideStatus.SCHEDULED, minTime, maxTime, airportHubId, isFromAirport, latitude, longitude, userId, pageable);
+            if (Boolean.TRUE.equals(isFromAirport)) {
+                ridesPage = rideRepository.findAvailableRidesFromAirportSortedByDistance(
+                        RideStatus.SCHEDULED.name(), minTime, maxTime, airportHubId, latitude, longitude, userId, pageable);
+            } else {
+                ridesPage = rideRepository.findAvailableRidesToAirportSortedByDistance(
+                        RideStatus.SCHEDULED.name(), minTime, maxTime, airportHubId, latitude, longitude, userId, pageable);
+            }
         }
 
         List<Ride> availableRides = ridesPage.getContent();
@@ -264,8 +274,8 @@ public class RideService {
 
         Set<Long> hubIds = new HashSet<>();
         availableRides.forEach(ride -> {
-            hubIds.add(Long.valueOf(ride.getSourceHubId()));
-            hubIds.add(Long.valueOf(ride.getDestinationHubId()));
+            hubIds.add(ride.getSourceHubId());
+            hubIds.add(ride.getDestinationHubId());
         });
 
         // 4. Bulk Fetch User Details and Hubs
@@ -299,8 +309,8 @@ public class RideService {
 
                     int availableSeats = ride.getTotalSeats() - participants.size();
 
-                    String srcHubName = hubsMap.get(Long.valueOf(ride.getSourceHubId()));
-                    String destHubName = hubsMap.get(Long.valueOf(ride.getDestinationHubId()));
+                    String srcHubName = hubsMap.get(ride.getSourceHubId());
+                    String destHubName = hubsMap.get(ride.getDestinationHubId());
 
                     return MyRideResponseDto.Builder.myRideResponseDto()
                             .withRideId(ride.getRideId())

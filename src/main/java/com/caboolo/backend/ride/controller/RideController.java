@@ -66,9 +66,9 @@ public class RideController extends BaseController {
             @RequestParam(required = false, defaultValue = "15") Integer timeWindow,
             @RequestParam(required = false) Double latitude,
             @RequestParam(required = false) Double longitude,
-            @RequestParam String airportHubId,
+            @RequestParam Long airportHubId,
             @RequestParam Boolean isFromAirport,
-            @RequestParam(required = false) String sourceOrDestinationHubId,
+            @RequestParam(required = false) Long sourceOrDestinationHubId,
             @RequestParam(required = false, defaultValue = "false") Boolean includeSourceOrDestinationHub,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class RideRequestDto {
     private String userId;
-    private String sourceHubId;
-    private String destinationHubId;
+    private Long sourceHubId;
+    private Long destinationHubId;
     private LocalDateTime departureTime;
     private Integer totalSeats;
     private boolean isWomenOnlyRide;
