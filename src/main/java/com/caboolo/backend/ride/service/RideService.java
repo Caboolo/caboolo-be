@@ -1,6 +1,7 @@
 package com.caboolo.backend.ride.service;
 
 import com.caboolo.backend.core.idgen.SequenceGenerator;
+import com.caboolo.backend.hub.domain.Hub;
 import com.caboolo.backend.ride.domain.Ride;
 import com.caboolo.backend.ride.domain.RideUserMapping;
 import com.caboolo.backend.ride.dto.MyRequestResponseDto;
@@ -20,9 +21,14 @@ import com.caboolo.backend.userdetails.service.UserDetailService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -125,8 +131,8 @@ public class RideService {
 
                     return MyRequestResponseDto.Builder.myRequestResponseDto()
                             .withRequestStatus(um.getStatus())
-                            .withSourceHubName(ride.getSourceHubId())
-                            .withDestinationHubName(ride.getDestinationHubId())
+                            .withSourceHubName(ride.getSourceHubId().toString())
+                            .withDestinationHubName(ride.getDestinationHubId().toString())
                             .withDepartureTime(ride.getDepartureTime())
                             .withActivePassengers(activePassengers)
                             .withAvailableSeats(ride.getTotalSeats() - acceptedCount)
@@ -173,8 +179,8 @@ public class RideService {
 
         Set<Long> hubIds = new HashSet<>();
         activeRides.forEach(ride -> {
-            hubIds.add(Long.valueOf(ride.getSourceHubId()));
-            hubIds.add(Long.valueOf(ride.getDestinationHubId()));
+            hubIds.add(ride.getSourceHubId());
+            hubIds.add(ride.getDestinationHubId());
         });
 
         // 5. Bulk Fetch User Details and Hub Names
@@ -210,8 +216,8 @@ public class RideService {
                     return MyRideResponseDto.Builder.myRideResponseDto()
                             .withRideId(ride.getRideId())
                             .withDepartureTime(ride.getDepartureTime())
-                            .withSourceHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getSourceHubId()), "Unknown Hub"))
-                            .withDestinationHubName(hubNamesMap.getOrDefault(Long.valueOf(ride.getDestinationHubId()), "Unknown Hub"))
+                            .withSourceHubName(hubNamesMap.getOrDefault(ride.getSourceHubId(), "Unknown Hub"))
+                            .withDestinationHubName(hubNamesMap.getOrDefault(ride.getDestinationHubId(), "Unknown Hub"))
                             .withParticipants(participants)
                             .withAvailableSeats(ride.getTotalSeats() - rideParticipantCount)
                             .withPoolPrice(ride.getPoolPrice())
@@ -308,6 +314,112 @@ public class RideService {
                 .withCrewMembers(crewMembers)
                 .withPendingRequests(pendingRequests)
                 .build();
+    }
+
+    public Page<MyRideResponseDto> getAvailableRides(String userId, LocalDateTime time, Integer timeWindow, Double latitude, Double longitude, Long airportHubId, Boolean isFromAirport, Long sourceOrDestinationHubId, Boolean includeSourceOrDestinationHub, int page, int size) {
+        LocalDateTime minTime = time.minusMinutes(timeWindow);
+        LocalDateTime maxTime = time.plusMinutes(timeWindow);
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Ride> ridesPage;
+        if (Boolean.TRUE.equals(includeSourceOrDestinationHub) && sourceOrDestinationHubId != null) {
+            if (Boolean.TRUE.equals(isFromAirport)) {
+                ridesPage = rideRepository.findAvailableRidesFromAirportByExactHubs(
+                        RideStatus.SCHEDULED.name(), minTime, maxTime, airportHubId, sourceOrDestinationHubId, userId, pageable);
+            } else {
+                ridesPage = rideRepository.findAvailableRidesToAirportByExactHubs(
+                        RideStatus.SCHEDULED.name(), minTime, maxTime, airportHubId, sourceOrDestinationHubId, userId, pageable);
+            }
+        } else {
+            if (Boolean.TRUE.equals(isFromAirport)) {
+                ridesPage = rideRepository.findAvailableRidesFromAirportSortedByDistance(
+                        RideStatus.SCHEDULED.name(), minTime, maxTime, airportHubId, latitude, longitude, userId, pageable);
+            } else {
+                ridesPage = rideRepository.findAvailableRidesToAirportSortedByDistance(
+                        RideStatus.SCHEDULED.name(), minTime, maxTime, airportHubId, latitude, longitude, userId, pageable);
+            }
+        }
+
+        List<Ride> availableRides = ridesPage.getContent();
+        if (availableRides.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        Set<Long> activeRideIds = availableRides.stream()
+                .map(Ride::getRideId)
+                .collect(Collectors.toSet());
+
+        // 2. Fetch mappings to get participants for the DTO
+        List<RideUserMapping> allMappings = rideUserMappingService.findByRideIdInAndStatusIn(
+                activeRideIds,
+                Set.of(RideUserMappingStatus.CREATED, RideUserMappingStatus.ACCEPTED, RideUserMappingStatus.PENDING)
+        );
+
+        Map<Long, List<RideUserMapping>> mappingsByRideId = allMappings.stream()
+                .collect(Collectors.groupingBy(RideUserMapping::getRideId));
+
+        // 3. Collect needed User IDs and Hub IDs for bulk lookup
+        Set<String> participantUserIds = new HashSet<>();
+        availableRides.forEach(ride -> {
+            List<RideUserMapping> pm = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
+            pm.stream()
+                    .filter(m -> m.getStatus() == RideUserMappingStatus.CREATED || m.getStatus() == RideUserMappingStatus.ACCEPTED)
+                    .forEach(m -> participantUserIds.add(m.getUserId()));
+        });
+
+        Set<Long> hubIds = new HashSet<>();
+        availableRides.forEach(ride -> {
+            hubIds.add(ride.getSourceHubId());
+            hubIds.add(ride.getDestinationHubId());
+        });
+
+        // 4. Bulk Fetch User Details and Hubs
+        Map<String, UserDetail> userDetailsMap = participantUserIds.isEmpty() ? new HashMap<>() :
+                userDetailService.findByUserIdIn(participantUserIds)
+                        .stream()
+                        .collect(Collectors.toMap(UserDetail::getUserId, ud -> ud));
+
+        Map<Long, String> hubsMap = hubService.getHubsMap(hubIds);
+
+        // 5. Construct the Response
+        List<MyRideResponseDto> dtoList = availableRides.stream()
+                .map(ride -> {
+                    List<RideUserMapping> pMapping = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
+
+                    // Only return accepted participants (CREATED/ACCEPTED)
+                    List<RiderInfoDto> participants = pMapping.stream()
+                            .filter(pm -> pm.getStatus() == RideUserMappingStatus.CREATED || pm.getStatus() == RideUserMappingStatus.ACCEPTED)
+                            .map(pm -> {
+                                UserDetail detail = userDetailsMap.get(pm.getUserId());
+                                if (detail == null) return null;
+                                return RiderInfoDto.Builder.passengerInfoDto()
+                                        .withUserId(pm.getUserId())
+                                        .withName(detail.getName())
+                                        .withImageUrl(detail.getImageUrl())
+                                        .withAvgRating(detail.getAvgRating())
+                                        .build();
+                            })
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+
+                    int availableSeats = ride.getTotalSeats() - participants.size();
+
+                    String srcHubName = hubsMap.get(ride.getSourceHubId());
+                    String destHubName = hubsMap.get(ride.getDestinationHubId());
+
+                    return MyRideResponseDto.Builder.myRideResponseDto()
+                            .withRideId(ride.getRideId())
+                            .withDepartureTime(ride.getDepartureTime())
+                            .withSourceHubName(srcHubName)
+                            .withDestinationHubName(destHubName)
+                            .withParticipants(participants)
+                            .withAvailableSeats(availableSeats)
+                            .withPoolPrice(ride.getPoolPrice())
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtoList, pageable, ridesPage.getTotalElements());
     }
 
     @Transactional

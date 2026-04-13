@@ -10,8 +10,11 @@ import com.caboolo.backend.ride.service.RideService;
 import com.caboolo.backend.ride.service.RideUserMappingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -61,5 +64,22 @@ public class RideController extends BaseController {
     public RestEntity<MyRideDetailResponseDto> getMyRideDetail(@PathVariable Long rideId) {
         log.info("Fetching ride detail for rideId: {} ", rideId);
         return successResponse(rideService.getMyRideDetail(rideId), "Ride detail retrieved successfully");
+    }
+
+    @GetMapping("/listing")
+    public RestEntity<Page<MyRideResponseDto>> getAvailableRides(
+            @RequestParam String userId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime time,
+            @RequestParam(required = false, defaultValue = "15") Integer timeWindow,
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam Long airportHubId,
+            @RequestParam Boolean isFromAirport,
+            @RequestParam(required = false) Long sourceOrDestinationHubId,
+            @RequestParam(required = false, defaultValue = "false") Boolean includeSourceOrDestinationHub,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return successResponse(rideService.getAvailableRides(userId, time, timeWindow, latitude, longitude, airportHubId, isFromAirport, sourceOrDestinationHubId, includeSourceOrDestinationHub, page, size), "Available rides retrieved successfully");
     }
 }

@@ -20,10 +20,10 @@ public class Ride extends GenericIdEntity {
     private Long rideId;
 
     @Column(name = "source_hub_id", nullable = false)
-    private String sourceHubId;
+    private Long sourceHubId;
 
     @Column(name = "destination_hub_id", nullable = false)
-    private String destinationHubId;
+    private Long destinationHubId;
 
     @Column(name = "departure_time", nullable = false)
     private LocalDateTime departureTime;
@@ -46,11 +46,11 @@ public class Ride extends GenericIdEntity {
     }
 
     public static interface SourceHubIdStep {
-        DestinationHubIdStep withSourceHubId(String sourceHubId);
+        DestinationHubIdStep withSourceHubId(Long sourceHubId);
     }
 
     public static interface DestinationHubIdStep {
-        DepartureTimeStep withDestinationHubId(String destinationHubId);
+        DepartureTimeStep withDestinationHubId(Long destinationHubId);
     }
 
     public static interface DepartureTimeStep {
@@ -80,8 +80,8 @@ public class Ride extends GenericIdEntity {
 
     public static class Builder implements RideIdStep, SourceHubIdStep, DestinationHubIdStep, DepartureTimeStep, TotalSeatsStep, StatusStep, IsWomenOnlyRideStep, PoolPriceStep, BuildStep {
         private Long rideId;
-        private String sourceHubId;
-        private String destinationHubId;
+        private Long sourceHubId;
+        private Long destinationHubId;
         private LocalDateTime departureTime;
         private Integer totalSeats;
         private RideStatus status;
@@ -102,13 +102,13 @@ public class Ride extends GenericIdEntity {
         }
 
         @Override
-        public DestinationHubIdStep withSourceHubId(String sourceHubId) {
+        public DestinationHubIdStep withSourceHubId(Long sourceHubId) {
             this.sourceHubId = sourceHubId;
             return this;
         }
 
         @Override
-        public DepartureTimeStep withDestinationHubId(String destinationHubId) {
+        public DepartureTimeStep withDestinationHubId(Long destinationHubId) {
             this.destinationHubId = destinationHubId;
             return this;
         }

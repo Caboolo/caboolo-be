@@ -39,11 +39,8 @@ public class RideUserRequestMappingService {
         Optional<RideUserMapping> existingActive = rideUserMappingRepository.findByRideIdAndUserId(rideId, requesterId);
         if (existingActive.isPresent()) {
             RideUserMappingStatus status = existingActive.get().getStatus();
-            if (RideUserMappingStatus.ACTIVE_STATUSES.contains(status)) {
-                throw new RuntimeException("User is already an active member of this ride");
-            }
-            if (status == RideUserMappingStatus.PENDING) {
-                throw new RuntimeException("User already has a pending join request for this ride");
+            if (!RideUserMappingStatus.PENDING.equals(status)) {
+                throw new RuntimeException("No Pending requests for the user");
             }
         }
 
@@ -55,22 +52,23 @@ public class RideUserRequestMappingService {
             throw new RuntimeException("No active participants found for ride — cannot raise a join request");
         }
 
+        // Create placeholder RideUserMapping for requester (PENDING)
+        Long mappingId = sequenceGenerator.nextId();
+
         // Create one request row per existing participant
         for (RideUserMapping participant : activeParticipants) {
             RideUserRequestMapping requestRow = RideUserRequestMapping.Builder
                     .rideUserRequestMapping()
                     .withRideUserRequestMappingId(sequenceGenerator.nextId())
                     .withRideId(rideId)
-                    .withSourceUserId(requesterId)
-                    .withDestinationUserId(participant.getUserId())
-                    .withRideUserMappingId(null)
+                    .withRequestorId(requesterId)
+                    .withApproverId(participant.getUserId())
+                    .withRideUserMappingId(mappingId)
                     .withStatus(RideUserRequestStatus.PENDING)
                     .build();
             requestMappingRepository.save(requestRow);
         }
 
-        // Create placeholder RideUserMapping for requester (PENDING)
-        Long mappingId = sequenceGenerator.nextId();
         RideUserMapping placeholderMapping = RideUserMapping.Builder.rideUserMapping()
                 .withRideUserMappingId(mappingId)
                 .withRideId(rideId)
@@ -103,7 +101,7 @@ public class RideUserRequestMappingService {
         }
 
         RideUserRequestMapping requestRow = requestMappingRepository
-                .findByRideIdAndSourceUserIdAndDestinationUserId(rideId, requesterId, acceptingUserId)
+                .findByRideIdAndRequestorIdAndApproverId(rideId, requesterId, acceptingUserId)
                 .orElseThrow(() -> new RuntimeException("Join request row not found"));
 
         // Idempotency: skip if already handled
@@ -114,9 +112,8 @@ public class RideUserRequestMappingService {
         requestRow.setStatus(RideUserRequestStatus.ACCEPTED);
         requestMappingRepository.save(requestRow);
 
-        // Evaluate final decision under a pessimistic lock
         List<RideUserRequestMapping> allRows =
-                requestMappingRepository.findByRideIdAndSourceUserIdWithLock(rideId, requesterId);
+                requestMappingRepository.findByRideIdAndRequestorIdWithLock(rideId, requesterId);
 
         long totalVoters = allRows.size();
         long acceptedCount = allRows.stream()
@@ -160,7 +157,7 @@ public class RideUserRequestMappingService {
         }
 
         RideUserRequestMapping requestRow = requestMappingRepository
-                .findByRideIdAndSourceUserIdAndDestinationUserId(rideId, requesterId, rejectingUserId)
+                .findByRideIdAndRequestorIdAndApproverId(rideId, requesterId, rejectingUserId)
                 .orElseThrow(() -> new RuntimeException("Join request row not found"));
 
         // Idempotency: skip if already in a terminal state
@@ -187,7 +184,7 @@ public class RideUserRequestMappingService {
     @Transactional
     public void withdrawRideRequest(Long rideId, String requesterId) {
         List<RideUserRequestMapping> pendingRows = requestMappingRepository
-                .findByRideIdAndSourceUserIdAndStatus(rideId, requesterId, RideUserRequestStatus.PENDING);
+                .findByRideIdAndRequestorIdAndStatus(rideId, requesterId, RideUserRequestStatus.PENDING);
 
         if (pendingRows.isEmpty()) {
             // Already decided or already withdrawn — no-op

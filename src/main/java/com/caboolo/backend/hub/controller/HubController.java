@@ -5,6 +5,7 @@ import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.hub.dto.HubDto;
 import com.caboolo.backend.hub.service.HubService;
 import com.caboolo.backend.hub.util.ExcelParserUtil;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,7 +21,7 @@ public class HubController extends BaseController {
         this.hubService = hubService;
     }
 
-    @PostMapping("/bulk")
+    @PostMapping(value = "/bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public RestEntity<Void> bulkStoreHubs(@RequestParam("file") MultipartFile file) {
         try {
             List<HubDto> hubs = ExcelParserUtil.parseHubs(file.getInputStream());

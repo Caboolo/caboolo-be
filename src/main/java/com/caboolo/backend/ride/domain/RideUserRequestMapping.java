@@ -21,11 +21,11 @@ public class RideUserRequestMapping extends GenericIdEntity {
     @Column(name = "ride_id", nullable = false)
     private Long rideId;
 
-    @Column(name = "source_user_id", nullable = false)
-    private String sourceUserId;
+    @Column(name = "requestor_id", nullable = false)
+    private String requestorId;
 
-    @Column(name = "destination_user_id", nullable = false)
-    private String destinationUserId;
+    @Column(name = "approver_id", nullable = false)
+    private String approverId;
 
     @Column(name = "ride_user_mapping_id")
     private Long rideUserMappingId;
@@ -39,15 +39,15 @@ public class RideUserRequestMapping extends GenericIdEntity {
     }
 
     public static interface RideIdStep {
-        SourceUserIdStep withRideId(Long rideId);
+        RequestorIdStep withRideId(Long rideId);
     }
 
-    public static interface SourceUserIdStep {
-        DestinationUserIdStep withSourceUserId(String sourceUserId);
+    public static interface RequestorIdStep {
+        ApproverIdStep withRequestorId(String requestorId);
     }
 
-    public static interface DestinationUserIdStep {
-        RideUserMappingIdStep withDestinationUserId(String destinationUserId);
+    public static interface ApproverIdStep {
+        RideUserMappingIdStep withApproverId(String approverId);
     }
 
     public static interface RideUserMappingIdStep {
@@ -62,13 +62,13 @@ public class RideUserRequestMapping extends GenericIdEntity {
         RideUserRequestMapping build();
     }
 
-    public static class Builder implements RideUserRequestMappingIdStep, RideIdStep, SourceUserIdStep,
-            DestinationUserIdStep, RideUserMappingIdStep, StatusStep, BuildStep {
+    public static class Builder implements RideUserRequestMappingIdStep, RideIdStep, RequestorIdStep,
+            ApproverIdStep, RideUserMappingIdStep, StatusStep, BuildStep {
 
         private Long rideUserRequestMappingId;
         private Long rideId;
-        private String sourceUserId;
-        private String destinationUserId;
+        private String requestorId;
+        private String approverId;
         private Long rideUserMappingId;
         private RideUserRequestStatus status;
 
@@ -86,20 +86,20 @@ public class RideUserRequestMapping extends GenericIdEntity {
         }
 
         @Override
-        public SourceUserIdStep withRideId(Long rideId) {
+        public RequestorIdStep withRideId(Long rideId) {
             this.rideId = rideId;
             return this;
         }
 
         @Override
-        public DestinationUserIdStep withSourceUserId(String sourceUserId) {
-            this.sourceUserId = sourceUserId;
+        public ApproverIdStep withRequestorId(String requestorId) {
+            this.requestorId = requestorId;
             return this;
         }
 
         @Override
-        public RideUserMappingIdStep withDestinationUserId(String destinationUserId) {
-            this.destinationUserId = destinationUserId;
+        public RideUserMappingIdStep withApproverId(String approverId) {
+            this.approverId = approverId;
             return this;
         }
 
@@ -120,8 +120,8 @@ public class RideUserRequestMapping extends GenericIdEntity {
             return new RideUserRequestMapping(
                     this.rideUserRequestMappingId,
                     this.rideId,
-                    this.sourceUserId,
-                    this.destinationUserId,
+                    this.requestorId,
+                    this.approverId,
                     this.rideUserMappingId,
                     this.status
             );
