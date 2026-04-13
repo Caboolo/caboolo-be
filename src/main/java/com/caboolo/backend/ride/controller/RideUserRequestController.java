@@ -49,8 +49,8 @@ public class RideUserRequestController extends BaseController {
     /**
      * PUT /api/v1/ride-request/{rideId}/reject?rejectingUserId=...&requesterId=...
      *
-     * Marks the row for this voter as REJECTED. If 50% or more of participants
-     * have rejected, the requester's join request is rejected globally.
+     * Marks the row for this voter as REJECTED. If one person in the group has
+     * rejected the requester's join request, it is rejected globally.
      * Individual rows for other voters are not modified.
      */
     @PutMapping("/{rideId}/reject")
