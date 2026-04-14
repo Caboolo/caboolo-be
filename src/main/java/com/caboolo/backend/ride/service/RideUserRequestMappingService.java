@@ -1,19 +1,24 @@
 package com.caboolo.backend.ride.service;
 
 import com.caboolo.backend.core.idgen.SequenceGenerator;
+import com.caboolo.backend.notification.service.NotificationService;
 import com.caboolo.backend.ride.domain.RideUserMapping;
 import com.caboolo.backend.ride.domain.RideUserRequestMapping;
 import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import com.caboolo.backend.ride.enums.RideUserRequestStatus;
 import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import com.caboolo.backend.ride.repository.RideUserRequestMappingRepository;
+import com.caboolo.backend.userdetails.domain.UserDetail;
+import com.caboolo.backend.userdetails.service.UserDetailService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RideUserRequestMappingService {
@@ -21,6 +26,8 @@ public class RideUserRequestMappingService {
     private final RideUserRequestMappingRepository requestMappingRepository;
     private final RideUserMappingRepository rideUserMappingRepository;
     private final SequenceGenerator sequenceGenerator;
+    private final NotificationService notificationService;
+    private final UserDetailService userDetailService;
 
     // ─────────────────────────────────────────────────────────────────────────
     // 1. Request to Join Ride
@@ -76,6 +83,25 @@ public class RideUserRequestMappingService {
                 .withStatus(RideUserMappingStatus.PENDING)
                 .build();
         rideUserMappingRepository.save(placeholderMapping);
+
+        // ── Notify all crew members about the new join request ──
+        try {
+            UserDetail requester = userDetailService.getUserDetailEntity(requesterId);
+            String requesterName = requester.getName() != null ? requester.getName() : "Someone";
+
+            List<String> crewUserIds = activeParticipants.stream()
+                    .map(RideUserMapping::getUserId)
+                    .collect(Collectors.toList());
+
+            notificationService.sendToUsers(
+                    crewUserIds,
+                    "New Join Request",
+                    requesterName + " wants to join your ride",
+                    Map.of("rideId", String.valueOf(rideId), "requesterId", requesterId, "type", "RIDE_REQUEST_SENT")
+            );
+        } catch (Exception e) {
+            log.warn("Failed to send ride request notification: {}", e.getMessage());
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -130,6 +156,38 @@ public class RideUserRequestMappingService {
             }
             userMapping.setStatus(RideUserMappingStatus.ACCEPTED);
             rideUserMappingRepository.save(userMapping);
+
+            // ── Notify requester: ride confirmed ──
+            try {
+                notificationService.sendToUser(
+                        requesterId,
+                        "Ride Confirmed \uD83C\uDF89",
+                        "Your request to join the ride has been accepted!",
+                        Map.of("rideId", String.valueOf(rideId), "type", "RIDE_CONFIRMED")
+                );
+            } catch (Exception e) {
+                log.warn("Failed to send ride confirmed notification to requester: {}", e.getMessage());
+            }
+
+            // ── Notify existing crew: new member joined ──
+            try {
+                UserDetail requester = userDetailService.getUserDetailEntity(requesterId);
+                String requesterName = requester.getName() != null ? requester.getName() : "A new member";
+
+                List<String> crewUserIds = allRows.stream()
+                        .map(RideUserRequestMapping::getApproverId)
+                        .distinct()
+                        .collect(Collectors.toList());
+
+                notificationService.sendToUsers(
+                        crewUserIds,
+                        "New Crew Member",
+                        requesterName + " has joined your ride",
+                        Map.of("rideId", String.valueOf(rideId), "requesterId", requesterId, "type", "MATCH_FOUND")
+                );
+            } catch (Exception e) {
+                log.warn("Failed to send match found notification to crew: {}", e.getMessage());
+            }
         }
 
     }
