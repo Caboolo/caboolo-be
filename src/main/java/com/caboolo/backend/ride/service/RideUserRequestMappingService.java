@@ -261,6 +261,26 @@ public class RideUserRequestMappingService {
             requesterMapping.setStatus(RideUserMappingStatus.WITHDRAWN);
             rideUserMappingRepository.save(requesterMapping);
         }
+
+        // ── Notify crew members that the request was withdrawn ──
+        try {
+            UserDetail requester = userDetailService.getUserDetailEntity(requesterId);
+            String requesterName = requester.getName() != null ? requester.getName() : "A user";
+
+            List<String> crewUserIds = pendingRows.stream()
+                    .map(RideUserRequestMapping::getApproverId)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            notificationService.sendToUsers(
+                    crewUserIds,
+                    "Request Withdrawn",
+                    requesterName + " withdrew their join request",
+                    Map.of("rideId", String.valueOf(rideId), "requesterId", requesterId, "type", "REQUEST_WITHDRAWN")
+            );
+        } catch (Exception e) {
+            log.warn("Failed to send withdraw notification: {}", e.getMessage());
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -284,5 +304,29 @@ public class RideUserRequestMappingService {
 
         mapping.setStatus(RideUserMappingStatus.LEFT);
         rideUserMappingRepository.save(mapping);
+
+        // ── Notify other crew members that this user left ──
+        try {
+            UserDetail leavingUser = userDetailService.getUserDetailEntity(userId);
+            String userName = leavingUser.getName() != null ? leavingUser.getName() : "A member";
+
+            List<RideUserMapping> remainingCrew = rideUserMappingRepository
+                    .findByRideIdInAndStatusIn(List.of(rideId), RideUserMappingStatus.ACTIVE_STATUSES);
+
+            List<String> crewUserIds = remainingCrew.stream()
+                    .map(RideUserMapping::getUserId)
+                    .filter(id -> !id.equals(userId))
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            notificationService.sendToUsers(
+                    crewUserIds,
+                    "Member Left",
+                    userName + " has left the ride",
+                    Map.of("rideId", String.valueOf(rideId), "userId", userId, "type", "MEMBER_LEFT")
+            );
+        } catch (Exception e) {
+            log.warn("Failed to send leave notification: {}", e.getMessage());
+        }
     }
 }
