@@ -70,7 +70,6 @@ public class NotificationService {
     /**
      * Send a push notification to a single user (all their devices).
      */
-    @Async
     public void sendToUser(String userId, String title, String body, Map<String, String> data) {
         List<UserFcmToken> tokens = fcmTokenRepository.findByUserId(userId);
         if (tokens.isEmpty()) {
@@ -88,7 +87,6 @@ public class NotificationService {
     /**
      * Send a push notification to multiple users (all their devices).
      */
-    @Async
     public void sendToUsers(Collection<String> userIds, String title, String body, Map<String, String> data) {
         if (userIds == null || userIds.isEmpty()) {
             return;
