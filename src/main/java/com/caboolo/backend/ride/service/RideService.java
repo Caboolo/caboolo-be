@@ -53,6 +53,8 @@ public class RideService {
     @Transactional
     public Long createRide(RideRequestDto request) {
         Long rideId = sequenceGenerator.nextId();
+        log.info("Creating ride rideId={}, userId={}, sourceHubId={}, destinationHubId={}, departureTime={}",
+                rideId, request.getUserId(), request.getSourceHubId(), request.getDestinationHubId(), request.getDepartureTime());
 
         // 1. Create and Save Ride
         Ride ride = Ride.Builder.ride()
@@ -70,6 +72,7 @@ public class RideService {
 
         // 2. Create and Save RideUserMapping for the creator via the specialized service
         rideUserMappingService.createMapping(rideId, request.getUserId(), RideUserMappingStatus.CREATED);
+        log.info("Ride created successfully: rideId={}", rideId);
 
         return rideId;
     }
@@ -227,9 +230,13 @@ public class RideService {
     }
 
     public MyRideDetailResponseDto getMyRideDetail(Long rideId) {
+        log.info("Fetching ride detail for rideId={}", rideId);
         // 1. Fetch the ride
         Ride ride = rideRepository.findByRideId(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found: " + rideId));
+                .orElseThrow(() -> {
+                    log.error("Ride not found for rideId={}", rideId);
+                    return new RuntimeException("Ride not found: " + rideId);
+                });
 
         // 2. Fetch all mappings for this ride
         List<RideUserMapping> allMappings = rideUserMappingService.findByRideId(rideId);
@@ -424,10 +431,15 @@ public class RideService {
 
     @Transactional
     public void updatePoolPrice(Long rideId, String userId, BigDecimal poolPrice) {
+        log.info("Updating pool price for rideId={}, updatedBy={}, newPoolPrice={}", rideId, userId, poolPrice);
         // 2. Fetch and update the ride
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found"));
+                .orElseThrow(() -> {
+                    log.error("Ride not found for rideId={} during pool price update", rideId);
+                    return new RuntimeException("Ride not found");
+                });
         ride.setPoolPrice(poolPrice);
         rideRepository.save(ride);
+        log.info("Pool price updated successfully for rideId={}", rideId);
     }
 }

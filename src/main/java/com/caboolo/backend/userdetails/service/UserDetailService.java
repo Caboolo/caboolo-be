@@ -55,16 +55,19 @@ public class UserDetailService {
             throw new IllegalArgumentException("User ID must not be null");
         }
 
+        log.info("Creating or updating user details for userId={}", requestDto.getUserId());
         Optional<UserDetail> existingDetailsOpt = userDetailRepository.findByUserId(requestDto.getUserId());
         UserDetail details;
 
         if (existingDetailsOpt.isPresent()) {
+            log.info("Existing user detail found for userId={}, updating record", requestDto.getUserId());
             details = existingDetailsOpt.get();
             details.setName(requestDto.getName());
             details.setGender(requestDto.getGender());
             details.setImageUrl(requestDto.getImageUrl());
             details.setEmail(requestDto.getEmail());
         } else {
+            log.info("No existing user detail found for userId={}, creating new record", requestDto.getUserId());
             details = UserDetail.Builder.userDetails()
                 .withUserDetailsId(sequenceGenerator.nextId())
                 .withName(requestDto.getName())
@@ -82,6 +85,7 @@ public class UserDetailService {
         }
 
         UserDetail saved = userDetailRepository.save(details);
+        log.info("User details saved for userId={}", saved.getUserId());
         return userDetailsConverter.toDetailResponseDto(saved);
     }
 
@@ -176,6 +180,7 @@ public class UserDetailService {
      * provider but the user record itself is never hard-deleted.
      */
     public String uploadProfilePhoto(String firebaseUid, MultipartFile file) {
+        log.info("Uploading profile photo for userId={}, fileName={}", firebaseUid, file.getOriginalFilename());
         validatePhoto(file);
 
         UserDetail details = userDetailRepository.findByUserId(firebaseUid)
@@ -196,6 +201,7 @@ public class UserDetailService {
 
         // Delete old photo from provider if one exists
         if (details.getPhotoPublicId() != null && !details.getPhotoPublicId().isBlank()) {
+            log.info("Deleting old profile photo for userId={}, publicId={}", firebaseUid, details.getPhotoPublicId());
             storageService.delete(details.getPhotoPublicId());
         }
 
@@ -204,6 +210,7 @@ public class UserDetailService {
         details.setImageUrl(result.getUrl());
         details.setPhotoPublicId(result.getPublicId());
         userDetailRepository.save(details);
+        log.info("Profile photo uploaded successfully for userId={}, publicId={}", firebaseUid, result.getPublicId());
 
         return details.getImageUrl();
     }
@@ -212,9 +219,11 @@ public class UserDetailService {
      * Soft-delete a user (isDeleted = true). The record stays in the DB.
      */
     public void softDeleteUser(String firebaseUid) {
+        log.info("Soft-deleting user: userId={}", firebaseUid);
         UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
         userLogin.setDeleted(true);
         userLoginRepository.save(userLogin);
+        log.info("User soft-deleted successfully: userId={}", firebaseUid);
     }
 
     // -----------------------------------------------------------------------
@@ -274,8 +283,12 @@ public class UserDetailService {
 
     @Async
     public void updateUserStatsAsync(String userId) {
+        log.info("Updating user stats asynchronously for userId={}", userId);
         Optional<UserDetail> detailsOpt = userDetailRepository.findByUserId(userId);
-        if (detailsOpt.isEmpty()) return;
+        if (detailsOpt.isEmpty()) {
+            log.warn("User detail not found for userId={} during async stats update", userId);
+            return;
+        }
 
         UserDetail details = detailsOpt.get();
         List<Review> reviews = reviewRepository.findByForUserId(userId);

@@ -69,6 +69,7 @@ public class HubService {
     }
 
     public List<HubDto> findNearestHubs(double longitude, double latitude, double radiusKm) {
+        log.info("Searching for nearest hubs at coordinates [{}, {}] within {} km", latitude, longitude, radiusKm);
         Point center = new Point(longitude, latitude);
         Distance radius = new Distance(radiusKm, RedisGeoCommands.DistanceUnit.KILOMETERS);
 
@@ -86,6 +87,7 @@ public class HubService {
         GeoResults<RedisGeoCommands.GeoLocation<String>> results = geoOps.radius(REDIS_HUB_KEY, new org.springframework.data.geo.Circle(center, radius), geoArgs);
 
         if (results == null || results.getContent().isEmpty()) {
+            log.warn("No hubs found within {} km of [{}, {}]", radiusKm, latitude, longitude);
             return new ArrayList<>();
         }
 
@@ -114,6 +116,7 @@ public class HubService {
                         .build());
             }
         }
+        log.info("Found {} hubs near [{}, {}]", nearestHubs.size(), latitude, longitude);
         return nearestHubs;
     }
 
@@ -125,6 +128,7 @@ public class HubService {
             return new ArrayList<>();
         }
 
+        log.info("Fetching all hubs, found {} members in Redis cache", members.size());
         List<Long> hubIds = members.stream()
                 .map(Long::valueOf)
                 .collect(Collectors.toList());
@@ -153,6 +157,7 @@ public class HubService {
                     .latitude(point != null ? point.getY() : hub.getLatitude())
                     .build());
         }
+        log.info("getAllHubs returning {} hub(s)", result.size());
         return result;
     }
 
