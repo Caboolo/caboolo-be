@@ -6,8 +6,10 @@ import com.caboolo.backend.flightverification.dto.FlightVerificationRequestDto;
 import com.caboolo.backend.flightverification.dto.FlightVerificationResponseDto;
 import com.caboolo.backend.flightverification.service.FlightVerificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/flight-verification")
 public class FlightVerificationController extends BaseController {
@@ -27,7 +29,10 @@ public class FlightVerificationController extends BaseController {
     public RestEntity<FlightVerificationResponseDto> verifyFlight(
             @RequestParam String userId,
             @RequestBody FlightVerificationRequestDto request) {
+        log.info("Flight verification request received for userId={}, flightNumber={}", userId, request.getFlightNumber());
         FlightVerificationResponseDto response = flightVerificationService.verifyFlight(userId, request);
+        log.info("Flight verification completed for userId={}, flightNumber={}, status={}",
+                userId, request.getFlightNumber(), response.getStatus());
         return successResponse(response);
     }
 }

@@ -27,6 +27,7 @@ public class CloudinaryStorageService implements StorageService {
 
     @Override
     public StorageUploadResult upload(MultipartFile file, String folder) {
+        log.info("Uploading file '{}' to Cloudinary folder '{}'", file.getOriginalFilename(), folder);
         try {
             Map<?, ?> result = cloudinary.uploader().upload(
                 file.getBytes(),
@@ -37,17 +38,22 @@ public class CloudinaryStorageService implements StorageService {
             );
             String url = result.get("secure_url").toString();
             String publicId = result.get("public_id").toString();
+            log.info("File uploaded successfully to Cloudinary: publicId={}, url={}", publicId, url);
             return new StorageUploadResult(url, publicId);
         } catch (IOException e) {
+            log.error("Cloudinary upload failed for file '{}': {}", file.getOriginalFilename(), e.getMessage(), e);
             throw new RuntimeException("Cloudinary upload failed: " + e.getMessage(), e);
         }
     }
 
     @Override
     public void delete(String publicId) {
+        log.info("Deleting file from Cloudinary: publicId={}", publicId);
         try {
             cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+            log.info("File deleted successfully from Cloudinary: publicId={}", publicId);
         } catch (IOException e) {
+            log.error("Cloudinary delete failed for publicId='{}': {}", publicId, e.getMessage(), e);
             throw new RuntimeException("Cloudinary delete failed: " + e.getMessage(), e);
         }
     }

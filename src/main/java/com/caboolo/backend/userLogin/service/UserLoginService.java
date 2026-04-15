@@ -27,10 +27,12 @@ public class UserLoginService {
     // -----------------------------------------------------------------------
 
     public AuthResponse handleLogin(String uid, String phoneNumber) {
+        log.info("Handling login for uid={}", uid);
         Optional<UserLogin> existingUserOpt = userLoginRepository.findByFirebaseUid(uid);
         UserLogin userLogin;
 
         if (existingUserOpt.isEmpty()) {
+            log.info("New user detected, creating UserLogin record for uid={}", uid);
             userLogin = UserLogin.Builder.userLogin()
                     .withUserLoginId(sequenceGenerator.nextId())
                     .withFirebaseUid(uid)
@@ -38,14 +40,17 @@ public class UserLoginService {
                     .build();
 
             userLogin = userLoginRepository.save(userLogin);
+            log.info("New UserLogin record created for uid={}", uid);
         } else {
             userLogin = existingUserOpt.get();
             // Update phone number if missing or changed
             if (phoneNumber != null && !phoneNumber.equals(userLogin.getPhoneNumber())) {
+                log.info("Updating phone number for uid={}", uid);
                 userLogin.setPhoneNumber(phoneNumber);
                 userLogin = userLoginRepository.save(userLogin);
             }
         }
+        log.info("Login handled successfully for uid={}", uid);
         return UserLoginConverter.toAuthResponse(userLogin);
     }
 }

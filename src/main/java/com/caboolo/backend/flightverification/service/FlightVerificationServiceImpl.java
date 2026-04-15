@@ -37,6 +37,7 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
     public FlightVerificationResponseDto verifyFlight(String userId, FlightVerificationRequestDto request) {
         String flightNumber = request.getFlightNumber();
         LocalDate flightDate = request.getFlightDate();
+        log.info("Starting flight verification for userId={}, flightNumber={}, flightDate={}", userId, flightNumber, flightDate);
 
         // ── Step 1: Short-circuit cache check ─────────────────────────────────
         // If any VERIFIED record already exists for this flight+date (from any user),
@@ -50,6 +51,7 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
         LocalDateTime arrivalTime;
 
         if (cachedVerification.isPresent()) {
+            log.info("Cache hit: reusing existing VERIFIED record for flightNumber={}, flightDate={}", flightNumber, flightDate);
             FlightVerification cached = cachedVerification.get();
             departureAirport = cached.getDepartureAirport();
             arrivalAirport = cached.getArrivalAirport();
@@ -57,10 +59,12 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
             arrivalTime = cached.getArrivalTime();
         } else {
             // ── Step 2: Call AviationStack API ────────────────────────────────
+            log.info("Cache miss: calling AviationStack API for flightNumber={}, flightDate={}", flightNumber, flightDate);
             AviationStackResponse response = aviationStackClient.getFlightInfo(
                     flightNumber, flightDate.toString());
 
             if (response == null || response.getData() == null || response.getData().isEmpty()) {
+                log.error("Flight not found in AviationStack for flightNumber={}, flightDate={}", flightNumber, flightDate);
                 throw new IllegalArgumentException("Flight not found: " + flightNumber);
             }
 
@@ -69,6 +73,7 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
             // ── Step 3: Validate flight date ──────────────────────────────────
             LocalDate apiFlightDate = LocalDate.parse(flightData.getFlightDate());
             if (!apiFlightDate.equals(flightDate)) {
+                log.error("Flight date mismatch for flightNumber={}: provided={}, actual={}", flightNumber, flightDate, apiFlightDate);
                 throw new IllegalArgumentException(
                         "Flight date mismatch: provided " + flightDate + " but flight is on " + apiFlightDate);
             }
@@ -81,7 +86,10 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
 
     // ── Step 4: Delete any existing record for this user ──────────────────
         flightVerificationRepository.findByUserId(userId)
-                .ifPresent(existing -> flightVerificationRepository.delete(existing));
+                .ifPresent(existing -> {
+                    log.info("Deleting previous flight verification record for userId={}", userId);
+                    flightVerificationRepository.delete(existing);
+                });
 
     // ── Step 5: Save new VERIFIED record ──────────────────────────────────
     FlightVerification newVerification = FlightVerification.Builder.flightVerification()
@@ -97,6 +105,8 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
                 .build();
 
     FlightVerification saved = flightVerificationRepository.save(newVerification);
+    log.info("Saved flight verification record for userId={}, flightNumber={}, verificationId={}",
+            userId, flightNumber, saved.getFlightVerificationId());
 
     // ── Step 6: Build and return response ─────────────────────────────────
         return FlightVerificationResponseDto.Builder.flightVerificationResponseDto()
