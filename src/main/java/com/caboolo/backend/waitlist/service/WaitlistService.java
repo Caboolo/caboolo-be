@@ -21,7 +21,9 @@ public class WaitlistService {
     }
 
     public void joinWaitlist(String email) {
+        log.info("Waitlist join request received for email={}", email);
         if (waitlistRepository.existsByEmail(email)) {
+            log.warn("Duplicate waitlist join attempt for email={}", email);
             throw new IllegalArgumentException("Email is already on the waitlist");
         }
         WaitlistEntry entry = WaitlistEntry.Builder.waitlistEntry()
@@ -29,5 +31,6 @@ public class WaitlistService {
                 .withEmail(email)
                 .build();
         waitlistRepository.save(entry);
+        log.info("Email={} successfully added to the waitlist", email);
     }
 }

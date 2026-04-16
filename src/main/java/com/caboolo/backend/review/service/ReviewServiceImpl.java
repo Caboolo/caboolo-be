@@ -34,6 +34,8 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public void submitReview(RideReviewResponseDto request) {
+        log.info("Submitting {} review(s) for rideId={}, byUserId={}",
+                request.getReviews().size(), request.getRideId(), request.getByUserId());
         List<Review> reviews = request.getReviews().stream()
                 .map(item -> Review.Builder.review()
                         .withReviewId(sequenceGenerator.nextId())
@@ -47,6 +49,7 @@ public class ReviewServiceImpl implements ReviewService {
                         .build())
                 .collect(Collectors.toList());
         reviewRepository.saveAll(reviews);
+        log.info("Saved {} review(s) for rideId={}", reviews.size(), request.getRideId());
 
         // Update user statistics asynchronously
         request.getReviews().stream()
@@ -98,6 +101,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public RiderProfileDto getCoTravellerProfile(String userId) {
+        log.info("Fetching co-traveller profile for userId={}", userId);
         UserDetail userDetails = userDetailService.getUserDetailEntity(userId);
 
         Map<String, Integer> tagCountMap = userDetails.getTagCounts();

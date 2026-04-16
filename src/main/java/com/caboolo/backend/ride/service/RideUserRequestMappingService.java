@@ -11,6 +11,7 @@ import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import com.caboolo.backend.ride.repository.RideUserRequestMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,11 +42,13 @@ public class RideUserRequestMappingService {
      */
     @Transactional
     public void requestToJoinRide(Long rideId, String requesterId) {
+        log.info("User requesterId={} is requesting to join rideId={}", requesterId, rideId);
         // Guard: user must not already be an active member
         Optional<RideUserMapping> existingActive = rideUserMappingRepository.findByRideIdAndUserId(rideId, requesterId);
         if (existingActive.isPresent()) {
             RideUserMappingStatus status = existingActive.get().getStatus();
             if (!RideUserMappingStatus.PENDING.equals(status)) {
+                log.error("User requesterId={} already has an active mapping for rideId={} with status={}", requesterId, rideId, status);
                 throw new RuntimeException("No Pending requests for the user");
             }
         }
@@ -55,6 +58,7 @@ public class RideUserRequestMappingService {
                 .findByRideIdInAndStatusIn(List.of(rideId), RideUserMappingStatus.ACTIVE_STATUSES);
 
         if (activeParticipants.isEmpty()) {
+            log.error("No active participants found for rideId={} — cannot raise join request for requesterId={}", rideId, requesterId);
             throw new RuntimeException("No active participants found for ride — cannot raise a join request");
         }
 
@@ -82,6 +86,8 @@ public class RideUserRequestMappingService {
                 .withStatus(RideUserMappingStatus.PENDING)
                 .build();
         rideUserMappingRepository.save(placeholderMapping);
+        log.info("Join request created for requesterId={}, rideId={}, notified {} participant(s)",
+                requesterId, rideId, activeParticipants.size());
 
         // Publish event → notify crew members
         List<String> crewUserIds = activeParticipants.stream()
@@ -107,20 +113,33 @@ public class RideUserRequestMappingService {
      */
     @Transactional
     public void acceptRideRequest(Long rideId, String acceptingUserId, String requesterId) {
+        log.info("User acceptingUserId={} is accepting join request from requesterId={} for rideId={}",
+                acceptingUserId, requesterId, rideId);
         // Guard: parent mapping must still be PENDING
         RideUserMapping requesterMapping = rideUserMappingRepository
                 .findByRideIdAndUserId(rideId, requesterId)
-                .orElseThrow(() -> new RuntimeException("Requester's RideUserMapping not found"));
+                .orElseThrow(() -> {
+                    log.error("Requester RideUserMapping not found for rideId={}, requesterId={}", rideId, requesterId);
+                    return new RuntimeException("Requester's RideUserMapping not found");
+                });
         if (requesterMapping.getStatus() != RideUserMappingStatus.PENDING) {
+            log.error("Cannot accept: request is no longer pending for requesterId={}, rideId={}, status={}",
+                    requesterId, rideId, requesterMapping.getStatus());
             throw new RuntimeException("Request is no longer pending — cannot accept");
         }
 
         RideUserRequestMapping requestRow = requestMappingRepository
                 .findByRideIdAndRequestorIdAndApproverId(rideId, requesterId, acceptingUserId)
-                .orElseThrow(() -> new RuntimeException("Join request row not found"));
+                .orElseThrow(() -> {
+                    log.error("Join request row not found for rideId={}, requesterId={}, approverId={}",
+                            rideId, requesterId, acceptingUserId);
+                    return new RuntimeException("Join request row not found");
+                });
 
         // Idempotency: skip if already handled
         if (requestRow.getStatus() != RideUserRequestStatus.PENDING) {
+            log.warn("Request already handled for rideId={}, requesterId={}, approverId={}, status={}",
+                    rideId, requesterId, acceptingUserId, requestRow.getStatus());
             return;
         }
 
@@ -137,6 +156,8 @@ public class RideUserRequestMappingService {
 
         // 50% or more accepted → promote to ACCEPTED globally
         if (acceptedCount * 2 >= totalVoters) {
+            log.info("Majority accepted ({}/{}) — promoting requesterId={} to ACCEPTED for rideId={}",
+                    acceptedCount, totalVoters, requesterId, rideId);
             RideUserMapping userMapping = rideUserMappingRepository
                     .findByRideIdAndUserId(rideId, requesterId)
                     .orElseThrow(() -> new RuntimeException("Requester's RideUserMapping not found"));
@@ -177,20 +198,32 @@ public class RideUserRequestMappingService {
      */
     @Transactional
     public void rejectRideRequest(Long rideId, String rejectingUserId, String requesterId) {
+        log.info("User rejectingUserId={} is rejecting join request from requesterId={} for rideId={}",
+                rejectingUserId, requesterId, rideId);
         // Guard: parent mapping must still be PENDING
         RideUserMapping requesterMapping = rideUserMappingRepository
                 .findByRideIdAndUserId(rideId, requesterId)
-                .orElseThrow(() -> new RuntimeException("Requester's RideUserMapping not found"));
+                .orElseThrow(() -> {
+                    log.error("Requester RideUserMapping not found for rideId={}, requesterId={}", rideId, requesterId);
+                    return new RuntimeException("Requester's RideUserMapping not found");
+                });
         if (requesterMapping.getStatus() != RideUserMappingStatus.PENDING) {
+            log.error("Cannot reject: request is no longer pending for requesterId={}, rideId={}", requesterId, rideId);
             throw new RuntimeException("Request is no longer pending — cannot reject");
         }
 
         RideUserRequestMapping requestRow = requestMappingRepository
                 .findByRideIdAndRequestorIdAndApproverId(rideId, requesterId, rejectingUserId)
-                .orElseThrow(() -> new RuntimeException("Join request row not found"));
+                .orElseThrow(() -> {
+                    log.error("Join request row not found for rideId={}, requesterId={}, rejectingUserId={}",
+                            rideId, requesterId, rejectingUserId);
+                    return new RuntimeException("Join request row not found");
+                });
 
         // Idempotency: skip if already in a terminal state
         if (requestRow.getStatus() != RideUserRequestStatus.PENDING) {
+            log.warn("Request already in terminal state for rideId={}, requesterId={}, rejectingUserId={}, status={}",
+                    rideId, requesterId, rejectingUserId, requestRow.getStatus());
             return;
         }
 
@@ -200,6 +233,8 @@ public class RideUserRequestMappingService {
         // Reject the requester's placeholder mapping
         requesterMapping.setStatus(RideUserMappingStatus.REJECTED);
         rideUserMappingRepository.save(requesterMapping);
+        log.info("Request from requesterId={} rejected for rideId={} by rejectingUserId={}",
+                requesterId, rideId, rejectingUserId);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -212,11 +247,13 @@ public class RideUserRequestMappingService {
      */
     @Transactional
     public void withdrawRideRequest(Long rideId, String requesterId) {
+        log.info("User requesterId={} is withdrawing ride request for rideId={}", requesterId, rideId);
         List<RideUserRequestMapping> pendingRows = requestMappingRepository
                 .findByRideIdAndRequestorIdAndStatus(rideId, requesterId, RideUserRequestStatus.PENDING);
 
         if (pendingRows.isEmpty()) {
             // Already decided or already withdrawn — no-op
+            log.warn("No pending rows found for rideId={}, requesterId={} — withdrawal is a no-op", rideId, requesterId);
             return;
         }
 
@@ -226,11 +263,16 @@ public class RideUserRequestMappingService {
         // Withdraw the requester's placeholder mapping
         RideUserMapping requesterMapping = rideUserMappingRepository
                 .findByRideIdAndUserId(rideId, requesterId)
-                .orElseThrow(() -> new RuntimeException("Requester's RideUserMapping not found"));
+                .orElseThrow(() -> {
+                    log.error("Requester RideUserMapping not found during withdrawal for rideId={}, requesterId={}",
+                            rideId, requesterId);
+                    return new RuntimeException("Requester's RideUserMapping not found");
+                });
 
         if (requesterMapping.getStatus() == RideUserMappingStatus.PENDING) {
             requesterMapping.setStatus(RideUserMappingStatus.WITHDRAWN);
             rideUserMappingRepository.save(requesterMapping);
+            log.info("Ride request withdrawn successfully for requesterId={}, rideId={}", requesterId, rideId);
         }
     }
 
@@ -245,16 +287,23 @@ public class RideUserRequestMappingService {
      */
     @Transactional
     public void leaveRide(Long rideId, String userId) {
+        log.info("User userId={} is leaving rideId={}", userId, rideId);
         RideUserMapping mapping = rideUserMappingRepository
                 .findByRideIdAndUserId(rideId, userId)
-                .orElseThrow(() -> new RuntimeException("User is not a member of this ride"));
+                .orElseThrow(() -> {
+                    log.error("User userId={} is not a member of rideId={}", userId, rideId);
+                    return new RuntimeException("User is not a member of this ride");
+                });
 
         if (!RideUserMappingStatus.ACTIVE_STATUSES.contains(mapping.getStatus())) {
+            log.error("User userId={} cannot leave rideId={}: not in active status, current status={}",
+                    userId, rideId, mapping.getStatus());
             throw new RuntimeException("Only active members can leave a ride");
         }
 
         mapping.setStatus(RideUserMappingStatus.LEFT);
         rideUserMappingRepository.save(mapping);
+        log.info("User userId={} left rideId={} successfully", userId, rideId);
 
         // Publish event → notify remaining crew
         List<RideUserMapping> remainingCrew = rideUserMappingRepository
