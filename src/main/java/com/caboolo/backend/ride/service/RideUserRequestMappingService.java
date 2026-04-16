@@ -1,6 +1,8 @@
 package com.caboolo.backend.ride.service;
 
 import com.caboolo.backend.core.idgen.SequenceGenerator;
+import com.caboolo.backend.notification.event.RideNotificationEvent;
+import com.caboolo.backend.notification.event.RideNotificationType;
 import com.caboolo.backend.ride.domain.RideUserMapping;
 import com.caboolo.backend.ride.domain.RideUserRequestMapping;
 import com.caboolo.backend.ride.enums.RideUserMappingStatus;
@@ -9,11 +11,13 @@ import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import com.caboolo.backend.ride.repository.RideUserRequestMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -23,6 +27,7 @@ public class RideUserRequestMappingService {
     private final RideUserRequestMappingRepository requestMappingRepository;
     private final RideUserMappingRepository rideUserMappingRepository;
     private final SequenceGenerator sequenceGenerator;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ─────────────────────────────────────────────────────────────────────────
     // 1. Request to Join Ride
@@ -83,6 +88,15 @@ public class RideUserRequestMappingService {
         rideUserMappingRepository.save(placeholderMapping);
         log.info("Join request created for requesterId={}, rideId={}, notified {} participant(s)",
                 requesterId, rideId, activeParticipants.size());
+
+        // Publish event → notify crew members
+        List<String> crewUserIds = activeParticipants.stream()
+                .map(RideUserMapping::getUserId)
+                .collect(Collectors.toList());
+
+        eventPublisher.publishEvent(
+                RideNotificationEvent.of(RideNotificationType.RIDE_REQUEST_SENT, rideId, requesterId, crewUserIds)
+        );
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -152,8 +166,22 @@ public class RideUserRequestMappingService {
             }
             userMapping.setStatus(RideUserMappingStatus.ACCEPTED);
             rideUserMappingRepository.save(userMapping);
-        }
 
+            // Publish event → notify requester: ride confirmed
+            eventPublisher.publishEvent(
+                    RideNotificationEvent.of(RideNotificationType.RIDE_CONFIRMED, rideId, requesterId, List.of(requesterId))
+            );
+
+            // Publish event → notify crew: new member joined
+            List<String> crewUserIds = allRows.stream()
+                    .map(RideUserRequestMapping::getApproverId)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            eventPublisher.publishEvent(
+                    RideNotificationEvent.of(RideNotificationType.MATCH_FOUND, rideId, requesterId, crewUserIds)
+            );
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -276,5 +304,19 @@ public class RideUserRequestMappingService {
         mapping.setStatus(RideUserMappingStatus.LEFT);
         rideUserMappingRepository.save(mapping);
         log.info("User userId={} left rideId={} successfully", userId, rideId);
+
+        // Publish event → notify remaining crew
+        List<RideUserMapping> remainingCrew = rideUserMappingRepository
+                .findByRideIdInAndStatusIn(List.of(rideId), RideUserMappingStatus.ACTIVE_STATUSES);
+
+        List<String> crewUserIds = remainingCrew.stream()
+                .map(RideUserMapping::getUserId)
+                .filter(id -> !id.equals(userId))
+                .distinct()
+                .collect(Collectors.toList());
+
+        eventPublisher.publishEvent(
+                RideNotificationEvent.of(RideNotificationType.MEMBER_LEFT, rideId, userId, crewUserIds)
+        );
     }
 }
