@@ -63,7 +63,7 @@ public class RideNotificationListener {
     private void handleRideConfirmed(RideNotificationEvent event) {
         notificationService.sendToUsers(
                 event.getRecipientUserIds(),
-                "Ride Confirmed \uD83C\uDF89",
+                "Ride Confirmed. ",
                 "Your request to join the ride has been accepted!",
                 Map.of(
                         "rideId", String.valueOf(event.getRideId()),

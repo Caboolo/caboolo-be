@@ -232,16 +232,6 @@ public class RideUserRequestMappingService {
             requesterMapping.setStatus(RideUserMappingStatus.WITHDRAWN);
             rideUserMappingRepository.save(requesterMapping);
         }
-
-        // Publish event → notify crew that request was withdrawn
-        List<String> crewUserIds = pendingRows.stream()
-                .map(RideUserRequestMapping::getApproverId)
-                .distinct()
-                .collect(Collectors.toList());
-
-        eventPublisher.publishEvent(
-                RideNotificationEvent.of(RideNotificationType.REQUEST_WITHDRAWN, rideId, requesterId, crewUserIds)
-        );
     }
 
     // ─────────────────────────────────────────────────────────────────────────
