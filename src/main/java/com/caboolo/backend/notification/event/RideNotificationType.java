@@ -13,9 +13,6 @@ public enum RideNotificationType {
     /** A new member joined → sent to existing crew */
     MATCH_FOUND,
 
-    /** A requester withdrew their pending request → sent to crew */
-    REQUEST_WITHDRAWN,
-
     /** An active member left the ride → sent to remaining crew */
     MEMBER_LEFT
 }

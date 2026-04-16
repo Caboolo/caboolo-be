@@ -35,7 +35,6 @@ public class RideNotificationListener {
                 case RIDE_REQUEST_SENT -> handleRideRequestSent(event);
                 case RIDE_CONFIRMED -> handleRideConfirmed(event);
                 case MATCH_FOUND -> handleMatchFound(event);
-                case REQUEST_WITHDRAWN -> handleRequestWithdrawn(event);
                 case MEMBER_LEFT -> handleMemberLeft(event);
                 default -> log.warn("Unknown ride notification type: {}", event.getType());
             }
@@ -83,21 +82,6 @@ public class RideNotificationListener {
                         "rideId", String.valueOf(event.getRideId()),
                         "requesterId", event.getActorUserId(),
                         "type", "MATCH_FOUND"
-                )
-        );
-    }
-
-    private void handleRequestWithdrawn(RideNotificationEvent event) {
-        String actorName = resolveUserName(event.getActorUserId(), "A user");
-
-        notificationService.sendToUsers(
-                event.getRecipientUserIds(),
-                "Request Withdrawn",
-                actorName + " withdrew their join request",
-                Map.of(
-                        "rideId", String.valueOf(event.getRideId()),
-                        "requesterId", event.getActorUserId(),
-                        "type", "REQUEST_WITHDRAWN"
                 )
         );
     }
