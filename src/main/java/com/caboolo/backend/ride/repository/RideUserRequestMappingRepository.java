@@ -15,15 +15,15 @@ import java.util.Optional;
 @Repository
 public interface RideUserRequestMappingRepository extends JpaRepository<RideUserRequestMapping, Long> {
 
-    List<RideUserRequestMapping> findByRideIdAndRequestorId(Long rideId, String requestorId);
+    List<RideUserRequestMapping> findByRideIdAndRequestorId(String rideId, String requestorId);
 
     Optional<RideUserRequestMapping> findByRideIdAndRequestorIdAndApproverId(
-            Long rideId, String requestorId, String approverId);
+            String rideId, String requestorId, String approverId);
 
     List<RideUserRequestMapping> findByRequestorIdAndStatus(String requestorId, RideUserRequestStatus status);
 
     List<RideUserRequestMapping> findByRideIdAndRequestorIdAndStatus(
-            Long rideId, String requestorId, RideUserRequestStatus status);
+            String rideId, String requestorId, RideUserRequestStatus status);
 
     /**
      * Fetches all request rows for a (rideId, requestorId) pair with a pessimistic
@@ -32,7 +32,7 @@ public interface RideUserRequestMappingRepository extends JpaRepository<RideUser
      */
     @Query("SELECT r FROM RideUserRequestMapping r WHERE r.rideId = :rideId AND r.requestorId = :requestorId")
     List<RideUserRequestMapping> findByRideIdAndRequestorIdWithLock(
-            @Param("rideId") Long rideId,
+            @Param("rideId") String rideId,
             @Param("requestorId") String requestorId);
 
 }

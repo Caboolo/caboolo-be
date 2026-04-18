@@ -16,9 +16,9 @@ import java.util.Optional;
 
 @Repository
 public interface RideRepository extends JpaRepository<Ride, Long> {
-    List<Ride> findByRideIdIn(List<Long> rideIds);
-    List<Ride> findByStatusAndRideIdIn(RideStatus status, Collection<Long> rideIds);
-    Optional<Ride> findByRideId(Long rideId);
+    List<Ride> findByRideIdIn(List<String> rideIds);
+    List<Ride> findByStatusAndRideIdIn(RideStatus status, Collection<String> rideIds);
+    Optional<Ride> findByRideId(String rideId);
 
     @Query(value = "SELECT r.* FROM ride r " +
             "JOIN hub h ON r.destination_hub_id = h.hub_id " +
@@ -39,7 +39,7 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             @Param("status") String status,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
-            @Param("airportHubId") Long airportHubId,
+            @Param("airportHubId") String airportHubId,
             @Param("latitude") Double latitude,
             @Param("longitude") Double longitude,
             @Param("userId") String userId,
@@ -64,7 +64,7 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             @Param("status") String status,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
-            @Param("airportHubId") Long airportHubId,
+            @Param("airportHubId") String airportHubId,
             @Param("latitude") Double latitude,
             @Param("longitude") Double longitude,
             @Param("userId") String userId,
@@ -90,8 +90,8 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             @Param("status") String status,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
-            @Param("airportHubId") Long airportHubId,
-            @Param("otherHubId") Long otherHubId,
+            @Param("airportHubId") String airportHubId,
+            @Param("otherHubId") String otherHubId,
             @Param("userId") String userId,
             Pageable pageable);
 
@@ -115,8 +115,8 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             @Param("status") String status,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
-            @Param("airportHubId") Long airportHubId,
-            @Param("otherHubId") Long otherHubId,
+            @Param("airportHubId") String airportHubId,
+            @Param("otherHubId") String otherHubId,
             @Param("userId") String userId,
             Pageable pageable);
 

@@ -9,12 +9,12 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RideReviewResponseDto {
-    private Long rideId;
+    private String rideId;
     private String byUserId;
     private List<UserReviewDto> reviews;
 
     public static interface RideIdStep {
-        ByUserIdStep withRideId(Long rideId);
+        ByUserIdStep withRideId(String rideId);
     }
 
     public static interface ByUserIdStep {
@@ -30,7 +30,7 @@ public class RideReviewResponseDto {
     }
 
     public static class Builder implements RideIdStep, ByUserIdStep, ReviewsStep, BuildStep {
-        private Long rideId;
+        private String rideId;
         private String byUserId;
         private List<UserReviewDto> reviews;
 
@@ -39,7 +39,7 @@ public class RideReviewResponseDto {
         }
 
         @Override
-        public ByUserIdStep withRideId(Long rideId) {
+        public ByUserIdStep withRideId(String rideId) {
             this.rideId = rideId;
             return this;
         }

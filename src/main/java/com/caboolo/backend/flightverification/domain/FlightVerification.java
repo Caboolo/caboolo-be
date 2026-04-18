@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 public class FlightVerification extends GenericIdEntity {
 
     @Column(name = "flight_verification_id")
-    private Long flightVerificationId;
+    private String flightVerificationId;
 
     @Column(name = "user_id", nullable = false)
     private String userId;
@@ -50,7 +50,7 @@ public class FlightVerification extends GenericIdEntity {
     // ─── Step Builder ──────────────────────────────────────────────────────────
 
     public interface FlightVerificationIdStep {
-        UserIdStep withFlightVerificationId(Long flightVerificationId);
+        UserIdStep withFlightVerificationId(String flightVerificationId);
     }
 
     public interface UserIdStep {
@@ -93,7 +93,7 @@ public class FlightVerification extends GenericIdEntity {
             FlightDateStep, DepartureAirportStep, ArrivalAirportStep, DepartureTimeStep,
             ArrivalTimeStep, StatusStep, BuildStep {
 
-        private Long flightVerificationId;
+        private String flightVerificationId;
         private String userId;
         private String flightNumber;
         private LocalDate flightDate;
@@ -111,7 +111,7 @@ public class FlightVerification extends GenericIdEntity {
         }
 
         @Override
-        public UserIdStep withFlightVerificationId(Long flightVerificationId) {
+        public UserIdStep withFlightVerificationId(String flightVerificationId) {
             this.flightVerificationId = flightVerificationId;
             return this;
         }

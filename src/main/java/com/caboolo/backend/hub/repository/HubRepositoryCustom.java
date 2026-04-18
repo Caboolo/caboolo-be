@@ -4,5 +4,5 @@ import java.util.Collection;
 import java.util.Map;
 
 public interface HubRepositoryCustom {
-    Map<Long, String> findHubIdAndNameByHubIdIn(Collection<Long> hubIds);
+    Map<String, String> findHubIdAndNameByHubIdIn(Collection<String> hubIds);
 }

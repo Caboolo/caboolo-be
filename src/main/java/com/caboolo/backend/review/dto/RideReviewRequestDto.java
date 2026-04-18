@@ -9,13 +9,13 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RideReviewRequestDto {
-    private Long rideId;
+    private String rideId;
     private String source;
     private String destination;
     private List<MinProfileDto> riders;
 
     public static interface RideIdStep {
-        SourceStep withRideId(Long rideId);
+        SourceStep withRideId(String rideId);
     }
 
     public static interface SourceStep {
@@ -36,7 +36,7 @@ public class RideReviewRequestDto {
 
 
     public static class Builder implements RideIdStep, SourceStep, DestinationStep, RidersStep, BuildStep {
-        private Long rideId;
+        private String rideId;
         private String source;
         private String destination;
         private List<MinProfileDto> riders;
@@ -49,7 +49,7 @@ public class RideReviewRequestDto {
         }
 
         @Override
-        public SourceStep withRideId(Long rideId) {
+        public SourceStep withRideId(String rideId) {
             this.rideId = rideId;
             return this;
         }

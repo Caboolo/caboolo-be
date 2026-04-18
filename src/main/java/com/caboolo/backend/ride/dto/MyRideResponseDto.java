@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MyRideResponseDto {
-    private Long rideId;
+    private String rideId;
     private LocalDateTime departureTime;
     private String sourceHubName;
     private String destinationHubName;
@@ -20,7 +20,7 @@ public class MyRideResponseDto {
     private BigDecimal poolPrice;
 
     public static interface RideIdStep {
-        DepartureTimeStep withRideId(Long rideId);
+        DepartureTimeStep withRideId(String rideId);
     }
 
     public static interface DepartureTimeStep {
@@ -53,7 +53,7 @@ public class MyRideResponseDto {
 
 
     public static class Builder implements RideIdStep, DepartureTimeStep, SourceHubNameStep, DestinationHubNameStep, ParticipantsStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
-        private Long rideId;
+        private String rideId;
         private LocalDateTime departureTime;
         private String sourceHubName;
         private String destinationHubName;
@@ -69,7 +69,7 @@ public class MyRideResponseDto {
         }
 
         @Override
-        public DepartureTimeStep withRideId(Long rideId) {
+        public DepartureTimeStep withRideId(String rideId) {
             this.rideId = rideId;
             return this;
         }

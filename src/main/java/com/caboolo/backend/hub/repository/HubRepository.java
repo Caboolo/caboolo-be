@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface HubRepository extends JpaRepository<Hub, Long>, HubRepositoryCustom {
-    List<Hub> findByHubIdIn(Collection<Long> hubIds);
+    List<Hub> findByHubIdIn(Collection<String> hubIds);
 }

@@ -17,7 +17,7 @@ public class HubRepositoryImpl implements HubRepositoryCustom {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Map<Long, String> findHubIdAndNameByHubIdIn(Collection<Long> hubIds) {
+    public Map<String, String> findHubIdAndNameByHubIdIn(Collection<String> hubIds) {
         if (hubIds == null || hubIds.isEmpty()) {
             return new HashMap<>();
         }
@@ -27,11 +27,11 @@ public class HubRepositoryImpl implements HubRepositoryCustom {
                 .setParameter("hubIds", hubIds)
                 .getResultList();
 
-        Map<Long, String> map = new HashMap<>();
+        Map<String, String> map = new HashMap<>();
         for (Object[] row : results) {
-            Number id = (Number) row[0];
+            String id = String.valueOf(row[0]);
             String name = (String) row[1];
-            map.put(id.longValue(), name);
+            map.put(id, name);
         }
         return map;
     }

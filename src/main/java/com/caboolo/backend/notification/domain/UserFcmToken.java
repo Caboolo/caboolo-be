@@ -14,7 +14,7 @@ import lombok.*;
 public class UserFcmToken extends GenericIdEntity {
 
     @Column(name = "user_fcm_token_id", nullable = false)
-    private Long userFcmTokenId;
+    private String userFcmTokenId;
 
     @Column(name = "user_id", nullable = false)
     private String userId;
@@ -23,7 +23,7 @@ public class UserFcmToken extends GenericIdEntity {
     private String fcmToken;
 
     public static interface UserFcmTokenIdStep {
-        UserIdStep withUserFcmTokenId(Long userFcmTokenId);
+        UserIdStep withUserFcmTokenId(String userFcmTokenId);
     }
 
     public static interface UserIdStep {
@@ -39,7 +39,7 @@ public class UserFcmToken extends GenericIdEntity {
     }
 
     public static class Builder implements UserFcmTokenIdStep, UserIdStep, FcmTokenStep, BuildStep {
-        private Long userFcmTokenId;
+        private String userFcmTokenId;
         private String userId;
         private String fcmToken;
 
@@ -51,7 +51,7 @@ public class UserFcmToken extends GenericIdEntity {
         }
 
         @Override
-        public UserIdStep withUserFcmTokenId(Long userFcmTokenId) {
+        public UserIdStep withUserFcmTokenId(String userFcmTokenId) {
             this.userFcmTokenId = userFcmTokenId;
             return this;
         }

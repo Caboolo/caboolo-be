@@ -18,7 +18,7 @@ import java.util.Map;
 public class UserDetail extends GenericIdEntity {
 
     @Column(name = "user_details_id")
-    private Long userDetailsId;
+    private String userDetailsId;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -56,7 +56,7 @@ public class UserDetail extends GenericIdEntity {
     private Map<String, Integer> tagCounts;
 
     public static interface UserDetailsIdStep {
-        NameStep withUserDetailsId(Long userDetailsId);
+        NameStep withUserDetailsId(String userDetailsId);
     }
 
     public static interface NameStep {
@@ -109,7 +109,7 @@ public class UserDetail extends GenericIdEntity {
 
 
     public static class Builder implements UserDetailsIdStep, NameStep, UserIdStep, GenderStep, ImageUrlStep, EmailStep, PhoneNumberStep, PhotoPublicIdStep, AvgRatingStep, TotalReviewsStep, RideAgainCountStep, TagCountsStep, BuildStep {
-        private Long userDetailsId;
+        private String userDetailsId;
         private String name;
         private String userId;
         private Gender gender;
@@ -130,7 +130,7 @@ public class UserDetail extends GenericIdEntity {
         }
 
         @Override
-        public NameStep withUserDetailsId(Long userDetailsId) {
+        public NameStep withUserDetailsId(String userDetailsId) {
             this.userDetailsId = userDetailsId;
             return this;
         }
