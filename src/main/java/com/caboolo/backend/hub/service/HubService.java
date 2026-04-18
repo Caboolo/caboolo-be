@@ -3,6 +3,7 @@ package com.caboolo.backend.hub.service;
 import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.hub.domain.Hub;
 import com.caboolo.backend.hub.dto.HubDto;
+import com.caboolo.backend.hub.enums.HubType;
 import com.caboolo.backend.hub.repository.HubRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Distance;
@@ -106,6 +107,7 @@ public class HubService {
 
             if (hub != null) {
                 nearestHubs.add(HubDto.builder()
+                        .hubId(hub.getHubId())
                         .name(hub.getName())
                         .type(hub.getType())
                         .city(hub.getCity())
@@ -149,6 +151,7 @@ public class HubService {
             Point point = (positions != null) ? positions.get(i) : null;
             if (hub == null) continue;
             result.add(HubDto.builder()
+                    .hubId(hub.getHubId())
                     .name(hub.getName())
                     .type(hub.getType())
                     .city(hub.getCity())
@@ -161,10 +164,27 @@ public class HubService {
         return result;
     }
 
-    public List<HubDto> getHubsByPriority(int minPriority, int maxPriority) {
-        return getAllHubs().stream()
+    public Map<HubType, List<HubDto>> getHubsByPriority(int minPriority, int maxPriority) {
+        List<HubDto> allHubs = getAllHubs();
+
+        Map<HubType, List<HubDto>> groupedHubs = allHubs.stream()
+                .collect(Collectors.groupingBy(HubDto::getType));
+
+        // 1. Process AIRPORTs: all sorted by priority ASC
+        List<HubDto> airports = groupedHubs.getOrDefault(HubType.AIRPORT, new ArrayList<>());
+        airports.sort(java.util.Comparator.comparing(HubDto::getPriority, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())));
+
+        // 2. Process HUBs: filtered by priority range [minPriority, maxPriority] and sorted ASC
+        List<HubDto> hubs = groupedHubs.getOrDefault(HubType.HUB, new ArrayList<>()).stream()
                 .filter(hub -> hub.getPriority() != null && hub.getPriority() >= minPriority && hub.getPriority() <= maxPriority)
+                .sorted(java.util.Comparator.comparing(HubDto::getPriority, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
                 .collect(Collectors.toList());
+
+        Map<HubType, List<HubDto>> result = new java.util.EnumMap<>(HubType.class);
+        result.put(HubType.AIRPORT, airports);
+        result.put(HubType.HUB, hubs);
+
+        return result;
     }
 
     public Map<Long, String> getHubNames(Collection<Long> hubIds) {
