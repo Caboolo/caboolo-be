@@ -92,17 +92,17 @@ public class HubService {
             return new ArrayList<>();
         }
 
-        List<Long> nearestIds = results.getContent().stream()
-                .map(res -> Long.valueOf(res.getContent().getName()))
+        List<String> nearestIds = results.getContent().stream()
+                .map(res -> res.getContent().getName())
                 .collect(Collectors.toList());
 
         // Fetch details from MySQL using hubIds
-        Map<Long, Hub> hubMap = hubRepository.findByHubIdIn(nearestIds).stream()
+        Map<String, Hub> hubMap = hubRepository.findByHubIdIn(nearestIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, h -> h));
 
         List<HubDto> nearestHubs = new ArrayList<>();
         for (GeoResult<RedisGeoCommands.GeoLocation<String>> result : results) {
-            Long hubId = Long.valueOf(result.getContent().getName());
+            String hubId = result.getContent().getName();
             Hub hub = hubMap.get(hubId);
 
             if (hub != null) {
@@ -131,8 +131,7 @@ public class HubService {
         }
 
         log.info("Fetching all hubs, found {} members in Redis cache", members.size());
-        List<Long> hubIds = members.stream()
-                .map(Long::valueOf)
+        List<String> hubIds = members.stream()
                 .collect(Collectors.toList());
 
         // 2. Fetch coordinates from Redis in one call
@@ -141,12 +140,12 @@ public class HubService {
                 memberList.toArray(new String[0]));
 
         // 3. Bulk-resolve name / type / city from DB
-        Map<Long, Hub> hubMap = hubRepository.findByHubIdIn(hubIds).stream()
+        Map<String, Hub> hubMap = hubRepository.findByHubIdIn(hubIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, h -> h));
 
         List<HubDto> result = new ArrayList<>();
         for (int i = 0; i < memberList.size(); i++) {
-            Long hubId = Long.valueOf(memberList.get(i));
+            String hubId = memberList.get(i);
             Hub hub = hubMap.get(hubId);
             Point point = (positions != null) ? positions.get(i) : null;
             if (hub == null) continue;
@@ -187,17 +186,17 @@ public class HubService {
         return result;
     }
 
-    public Map<Long, String> getHubNames(Collection<Long> hubIds) {
+    public Map<String, String> getHubNames(Collection<String> hubIds) {
         return hubRepository.findByHubIdIn(hubIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, Hub::getName));
     }
 
-    public Map<Long, Hub> getHubsByIds(Collection<Long> hubIds) {
+    public Map<String, Hub> getHubsByIds(Collection<String> hubIds) {
         return hubRepository.findByHubIdIn(hubIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, h -> h));
     }
 
-    public Map<Long, String> getHubsMap(Collection<Long> hubIds) {
+    public Map<String, String> getHubsMap(Collection<String> hubIds) {
         return hubRepository.findHubIdAndNameByHubIdIn(hubIds);
     }
 }

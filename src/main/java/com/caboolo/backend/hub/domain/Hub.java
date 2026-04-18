@@ -15,7 +15,7 @@ import lombok.*;
 public class Hub extends GenericIdEntity {
 
     @Column(name = "hub_id")
-    private Long hubId;
+    private String hubId;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -38,7 +38,7 @@ public class Hub extends GenericIdEntity {
     private Double longitude;
 
     public static interface HubIdStep {
-        NameStep withHubId(Long hubId);
+        NameStep withHubId(String hubId);
     }
 
     public static interface NameStep {
@@ -71,7 +71,7 @@ public class Hub extends GenericIdEntity {
 
 
     public static class Builder implements HubIdStep, NameStep, TypeStep, CityStep, PriorityStep, LatitudeStep, LongitudeStep, BuildStep {
-        private Long hubId;
+        private String hubId;
         private String name;
         private HubType type;
         private City city;
@@ -87,7 +87,7 @@ public class Hub extends GenericIdEntity {
         }
 
         @Override
-        public NameStep withHubId(Long hubId) {
+        public NameStep withHubId(String hubId) {
             this.hubId = hubId;
             return this;
         }

@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class HubDto {
-    private Long hubId;
+    private String hubId;
     private String name;
     private HubType type;
     private City city;

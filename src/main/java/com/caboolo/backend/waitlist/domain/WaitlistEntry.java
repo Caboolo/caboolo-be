@@ -16,13 +16,13 @@ import com.caboolo.backend.core.domain.GenericIdEntity;
 public class WaitlistEntry extends GenericIdEntity {
 
     @Column(name = "waitlist_entry_id")
-    private Long waitlistEntryId;
+    private String waitlistEntryId;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     public static interface WaitlistEntryIdStep {
-        EmailStep withWaitlistEntryId(Long waitlistEntryId);
+        EmailStep withWaitlistEntryId(String waitlistEntryId);
     }
 
     public static interface EmailStep {
@@ -34,7 +34,7 @@ public class WaitlistEntry extends GenericIdEntity {
     }
 
     public static class Builder implements WaitlistEntryIdStep, EmailStep, BuildStep {
-        private Long waitlistEntryId;
+        private String waitlistEntryId;
         private String email;
 
         private Builder() {
@@ -45,7 +45,7 @@ public class WaitlistEntry extends GenericIdEntity {
         }
 
         @Override
-        public EmailStep withWaitlistEntryId(Long waitlistEntryId) {
+        public EmailStep withWaitlistEntryId(String waitlistEntryId) {
             this.waitlistEntryId = waitlistEntryId;
             return this;
         }

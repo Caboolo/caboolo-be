@@ -14,10 +14,10 @@ import lombok.*;
 public class RideUserMapping extends GenericIdEntity {
 
     @Column(name = "ride_user_mapping_id", nullable = false)
-    private Long rideUserMappingId;
+    private String rideUserMappingId;
 
     @Column(name = "ride_id", nullable = false)
-    private Long rideId;
+    private String rideId;
 
     @Column(name = "user_id", nullable = false)
     private String userId;
@@ -27,11 +27,11 @@ public class RideUserMapping extends GenericIdEntity {
     private RideUserMappingStatus status;
 
     public static interface RideUserMappingIdStep {
-        RideIdStep withRideUserMappingId(Long rideUserMappingId);
+        RideIdStep withRideUserMappingId(String rideUserMappingId);
     }
 
     public static interface RideIdStep {
-        UserIdStep withRideId(Long rideId);
+        UserIdStep withRideId(String rideId);
     }
 
     public static interface UserIdStep {
@@ -47,8 +47,8 @@ public class RideUserMapping extends GenericIdEntity {
     }
 
     public static class Builder implements RideUserMappingIdStep, RideIdStep, UserIdStep, StatusStep, BuildStep {
-        private Long rideUserMappingId;
-        private Long rideId;
+        private String rideUserMappingId;
+        private String rideId;
         private String userId;
         private RideUserMappingStatus status;
 
@@ -60,13 +60,13 @@ public class RideUserMapping extends GenericIdEntity {
         }
 
         @Override
-        public RideIdStep withRideUserMappingId(Long rideUserMappingId) {
+        public RideIdStep withRideUserMappingId(String rideUserMappingId) {
             this.rideUserMappingId = rideUserMappingId;
             return this;
         }
 
         @Override
-        public UserIdStep withRideId(Long rideId) {
+        public UserIdStep withRideId(String rideId) {
             this.rideId = rideId;
             return this;
         }

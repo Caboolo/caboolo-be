@@ -23,8 +23,8 @@ public class RideUserMappingService {
     private final SequenceGenerator sequenceGenerator;
 
     @Transactional
-    public void createMapping(Long rideId, String userId, RideUserMappingStatus status) {
-        Long mappingId = sequenceGenerator.nextId();
+    public void createMapping(String rideId, String userId, RideUserMappingStatus status) {
+        String mappingId = sequenceGenerator.nextId();
         log.info("Creating RideUserMapping: mappingId={}, rideId={}, userId={}, status={}", mappingId, rideId, userId, status);
         
         RideUserMapping mapping = RideUserMapping.Builder.rideUserMapping()
@@ -39,7 +39,7 @@ public class RideUserMappingService {
     }
 
     @Transactional
-    public void withdrawRequest(Long rideId, String userId) {
+    public void withdrawRequest(String rideId, String userId) {
         log.info("Withdrawing ride request for rideId={}, userId={}", rideId, userId);
         Optional<RideUserMapping> mappingOpt = rideUserMappingRepository.findByRideIdAndUserId(rideId, userId);
         if (mappingOpt.isEmpty()) {
@@ -63,11 +63,11 @@ public class RideUserMappingService {
         return rideUserMappingRepository.findByUserIdAndStatus(userId, rideUserMappingStatus);
     }
 
-    public List<RideUserMapping> findByRideIdInAndStatusIn(Set<Long> activeRideIds, Set<RideUserMappingStatus> rideUserMappingStatuses) {
+    public List<RideUserMapping> findByRideIdInAndStatusIn(Set<String> activeRideIds, Set<RideUserMappingStatus> rideUserMappingStatuses) {
         return rideUserMappingRepository.findByRideIdInAndStatusIn(activeRideIds, rideUserMappingStatuses);
     }
 
-    public List<RideUserMapping> findByRideId(Long rideId) {
+    public List<RideUserMapping> findByRideId(String rideId) {
         return rideUserMappingRepository.findByRideId(rideId);
     }
 }

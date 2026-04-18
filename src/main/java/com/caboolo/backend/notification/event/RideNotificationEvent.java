@@ -14,7 +14,7 @@ import java.util.List;
 public class RideNotificationEvent {
 
     private final RideNotificationType type;
-    private final Long rideId;
+    private final String rideId;
 
     /** The user who triggered the event (requester / leaver) */
     private final String actorUserId;
@@ -22,7 +22,7 @@ public class RideNotificationEvent {
     /** Users who should receive the notification */
     private final List<String> recipientUserIds;
 
-    private RideNotificationEvent(RideNotificationType type, Long rideId,
+    private RideNotificationEvent(RideNotificationType type, String rideId,
                                   String actorUserId, List<String> recipientUserIds) {
         this.type = type;
         this.rideId = rideId;
@@ -30,7 +30,7 @@ public class RideNotificationEvent {
         this.recipientUserIds = recipientUserIds;
     }
 
-    public static RideNotificationEvent of(RideNotificationType type, Long rideId,
+    public static RideNotificationEvent of(RideNotificationType type, String rideId,
                                             String actorUserId, List<String> recipientUserIds) {
         return new RideNotificationEvent(type, rideId, actorUserId, recipientUserIds);
     }

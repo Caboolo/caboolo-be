@@ -51,8 +51,8 @@ public class RideService {
     }
 
     @Transactional
-    public Long createRide(RideRequestDto request) {
-        Long rideId = sequenceGenerator.nextId();
+    public String createRide(RideRequestDto request) {
+        String rideId = sequenceGenerator.nextId();
         log.info("Creating ride rideId={}, userId={}, sourceHubId={}, destinationHubId={}, departureTime={}",
                 rideId, request.getUserId(), request.getSourceHubId(), request.getDestinationHubId(), request.getDepartureTime());
 
@@ -88,17 +88,17 @@ public class RideService {
                 .filter(um -> um.getUserId().equals(userId) && um.getStatus() == RideUserMappingStatus.PENDING)
                 .toList();
 
-        List<Long> rideIds = userMappings.stream()
+        List<String> rideIds = userMappings.stream()
                 .map(RideUserMapping::getRideId)
                 .distinct()
                 .collect(Collectors.toList());
 
         List<Ride> rides = rideRepository.findByRideIdIn(rideIds);
-        Map<Long, Ride> rideMap = rides.stream()
+        Map<String, Ride> rideMap = rides.stream()
                 .collect(Collectors.toMap(Ride::getRideId, ride -> ride));
 
         // Group all accepted mappings by rideId for available seats and active passengers
-        Map<Long, List<RideUserMapping>> acceptedMappingsByRide = allMappings.stream()
+        Map<String, List<RideUserMapping>> acceptedMappingsByRide = allMappings.stream()
                 .filter(um -> um.getStatus() == RideUserMappingStatus.ACCEPTED)
                 .collect(Collectors.groupingBy(RideUserMapping::getRideId));
 
@@ -153,7 +153,7 @@ public class RideService {
             return new ArrayList<>();
         }
 
-        List<Long> rideIds = leadMappings.stream()
+        List<String> rideIds = leadMappings.stream()
                 .map(RideUserMapping::getRideId)
                 .collect(Collectors.toList());
 
@@ -164,7 +164,7 @@ public class RideService {
             return new ArrayList<>();
         }
 
-        Set<Long> activeRideIds = activeRides.stream()
+        Set<String> activeRideIds = activeRides.stream()
                 .map(Ride::getRideId)
                 .collect(Collectors.toSet());
 
@@ -172,7 +172,7 @@ public class RideService {
         List<RideUserMapping> allParticipantMappings = rideUserMappingService.findByRideIdInAndStatusIn(
                 activeRideIds, RideUserMappingStatus.ACTIVE_STATUSES);
 
-        Map<Long, List<RideUserMapping>> mappingsByRideId = allParticipantMappings.stream()
+        Map<String, List<RideUserMapping>> mappingsByRideId = allParticipantMappings.stream()
                 .collect(Collectors.groupingBy(RideUserMapping::getRideId));
 
         // 4. Collect all User IDs and Hub IDs for bulk lookup
@@ -180,7 +180,7 @@ public class RideService {
                 .map(RideUserMapping::getUserId)
                 .collect(Collectors.toSet());
 
-        Set<Long> hubIds = new HashSet<>();
+        Set<String> hubIds = new HashSet<>();
         activeRides.forEach(ride -> {
             hubIds.add(ride.getSourceHubId());
             hubIds.add(ride.getDestinationHubId());
@@ -195,7 +195,7 @@ public class RideService {
                                 ud -> ud
                         ));
 
-        Map<Long, String> hubNamesMap = hubService.getHubNames(hubIds);
+        Map<String, String> hubNamesMap = hubService.getHubNames(hubIds);
 
         // 6. Construct the Response
         return activeRides.stream()
@@ -229,7 +229,7 @@ public class RideService {
                 .collect(Collectors.toList());
     }
 
-    public MyRideDetailResponseDto getMyRideDetail(Long rideId) {
+    public MyRideDetailResponseDto getMyRideDetail(String rideId) {
         log.info("Fetching ride detail for rideId={}", rideId);
         // 1. Fetch the ride
         Ride ride = rideRepository.findByRideId(rideId)
@@ -261,15 +261,15 @@ public class RideService {
                 .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
         // 5. Resolve hub details (name + lat/lng)
-        Set<Long> hubIds = new HashSet<>();
-        Long sourceHubIdLong = Long.valueOf(ride.getSourceHubId());
-        Long destHubIdLong = Long.valueOf(ride.getDestinationHubId());
-        hubIds.add(sourceHubIdLong);
-        hubIds.add(destHubIdLong);
-        Map<Long, com.caboolo.backend.hub.domain.Hub> hubMap = hubService.getHubsByIds(hubIds);
+        Set<String> hubIds = new HashSet<>();
+        String sourceHubIdStr = ride.getSourceHubId();
+        String destHubIdStr = ride.getDestinationHubId();
+        hubIds.add(sourceHubIdStr);
+        hubIds.add(destHubIdStr);
+        Map<String, com.caboolo.backend.hub.domain.Hub> hubMap = hubService.getHubsByIds(hubIds);
 
-        com.caboolo.backend.hub.domain.Hub sourceHub = hubMap.get(sourceHubIdLong);
-        com.caboolo.backend.hub.domain.Hub destHub = hubMap.get(destHubIdLong);
+        com.caboolo.backend.hub.domain.Hub sourceHub = hubMap.get(sourceHubIdStr);
+        com.caboolo.backend.hub.domain.Hub destHub = hubMap.get(destHubIdStr);
 
         // 6. Build crew member DTOs
         List<CrewMemberDto> crewMembers = crewMappings.stream()
@@ -323,7 +323,7 @@ public class RideService {
                 .build();
     }
 
-    public Page<MyRideResponseDto> getAvailableRides(String userId, LocalDateTime time, Integer timeWindow, Double latitude, Double longitude, Long airportHubId, Boolean isFromAirport, Long sourceOrDestinationHubId, Boolean includeSourceOrDestinationHub, int page, int size) {
+    public Page<MyRideResponseDto> getAvailableRides(String userId, LocalDateTime time, Integer timeWindow, Double latitude, Double longitude, String airportHubId, Boolean isFromAirport, String sourceOrDestinationHubId, Boolean includeSourceOrDestinationHub, int page, int size) {
         LocalDateTime minTime = time.minusMinutes(timeWindow);
         LocalDateTime maxTime = time.plusMinutes(timeWindow);
         Pageable pageable = PageRequest.of(page, size);
@@ -352,7 +352,7 @@ public class RideService {
             return Page.empty(pageable);
         }
 
-        Set<Long> activeRideIds = availableRides.stream()
+        Set<String> activeRideIds = availableRides.stream()
                 .map(Ride::getRideId)
                 .collect(Collectors.toSet());
 
@@ -362,7 +362,7 @@ public class RideService {
                 Set.of(RideUserMappingStatus.CREATED, RideUserMappingStatus.ACCEPTED, RideUserMappingStatus.PENDING)
         );
 
-        Map<Long, List<RideUserMapping>> mappingsByRideId = allMappings.stream()
+        Map<String, List<RideUserMapping>> mappingsByRideId = allMappings.stream()
                 .collect(Collectors.groupingBy(RideUserMapping::getRideId));
 
         // 3. Collect needed User IDs and Hub IDs for bulk lookup
@@ -374,7 +374,7 @@ public class RideService {
                     .forEach(m -> participantUserIds.add(m.getUserId()));
         });
 
-        Set<Long> hubIds = new HashSet<>();
+        Set<String> hubIds = new HashSet<>();
         availableRides.forEach(ride -> {
             hubIds.add(ride.getSourceHubId());
             hubIds.add(ride.getDestinationHubId());
@@ -386,7 +386,7 @@ public class RideService {
                         .stream()
                         .collect(Collectors.toMap(UserDetail::getUserId, ud -> ud));
 
-        Map<Long, String> hubsMap = hubService.getHubsMap(hubIds);
+        Map<String, String> hubsMap = hubService.getHubsMap(hubIds);
 
         // 5. Construct the Response
         List<MyRideResponseDto> dtoList = availableRides.stream()
@@ -430,10 +430,10 @@ public class RideService {
     }
 
     @Transactional
-    public void updatePoolPrice(Long rideId, String userId, BigDecimal poolPrice) {
+    public void updatePoolPrice(String rideId, String userId, BigDecimal poolPrice) {
         log.info("Updating pool price for rideId={}, updatedBy={}, newPoolPrice={}", rideId, userId, poolPrice);
         // 2. Fetch and update the ride
-        Ride ride = rideRepository.findById(rideId)
+        Ride ride = rideRepository.findByRideId(rideId)
                 .orElseThrow(() -> {
                     log.error("Ride not found for rideId={} during pool price update", rideId);
                     return new RuntimeException("Ride not found");

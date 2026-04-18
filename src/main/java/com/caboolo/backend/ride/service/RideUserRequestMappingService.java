@@ -41,7 +41,7 @@ public class RideUserRequestMappingService {
      * {@link RideUserMapping} for the requester.
      */
     @Transactional
-    public void requestToJoinRide(Long rideId, String requesterId) {
+    public void requestToJoinRide(String rideId, String requesterId) {
         log.info("User requesterId={} is requesting to join rideId={}", requesterId, rideId);
         // Guard: user must not already be an active member
         Optional<RideUserMapping> existingActive = rideUserMappingRepository.findByRideIdAndUserId(rideId, requesterId);
@@ -63,7 +63,7 @@ public class RideUserRequestMappingService {
         }
 
         // Create placeholder RideUserMapping for requester (PENDING)
-        Long mappingId = sequenceGenerator.nextId();
+        String mappingId = sequenceGenerator.nextId();
 
         // Create one request row per existing participant
         for (RideUserMapping participant : activeParticipants) {
@@ -112,7 +112,7 @@ public class RideUserRequestMappingService {
      * Individual request rows for other voters are left untouched.
      */
     @Transactional
-    public void acceptRideRequest(Long rideId, String acceptingUserId, String requesterId) {
+    public void acceptRideRequest(String rideId, String acceptingUserId, String requesterId) {
         log.info("User acceptingUserId={} is accepting join request from requesterId={} for rideId={}",
                 acceptingUserId, requesterId, rideId);
         // Guard: parent mapping must still be PENDING
@@ -197,7 +197,7 @@ public class RideUserRequestMappingService {
      * The remaining rows remain unaffected.
      */
     @Transactional
-    public void rejectRideRequest(Long rideId, String rejectingUserId, String requesterId) {
+    public void rejectRideRequest(String rideId, String rejectingUserId, String requesterId) {
         log.info("User rejectingUserId={} is rejecting join request from requesterId={} for rideId={}",
                 rejectingUserId, requesterId, rideId);
         // Guard: parent mapping must still be PENDING
@@ -246,7 +246,7 @@ public class RideUserRequestMappingService {
      * If no PENDING rows exist (already decided), this is a no-op.
      */
     @Transactional
-    public void withdrawRideRequest(Long rideId, String requesterId) {
+    public void withdrawRideRequest(String rideId, String requesterId) {
         log.info("User requesterId={} is withdrawing ride request for rideId={}", requesterId, rideId);
         List<RideUserRequestMapping> pendingRows = requestMappingRepository
                 .findByRideIdAndRequestorIdAndStatus(rideId, requesterId, RideUserRequestStatus.PENDING);
@@ -286,7 +286,7 @@ public class RideUserRequestMappingService {
      * @throws RuntimeException if the user has no active mapping for the ride.
      */
     @Transactional
-    public void leaveRide(Long rideId, String userId) {
+    public void leaveRide(String rideId, String userId) {
         log.info("User userId={} is leaving rideId={}", userId, rideId);
         RideUserMapping mapping = rideUserMappingRepository
                 .findByRideIdAndUserId(rideId, userId)

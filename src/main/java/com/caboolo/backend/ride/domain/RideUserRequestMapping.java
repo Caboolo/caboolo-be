@@ -16,10 +16,10 @@ import lombok.*;
 public class RideUserRequestMapping extends GenericIdEntity {
 
     @Column(name = "ride_user_request_mapping_id", nullable = false)
-    private Long rideUserRequestMappingId;
+    private String rideUserRequestMappingId;
 
     @Column(name = "ride_id", nullable = false)
-    private Long rideId;
+    private String rideId;
 
     @Column(name = "requestor_id", nullable = false)
     private String requestorId;
@@ -28,18 +28,18 @@ public class RideUserRequestMapping extends GenericIdEntity {
     private String approverId;
 
     @Column(name = "ride_user_mapping_id")
-    private Long rideUserMappingId;
+    private String rideUserMappingId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private RideUserRequestStatus status;
 
     public static interface RideUserRequestMappingIdStep {
-        RideIdStep withRideUserRequestMappingId(Long rideUserRequestMappingId);
+        RideIdStep withRideUserRequestMappingId(String rideUserRequestMappingId);
     }
 
     public static interface RideIdStep {
-        RequestorIdStep withRideId(Long rideId);
+        RequestorIdStep withRideId(String rideId);
     }
 
     public static interface RequestorIdStep {
@@ -51,7 +51,7 @@ public class RideUserRequestMapping extends GenericIdEntity {
     }
 
     public static interface RideUserMappingIdStep {
-        StatusStep withRideUserMappingId(Long rideUserMappingId);
+        StatusStep withRideUserMappingId(String rideUserMappingId);
     }
 
     public static interface StatusStep {
@@ -65,11 +65,11 @@ public class RideUserRequestMapping extends GenericIdEntity {
     public static class Builder implements RideUserRequestMappingIdStep, RideIdStep, RequestorIdStep,
             ApproverIdStep, RideUserMappingIdStep, StatusStep, BuildStep {
 
-        private Long rideUserRequestMappingId;
-        private Long rideId;
+        private String rideUserRequestMappingId;
+        private String rideId;
         private String requestorId;
         private String approverId;
-        private Long rideUserMappingId;
+        private String rideUserMappingId;
         private RideUserRequestStatus status;
 
         private Builder() {
@@ -80,13 +80,13 @@ public class RideUserRequestMapping extends GenericIdEntity {
         }
 
         @Override
-        public RideIdStep withRideUserRequestMappingId(Long rideUserRequestMappingId) {
+        public RideIdStep withRideUserRequestMappingId(String rideUserRequestMappingId) {
             this.rideUserRequestMappingId = rideUserRequestMappingId;
             return this;
         }
 
         @Override
-        public RequestorIdStep withRideId(Long rideId) {
+        public RequestorIdStep withRideId(String rideId) {
             this.rideId = rideId;
             return this;
         }
@@ -104,7 +104,7 @@ public class RideUserRequestMapping extends GenericIdEntity {
         }
 
         @Override
-        public StatusStep withRideUserMappingId(Long rideUserMappingId) {
+        public StatusStep withRideUserMappingId(String rideUserMappingId) {
             this.rideUserMappingId = rideUserMappingId;
             return this;
         }
