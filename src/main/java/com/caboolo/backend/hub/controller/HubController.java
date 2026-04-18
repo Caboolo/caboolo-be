@@ -3,6 +3,7 @@ package com.caboolo.backend.hub.controller;
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.hub.dto.HubDto;
+import com.caboolo.backend.hub.enums.HubType;
 import com.caboolo.backend.hub.service.HubService;
 import com.caboolo.backend.hub.util.ExcelParserUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -47,12 +49,12 @@ public class HubController extends BaseController {
     }
 
     @GetMapping("/preferred")
-    public RestEntity<List<HubDto>> getHubsByPriority(
+    public RestEntity<Map<HubType, List<HubDto>>> getHubsByPriority(
             @RequestParam(defaultValue = "1") int minPriority,
             @RequestParam(defaultValue = "7") int maxPriority) {
         log.info("Fetching hubs by priority range [{}, {}]", minPriority, maxPriority);
-        List<HubDto> hubs = hubService.getHubsByPriority(minPriority, maxPriority);
-        log.info("Returned {} hubs for priority range [{}, {}]", hubs.size(), minPriority, maxPriority);
+        Map<HubType, List<HubDto>> hubs = hubService.getHubsByPriority(minPriority, maxPriority);
+        log.info("Returned hubs grouped by type for priority range [{}, {}]", minPriority, maxPriority);
         return successResponse(hubs, "Hubs by priority retrieved successfully from cache");
     }
 
