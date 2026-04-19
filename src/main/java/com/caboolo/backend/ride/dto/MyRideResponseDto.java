@@ -1,5 +1,6 @@
 package com.caboolo.backend.ride.dto;
 
+import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -18,6 +19,7 @@ public class MyRideResponseDto {
     private List<RiderInfoDto> participants;
     private Integer availableSeats;
     private BigDecimal poolPrice;
+    private RideUserMappingStatus userStatus;
 
     public static interface RideIdStep {
         DepartureTimeStep withRideId(String rideId);
@@ -48,6 +50,7 @@ public class MyRideResponseDto {
     }
 
     public static interface BuildStep {
+        BuildStep withUserStatus(RideUserMappingStatus userStatus);
         MyRideResponseDto build();
     }
 
@@ -60,6 +63,7 @@ public class MyRideResponseDto {
         private List<RiderInfoDto> participants;
         private Integer availableSeats;
         private BigDecimal poolPrice;
+        private RideUserMappingStatus userStatus;
 
         private Builder() {
         }
@@ -111,6 +115,12 @@ public class MyRideResponseDto {
         }
 
         @Override
+        public BuildStep withUserStatus(RideUserMappingStatus userStatus) {
+            this.userStatus = userStatus;
+            return this;
+        }
+
+        @Override
         public MyRideResponseDto build() {
             return new MyRideResponseDto(
                     this.rideId,
@@ -119,7 +129,8 @@ public class MyRideResponseDto {
                     this.destinationHubName,
                     this.participants,
                     this.availableSeats,
-                    this.poolPrice
+                    this.poolPrice,
+                    this.userStatus
             );
         }
     }
