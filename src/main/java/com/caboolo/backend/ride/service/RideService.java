@@ -292,7 +292,7 @@ public class RideService {
         // 2. Fetch all active mappings for this ride
         List<RideUserMapping> crewMappings = rideUserMappingService.findByRideIdAndStatusIn(rideId, RideUserMappingStatus.ACTIVE_STATUSES);
 
-        // 4. Collect all user IDs for bulk lookup
+        // 3. Collect all user IDs for bulk lookup
         Set<String> activeUserIds = crewMappings.stream()
                 .map(RideUserMapping::getUserId)
                 .collect(Collectors.toSet());
@@ -300,7 +300,7 @@ public class RideService {
         Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(activeUserIds).stream()
                 .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
-        // 5. Resolve hub details
+        // 4. Resolve hub details
         Set<String> hubIds = new HashSet<>();
         String sourceHubId = ride.getSourceHubId();
         String destinationHubId = ride.getDestinationHubId();
