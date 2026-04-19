@@ -1,5 +1,7 @@
 package com.caboolo.backend.review.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,8 +11,13 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RideReviewResponseDto {
+    @NotNull(message = "rideId cannot be null")
     private Long rideId;
+
+    @NotBlank(message = "byUserId cannot be null or blank")
     private String byUserId;
+
+    @NotNull(message = "reviews cannot be null")
     private List<UserReviewDto> reviews;
 
     public static interface RideIdStep {

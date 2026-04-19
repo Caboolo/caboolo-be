@@ -1,6 +1,8 @@
 package com.caboolo.backend.waitlist.dto;
 
 import com.caboolo.backend.core.dto.GenericEntityDto;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,6 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WaitlistRequestDto extends GenericEntityDto {
+    @NotBlank(message = "email cannot be null or blank")
+    @Email(message = "email must be a valid email address")
     private String email;
 
     public WaitlistRequestDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, String email) {

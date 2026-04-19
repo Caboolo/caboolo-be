@@ -8,6 +8,7 @@ import com.caboolo.backend.ride.dto.MyRideDetailResponseDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
 import com.caboolo.backend.ride.service.RideService;
 import com.caboolo.backend.ride.service.RideUserMappingService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -31,7 +32,7 @@ public class RideController extends BaseController {
     }
 
     @PostMapping("/create")
-    public RestEntity<Long> createRide(@RequestBody RideRequestDto request) {
+    public RestEntity<Long> createRide(@Valid @RequestBody RideRequestDto request) {
         log.info("Creating new ride for user: {}", request.getUserId());
         Long rideId = rideService.createRide(request);
         log.info("Ride created successfully with id: {}", rideId);

@@ -4,6 +4,7 @@ import com.caboolo.backend.waitlist.dto.WaitlistRequestDto;
 import com.caboolo.backend.waitlist.service.WaitlistService;
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class WaitlistController extends BaseController {
     }
 
     @PostMapping("/join")
-    public RestEntity<String> joinWaitlist(@RequestBody WaitlistRequestDto request) {
+    public RestEntity<String> joinWaitlist(@Valid @RequestBody WaitlistRequestDto request) {
         log.info("Received request to join waitlist for email: {}", request.getEmail());
         try {
             if (request.getEmail() == null || request.getEmail().isBlank()) {

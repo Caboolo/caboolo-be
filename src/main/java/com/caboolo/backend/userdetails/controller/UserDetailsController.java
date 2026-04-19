@@ -8,6 +8,7 @@ import com.caboolo.backend.review.dto.ReviewDto;
 import com.caboolo.backend.review.service.ReviewService;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.service.UserDetailService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +29,7 @@ public class UserDetailsController extends BaseController {
     }
 
     @PostMapping
-    public RestEntity<UserDetailResponseDto> saveUserDetails(@RequestBody UserDetailRequestDto requestDto) {
+    public RestEntity<UserDetailResponseDto> saveUserDetails(@Valid @RequestBody UserDetailRequestDto requestDto) {
         try {
             UserDetailResponseDto responseDto = userDetailService.createOrUpdateUserDetails(requestDto);
             return successResponse(responseDto, "User details saved successfully");
@@ -59,7 +60,7 @@ public class UserDetailsController extends BaseController {
     @PutMapping("/profile")
     public RestEntity<UserDetailResponseDto> updateProfile(
             @AuthenticationPrincipal String firebaseUid,
-            @RequestBody UserDetailRequestDto request) {
+            @Valid @RequestBody UserDetailRequestDto request) {
         return successResponse(userDetailService.updateProfile(firebaseUid, request), "Profile updated successfully");
     }
 
