@@ -3,6 +3,7 @@ package com.caboolo.backend.ride.controller;
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.ride.dto.MyRequestResponseDto;
+import com.caboolo.backend.ride.dto.MyRequestDetailResponseDto;
 import com.caboolo.backend.ride.dto.MyRideResponseDto;
 import com.caboolo.backend.ride.dto.MyRideDetailResponseDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
@@ -41,6 +42,12 @@ public class RideController extends BaseController {
     @GetMapping("/my-requests")
     public RestEntity<List<MyRequestResponseDto>> getMyRequests(@RequestParam String userId) {
         return successResponse(rideService.getMyRequests(userId));
+    }
+
+    @GetMapping("/my-requests/{rideId}")
+    public RestEntity<MyRequestDetailResponseDto> getMyRequestDetail(@PathVariable String rideId, @RequestParam String userId) {
+        log.info("Fetching request detail for rideId: {}, userId: {}", rideId, userId);
+        return successResponse(rideService.getMyRequestDetail(rideId, userId), "Request detail retrieved successfully");
     }
 
     @PutMapping("/request/{rideId}/withdraw")
