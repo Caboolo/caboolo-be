@@ -11,6 +11,7 @@ import lombok.*;
 public class HubDto {
     private String hubId;
     private String name;
+    private String displayName;
     private HubType type;
     private City city;
     private Integer priority;
