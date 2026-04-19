@@ -1,6 +1,8 @@
 package com.caboolo.backend.dto;
 
 import com.caboolo.backend.core.dto.GenericEntityDto;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 import com.caboolo.backend.userdetails.domain.Gender;
@@ -17,16 +19,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserDetailRequestDto extends GenericEntityDto {
 
+    @NotBlank(message = "userId cannot be null or blank")
     private String userId;
 
+    @NotNull(message = "gender cannot be null")
     private Gender gender;
 
+    @NotBlank(message = "name cannot be null or blank")
     private String name;
 
     private String email;
 
     private String imageUrl;
 
+    @NotBlank(message = "phoneNumber cannot be null or blank")
     private String phoneNumber;
 
     public UserDetailRequestDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, String name, String email) {

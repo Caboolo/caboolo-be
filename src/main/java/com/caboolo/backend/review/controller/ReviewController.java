@@ -4,6 +4,7 @@ import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.review.dto.*;
 import com.caboolo.backend.review.service.ReviewService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +26,7 @@ public class ReviewController extends BaseController {
     }
 
     @PostMapping("/submit")
-    public RestEntity<Void> submitReview(@RequestBody RideReviewResponseDto request) {
+    public RestEntity<Void> submitReview(@Valid @RequestBody RideReviewResponseDto request) {
         reviewService.submitReview(request);
         return successResponse("Review submitted successfully");
     }

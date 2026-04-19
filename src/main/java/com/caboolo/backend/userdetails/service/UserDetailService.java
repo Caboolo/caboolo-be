@@ -7,9 +7,11 @@ import com.caboolo.backend.review.enums.ReviewTag;
 import com.caboolo.backend.storage.StorageService;
 import com.caboolo.backend.storage.StorageUploadResult;
 import com.caboolo.backend.userLogin.domain.UserLogin;
+import com.caboolo.backend.userLogin.dto.UserLoginDto;
 import com.caboolo.backend.userLogin.repository.UserLoginRepository;
 import com.caboolo.backend.review.domain.Review;
 import com.caboolo.backend.review.repository.ReviewRepository;
+import com.caboolo.backend.userLogin.service.UserLoginService;
 import com.caboolo.backend.userdetails.converter.UserDetailsConverter;
 import com.caboolo.backend.userdetails.domain.UserDetail;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
@@ -38,16 +40,19 @@ public class UserDetailService {
     private final UserDetailsConverter userDetailsConverter;
     private final ReviewRepository reviewRepository;
 
+    private final UserLoginService userLoginService;
+
     public UserDetailService(UserDetailRepository userDetailRepository, UserLoginRepository userLoginRepository,
                              StorageService storageService, SequenceGenerator sequenceGenerator,
                              UserDetailsConverter userDetailsConverter,
-                             ReviewRepository reviewRepository) {
+                             ReviewRepository reviewRepository, UserLoginService userLoginService) {
         this.userDetailRepository = userDetailRepository;
         this.userLoginRepository = userLoginRepository;
         this.storageService = storageService;
         this.sequenceGenerator = sequenceGenerator;
         this.userDetailsConverter = userDetailsConverter;
         this.reviewRepository = reviewRepository;
+        this.userLoginService = userLoginService;
     }
 
     public UserDetailResponseDto createOrUpdateUserDetails(UserDetailRequestDto requestDto) {
@@ -124,6 +129,7 @@ public class UserDetailService {
      * Fetch the profile for the authenticated user.
      */
     public UserDetailResponseDto getProfile(String firebaseUid) {
+        UserLoginDto userLoginDto = userLoginService.findByUserId(firebaseUid);
         UserDetail details = userDetailRepository.findByUserId(firebaseUid).orElseGet(() ->
             UserDetail.Builder.userDetails()
                 .withUserDetailsId(sequenceGenerator.nextId())
@@ -132,7 +138,7 @@ public class UserDetailService {
                 .withGender(null)
                 .withImageUrl(null)
                 .withEmail(null)
-                .withPhoneNumber(null)
+                .withPhoneNumber(userLoginDto.getPhoneNumber())
                 .withPhotoPublicId(null)
                 .withAvgRating(null)
                 .withTotalReviews(null)

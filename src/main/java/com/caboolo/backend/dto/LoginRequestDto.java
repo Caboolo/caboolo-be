@@ -1,6 +1,7 @@
 package com.caboolo.backend.dto;
 
 import com.caboolo.backend.core.dto.GenericEntityDto;
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +12,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LoginRequestDto extends GenericEntityDto {
 
+    @NotBlank(message = "idToken cannot be null or blank")
     private String idToken;
+
+    @NotBlank(message = "phoneNumber cannot be null or blank")
     private String phoneNumber;
 
     public LoginRequestDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, String idToken) {
