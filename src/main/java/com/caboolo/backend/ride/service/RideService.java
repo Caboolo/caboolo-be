@@ -334,7 +334,7 @@ public class RideService {
                 });
 
         // 2. Fetch only relevant mappings: current user's mapping + active crew (CREATED/ACCEPTED)
-        List<RideUserMapping> relevantMappings = rideUserMappingService.findRelevantMappings(
+        List<RideUserMapping> relevantMappings = rideUserMappingService.findByRideIdAndUserIdOrStatusIn(
                 rideId, userId, RideUserMappingStatus.ACTIVE_STATUSES);
 
         // 3. Find the current user's request status
@@ -368,6 +368,9 @@ public class RideService {
         Hub sourceHub = hubMap.get(ride.getSourceHubId());
         Hub destHub = hubMap.get(ride.getDestinationHubId());
 
+        if (sourceHub == null || destHub == null) {
+            throw new RuntimeException("Source Hub or Destination Hub not found");
+        }
         // 6. Build crew member DTOs
         List<CrewMemberDto> crewMembers = crewMappings.stream()
                 .map(m -> {
@@ -390,12 +393,12 @@ public class RideService {
                 .withRideId(ride.getRideId())
                 .withRequestStatus(requestStatus)
                 .withDepartureTime(ride.getDepartureTime())
-                .withSourceHubName(sourceHub != null ? sourceHub.getName() : "Unknown Hub")
-                .withSourceHubLatitude(sourceHub != null ? sourceHub.getLatitude() : null)
-                .withSourceHubLongitude(sourceHub != null ? sourceHub.getLongitude() : null)
-                .withDestinationHubName(destHub != null ? destHub.getName() : "Unknown Hub")
-                .withDestinationHubLatitude(destHub != null ? destHub.getLatitude() : null)
-                .withDestinationHubLongitude(destHub != null ? destHub.getLongitude() : null)
+                .withSourceHubName(sourceHub.getName())
+                .withSourceHubLatitude(sourceHub.getLatitude())
+                .withSourceHubLongitude(sourceHub.getLongitude())
+                .withDestinationHubName(destHub.getName())
+                .withDestinationHubLatitude(destHub.getLatitude())
+                .withDestinationHubLongitude(destHub.getLongitude())
                 .withPoolPrice(ride.getPoolPrice())
                 .withTotalSeats(ride.getTotalSeats())
                 .withAvailableSeats(ride.getTotalSeats() - crewCount)

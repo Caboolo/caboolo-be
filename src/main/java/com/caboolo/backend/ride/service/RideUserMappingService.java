@@ -71,7 +71,7 @@ public class RideUserMappingService {
         return rideUserMappingRepository.findByRideId(rideId);
     }
 
-    public List<RideUserMapping> findRelevantMappings(String rideId, String userId, java.util.Collection<RideUserMappingStatus> activeStatuses) {
-        return rideUserMappingRepository.findRelevantMappings(rideId, userId, activeStatuses);
+    public List<RideUserMapping> findByRideIdAndUserIdOrStatusIn(String rideId, String userId, java.util.Collection<RideUserMappingStatus> activeStatuses) {
+        return rideUserMappingRepository.findByRideIdAndUserIdOrStatusIn(rideId, userId, activeStatuses);
     }
 }

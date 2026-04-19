@@ -27,7 +27,7 @@ public interface RideUserMappingRepository extends JpaRepository<RideUserMapping
             OR m.status IN :activeStatuses
         )
     """)
-    List<RideUserMapping> findRelevantMappings(
+    List<RideUserMapping> findByRideIdAndUserIdOrStatusIn(
         @Param("rideId") String rideId,
         @Param("userId") String userId,
         @Param("activeStatuses") Collection<RideUserMappingStatus> activeStatuses
