@@ -3,6 +3,7 @@ package com.caboolo.backend.ride.controller;
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.ride.dto.MyRequestResponseDto;
+import com.caboolo.backend.ride.dto.MyRequestDetailResponseDto;
 import com.caboolo.backend.ride.dto.MyRideResponseDto;
 import com.caboolo.backend.ride.dto.MyRideDetailResponseDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
@@ -32,9 +33,9 @@ public class RideController extends BaseController {
     }
 
     @PostMapping("/create")
-    public RestEntity<Long> createRide(@Valid @RequestBody RideRequestDto request) {
+    public RestEntity<String> createRide(@Valid @RequestBody RideRequestDto request) throws Exception {
         log.info("Creating new ride for user: {}", request.getUserId());
-        Long rideId = rideService.createRide(request);
+        String rideId = rideService.createRide(request);
         log.info("Ride created successfully with id: {}", rideId);
         return successResponse(rideId, "Ride created successfully");
     }
@@ -44,14 +45,20 @@ public class RideController extends BaseController {
         return successResponse(rideService.getMyRequests(userId));
     }
 
+    @GetMapping("/my-requests/{rideId}")
+    public RestEntity<MyRequestDetailResponseDto> getMyRequestDetail(@PathVariable String rideId, @RequestParam String userId) {
+        log.info("Fetching request detail for rideId: {}, userId: {}", rideId, userId);
+        return successResponse(rideService.getMyRequestDetail(rideId, userId), "Request detail retrieved successfully");
+    }
+
     @PutMapping("/request/{rideId}/withdraw")
-    public RestEntity<Void> withdrawRequest(@PathVariable Long rideId, @RequestParam String userId) {
+    public RestEntity<Void> withdrawRequest(@PathVariable String rideId, @RequestParam String userId) {
         rideUserMappingService.withdrawRequest(rideId, userId);
         return successResponse("Request withdrawn successfully");
     }
 
     @PatchMapping("/{rideId}/pool-price")
-    public RestEntity<Void> updatePoolPrice(@PathVariable Long rideId, @RequestParam String userId, @RequestParam BigDecimal poolPrice) {
+    public RestEntity<Void> updatePoolPrice(@PathVariable String rideId, @RequestParam String userId, @RequestParam BigDecimal poolPrice) {
         rideService.updatePoolPrice(rideId, userId, poolPrice);
         return successResponse("Pool price updated successfully");
     }
@@ -62,7 +69,7 @@ public class RideController extends BaseController {
     }
 
     @GetMapping("/my-rides/{rideId}")
-    public RestEntity<MyRideDetailResponseDto> getMyRideDetail(@PathVariable Long rideId) {
+    public RestEntity<MyRideDetailResponseDto> getMyRideDetail(@PathVariable String rideId) {
         log.info("Fetching ride detail for rideId: {} ", rideId);
         return successResponse(rideService.getMyRideDetail(rideId), "Ride detail retrieved successfully");
     }
@@ -74,9 +81,9 @@ public class RideController extends BaseController {
             @RequestParam(required = false, defaultValue = "15") Integer timeWindow,
             @RequestParam(required = false) Double latitude,
             @RequestParam(required = false) Double longitude,
-            @RequestParam Long airportHubId,
+            @RequestParam String airportHubId,
             @RequestParam Boolean isFromAirport,
-            @RequestParam(required = false) Long sourceOrDestinationHubId,
+            @RequestParam(required = false) String sourceOrDestinationHubId,
             @RequestParam(required = false, defaultValue = "false") Boolean includeSourceOrDestinationHub,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

@@ -16,10 +16,10 @@ public class RideRequestDto {
     private String userId;
 
     @NotNull(message = "sourceHubId cannot be null")
-    private Long sourceHubId;
+    private String sourceHubId;
 
     @NotNull(message = "destinationHubId cannot be null")
-    private Long destinationHubId;
+    private String destinationHubId;
 
     @NotNull(message = "departureTime cannot be null")
     private LocalDateTime departureTime;

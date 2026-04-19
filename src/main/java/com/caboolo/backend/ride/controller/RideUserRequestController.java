@@ -24,7 +24,7 @@ public class RideUserRequestController extends BaseController {
      */
     @PostMapping("/{rideId}/join")
     public RestEntity<Void> requestToJoinRide(
-            @PathVariable Long rideId,
+            @PathVariable String rideId,
             @RequestParam String requesterId) {
         rideUserRequestMappingService.requestToJoinRide(rideId, requesterId);
         return successResponse("Join request raised successfully");
@@ -39,7 +39,7 @@ public class RideUserRequestController extends BaseController {
      */
     @PutMapping("/{rideId}/accept")
     public RestEntity<Void> acceptRideRequest(
-            @PathVariable Long rideId,
+            @PathVariable String rideId,
             @RequestParam String acceptingUserId,
             @RequestParam String requesterId) {
         rideUserRequestMappingService.acceptRideRequest(rideId, acceptingUserId, requesterId);
@@ -55,7 +55,7 @@ public class RideUserRequestController extends BaseController {
      */
     @PutMapping("/{rideId}/reject")
     public RestEntity<Void> rejectRideRequest(
-            @PathVariable Long rideId,
+            @PathVariable String rideId,
             @RequestParam String rejectingUserId,
             @RequestParam String requesterId) {
         rideUserRequestMappingService.rejectRideRequest(rideId, rejectingUserId, requesterId);
@@ -70,7 +70,7 @@ public class RideUserRequestController extends BaseController {
      */
     @PutMapping("/{rideId}/withdraw")
     public RestEntity<Void> withdrawRideRequest(
-            @PathVariable Long rideId,
+            @PathVariable String rideId,
             @RequestParam String requesterId) {
         rideUserRequestMappingService.withdrawRideRequest(rideId, requesterId);
         return successResponse("Ride request withdrawn");
@@ -83,7 +83,7 @@ public class RideUserRequestController extends BaseController {
      */
     @PutMapping("/{rideId}/leave")
     public RestEntity<Void> leaveRide(
-            @PathVariable Long rideId,
+            @PathVariable String rideId,
             @RequestParam String userId) {
         rideUserRequestMappingService.leaveRide(rideId, userId);
         return successResponse("Left the ride successfully");

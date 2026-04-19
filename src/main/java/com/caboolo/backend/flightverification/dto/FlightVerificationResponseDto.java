@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 public class FlightVerificationResponseDto extends GenericEntityDto {
 
-    private Long flightVerificationId;
+    private String flightVerificationId;
     private String userId;
     private String flightNumber;
     private LocalDate flightDate;
@@ -29,7 +29,7 @@ public class FlightVerificationResponseDto extends GenericEntityDto {
     // ─── Step Builder ──────────────────────────────────────────────────────────
 
     public interface FlightVerificationIdStep {
-        UserIdStep withFlightVerificationId(Long flightVerificationId);
+        UserIdStep withFlightVerificationId(String flightVerificationId);
     }
 
     public interface UserIdStep {
@@ -72,7 +72,7 @@ public class FlightVerificationResponseDto extends GenericEntityDto {
             FlightDateStep, DepartureAirportStep, ArrivalAirportStep, DepartureTimeStep,
             ArrivalTimeStep, StatusStep, BuildStep {
 
-        private Long flightVerificationId;
+        private String flightVerificationId;
         private String userId;
         private String flightNumber;
         private LocalDate flightDate;
@@ -90,7 +90,7 @@ public class FlightVerificationResponseDto extends GenericEntityDto {
         }
 
         @Override
-        public UserIdStep withFlightVerificationId(Long flightVerificationId) {
+        public UserIdStep withFlightVerificationId(String flightVerificationId) {
             this.flightVerificationId = flightVerificationId;
             return this;
         }

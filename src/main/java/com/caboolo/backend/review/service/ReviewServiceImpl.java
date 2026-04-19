@@ -59,10 +59,10 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public RideReviewRequestDto getListOfCoPassengers(Long rideId) {
+    public RideReviewRequestDto getListOfCoPassengers(String rideId) {
         // Hardcoded ride details as requested
         return RideReviewRequestDto.Builder.rideReviewRequestDto()
-                .withRideId(1231L)
+                .withRideId("1231")
                 .withSource("Indira Nagar")
                 .withDestination("Electronic City")
                 .withRiders(List.of(

@@ -44,7 +44,7 @@ public class SequenceGenerator {
         this.nodeId = createNodeId();
     }
 
-    public synchronized long nextId() {
+    public synchronized String nextId() {
         long currentTimestamp = timestamp();
 
         if(currentTimestamp < lastTimestamp) {
@@ -67,7 +67,7 @@ public class SequenceGenerator {
         long id = currentTimestamp << (NODE_ID_BITS + SEQUENCE_BITS);
         id |= (nodeId << SEQUENCE_BITS);
         id |= sequence;
-        return id;
+        return String.valueOf(id);
     }
 
 

@@ -17,13 +17,13 @@ import java.math.BigDecimal;
 public class Ride extends GenericIdEntity {
 
     @Column(name = "ride_id", nullable = false)
-    private Long rideId;
+    private String rideId;
 
     @Column(name = "source_hub_id", nullable = false)
-    private Long sourceHubId;
+    private String sourceHubId;
 
     @Column(name = "destination_hub_id", nullable = false)
-    private Long destinationHubId;
+    private String destinationHubId;
 
     @Column(name = "departure_time", nullable = false)
     private LocalDateTime departureTime;
@@ -42,15 +42,15 @@ public class Ride extends GenericIdEntity {
     private BigDecimal poolPrice;
 
     public static interface RideIdStep {
-        SourceHubIdStep withRideId(Long rideId);
+        SourceHubIdStep withRideId(String rideId);
     }
 
     public static interface SourceHubIdStep {
-        DestinationHubIdStep withSourceHubId(Long sourceHubId);
+        DestinationHubIdStep withSourceHubId(String sourceHubId);
     }
 
     public static interface DestinationHubIdStep {
-        DepartureTimeStep withDestinationHubId(Long destinationHubId);
+        DepartureTimeStep withDestinationHubId(String destinationHubId);
     }
 
     public static interface DepartureTimeStep {
@@ -79,9 +79,9 @@ public class Ride extends GenericIdEntity {
 
 
     public static class Builder implements RideIdStep, SourceHubIdStep, DestinationHubIdStep, DepartureTimeStep, TotalSeatsStep, StatusStep, IsWomenOnlyRideStep, PoolPriceStep, BuildStep {
-        private Long rideId;
-        private Long sourceHubId;
-        private Long destinationHubId;
+        private String rideId;
+        private String sourceHubId;
+        private String destinationHubId;
         private LocalDateTime departureTime;
         private Integer totalSeats;
         private RideStatus status;
@@ -96,19 +96,19 @@ public class Ride extends GenericIdEntity {
         }
 
         @Override
-        public SourceHubIdStep withRideId(Long rideId) {
+        public SourceHubIdStep withRideId(String rideId) {
             this.rideId = rideId;
             return this;
         }
 
         @Override
-        public DestinationHubIdStep withSourceHubId(Long sourceHubId) {
+        public DestinationHubIdStep withSourceHubId(String sourceHubId) {
             this.sourceHubId = sourceHubId;
             return this;
         }
 
         @Override
-        public DepartureTimeStep withDestinationHubId(Long destinationHubId) {
+        public DepartureTimeStep withDestinationHubId(String destinationHubId) {
             this.destinationHubId = destinationHubId;
             return this;
         }

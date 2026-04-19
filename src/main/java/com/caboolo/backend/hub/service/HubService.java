@@ -3,6 +3,7 @@ package com.caboolo.backend.hub.service;
 import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.hub.domain.Hub;
 import com.caboolo.backend.hub.dto.HubDto;
+import com.caboolo.backend.hub.enums.HubType;
 import com.caboolo.backend.hub.repository.HubRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Distance;
@@ -45,6 +46,7 @@ public class HubService {
                 .map(dto -> Hub.Builder.hub()
                         .withHubId(sequenceGenerator.nextId())
                         .withName(dto.getName())
+                        .withDisplayName(dto.getDisplayName())
                         .withType(dto.getType())
                         .withCity(dto.getCity())
                         .withPriority(dto.getPriority())
@@ -91,22 +93,24 @@ public class HubService {
             return new ArrayList<>();
         }
 
-        List<Long> nearestIds = results.getContent().stream()
-                .map(res -> Long.valueOf(res.getContent().getName()))
+        List<String> nearestIds = results.getContent().stream()
+                .map(res -> res.getContent().getName())
                 .collect(Collectors.toList());
 
         // Fetch details from MySQL using hubIds
-        Map<Long, Hub> hubMap = hubRepository.findByHubIdIn(nearestIds).stream()
+        Map<String, Hub> hubMap = hubRepository.findByHubIdIn(nearestIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, h -> h));
 
         List<HubDto> nearestHubs = new ArrayList<>();
         for (GeoResult<RedisGeoCommands.GeoLocation<String>> result : results) {
-            Long hubId = Long.valueOf(result.getContent().getName());
+            String hubId = result.getContent().getName();
             Hub hub = hubMap.get(hubId);
 
             if (hub != null) {
                 nearestHubs.add(HubDto.builder()
+                        .hubId(hub.getHubId())
                         .name(hub.getName())
+                        .displayName(hub.getDisplayName())
                         .type(hub.getType())
                         .city(hub.getCity())
                         .priority(hub.getPriority())
@@ -129,8 +133,7 @@ public class HubService {
         }
 
         log.info("Fetching all hubs, found {} members in Redis cache", members.size());
-        List<Long> hubIds = members.stream()
-                .map(Long::valueOf)
+        List<String> hubIds = members.stream()
                 .collect(Collectors.toList());
 
         // 2. Fetch coordinates from Redis in one call
@@ -139,17 +142,19 @@ public class HubService {
                 memberList.toArray(new String[0]));
 
         // 3. Bulk-resolve name / type / city from DB
-        Map<Long, Hub> hubMap = hubRepository.findByHubIdIn(hubIds).stream()
+        Map<String, Hub> hubMap = hubRepository.findByHubIdIn(hubIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, h -> h));
 
         List<HubDto> result = new ArrayList<>();
         for (int i = 0; i < memberList.size(); i++) {
-            Long hubId = Long.valueOf(memberList.get(i));
+            String hubId = memberList.get(i);
             Hub hub = hubMap.get(hubId);
             Point point = (positions != null) ? positions.get(i) : null;
             if (hub == null) continue;
             result.add(HubDto.builder()
+                    .hubId(hub.getHubId())
                     .name(hub.getName())
+                    .displayName(hub.getDisplayName())
                     .type(hub.getType())
                     .city(hub.getCity())
                     .priority(hub.getPriority())
@@ -161,23 +166,40 @@ public class HubService {
         return result;
     }
 
-    public List<HubDto> getHubsByPriority(int minPriority, int maxPriority) {
-        return getAllHubs().stream()
+    public Map<HubType, List<HubDto>> getHubsByPriority(int minPriority, int maxPriority) {
+        List<HubDto> allHubs = getAllHubs();
+
+        Map<HubType, List<HubDto>> groupedHubs = allHubs.stream()
+                .collect(Collectors.groupingBy(HubDto::getType));
+
+        // 1. Process AIRPORTs: all sorted by priority ASC
+        List<HubDto> airports = groupedHubs.getOrDefault(HubType.AIRPORT, new ArrayList<>());
+        airports.sort(java.util.Comparator.comparing(HubDto::getPriority, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())));
+
+        // 2. Process HUBs: filtered by priority range [minPriority, maxPriority] and sorted ASC
+        List<HubDto> hubs = groupedHubs.getOrDefault(HubType.HUB, new ArrayList<>()).stream()
                 .filter(hub -> hub.getPriority() != null && hub.getPriority() >= minPriority && hub.getPriority() <= maxPriority)
+                .sorted(java.util.Comparator.comparing(HubDto::getPriority, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
                 .collect(Collectors.toList());
+
+        Map<HubType, List<HubDto>> result = new java.util.EnumMap<>(HubType.class);
+        result.put(HubType.AIRPORT, airports);
+        result.put(HubType.HUB, hubs);
+
+        return result;
     }
 
-    public Map<Long, String> getHubNames(Collection<Long> hubIds) {
+    public Map<String, String> getHubNames(Collection<String> hubIds) {
         return hubRepository.findByHubIdIn(hubIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, Hub::getName));
     }
 
-    public Map<Long, Hub> getHubsByIds(Collection<Long> hubIds) {
+    public Map<String, Hub> getHubsByIds(Collection<String> hubIds) {
         return hubRepository.findByHubIdIn(hubIds).stream()
                 .collect(Collectors.toMap(Hub::getHubId, h -> h));
     }
 
-    public Map<Long, String> getHubsMap(Collection<Long> hubIds) {
+    public Map<String, String> getHubsMap(Collection<String> hubIds) {
         return hubRepository.findHubIdAndNameByHubIdIn(hubIds);
     }
 }

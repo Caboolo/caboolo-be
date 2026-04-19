@@ -1,5 +1,6 @@
 package com.caboolo.backend.ride.dto;
 
+import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -9,8 +10,9 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MyRideDetailResponseDto {
+public class MyRequestDetailResponseDto {
     private String rideId;
+    private RideUserMappingStatus requestStatus;
     private LocalDateTime departureTime;
     private String sourceHubName;
     private Double sourceHubLatitude;
@@ -22,10 +24,13 @@ public class MyRideDetailResponseDto {
     private Integer totalSeats;
     private Integer availableSeats;
     private List<CrewMemberDto> crewMembers;
-    private List<PendingRequestDto> pendingRequests;
 
     public static interface RideIdStep {
-        DepartureTimeStep withRideId(String rideId);
+        RequestStatusStep withRideId(String rideId);
+    }
+
+    public static interface RequestStatusStep {
+        DepartureTimeStep withRequestStatus(RideUserMappingStatus requestStatus);
     }
 
     public static interface DepartureTimeStep {
@@ -69,19 +74,16 @@ public class MyRideDetailResponseDto {
     }
 
     public static interface CrewMembersStep {
-        PendingRequestsStep withCrewMembers(List<CrewMemberDto> crewMembers);
-    }
-
-    public static interface PendingRequestsStep {
-        BuildStep withPendingRequests(List<PendingRequestDto> pendingRequests);
+        BuildStep withCrewMembers(List<CrewMemberDto> crewMembers);
     }
 
     public static interface BuildStep {
-        MyRideDetailResponseDto build();
+        MyRequestDetailResponseDto build();
     }
 
-    public static class Builder implements RideIdStep, DepartureTimeStep, SourceHubNameStep, SourceHubLatitudeStep, SourceHubLongitudeStep, DestinationHubNameStep, DestinationHubLatitudeStep, DestinationHubLongitudeStep, PoolPriceStep, TotalSeatsStep, AvailableSeatsStep, CrewMembersStep, PendingRequestsStep, BuildStep {
+    public static class Builder implements RideIdStep, RequestStatusStep, DepartureTimeStep, SourceHubNameStep, SourceHubLatitudeStep, SourceHubLongitudeStep, DestinationHubNameStep, DestinationHubLatitudeStep, DestinationHubLongitudeStep, PoolPriceStep, TotalSeatsStep, AvailableSeatsStep, CrewMembersStep, BuildStep {
         private String rideId;
+        private RideUserMappingStatus requestStatus;
         private LocalDateTime departureTime;
         private String sourceHubName;
         private Double sourceHubLatitude;
@@ -93,18 +95,23 @@ public class MyRideDetailResponseDto {
         private Integer totalSeats;
         private Integer availableSeats;
         private List<CrewMemberDto> crewMembers;
-        private List<PendingRequestDto> pendingRequests;
 
         private Builder() {
         }
 
-        public static RideIdStep myRideDetailResponseDto() {
+        public static RideIdStep myRequestDetailResponseDto() {
             return new Builder();
         }
 
         @Override
-        public DepartureTimeStep withRideId(String rideId) {
+        public RequestStatusStep withRideId(String rideId) {
             this.rideId = rideId;
+            return this;
+        }
+
+        @Override
+        public DepartureTimeStep withRequestStatus(RideUserMappingStatus requestStatus) {
+            this.requestStatus = requestStatus;
             return this;
         }
 
@@ -169,21 +176,16 @@ public class MyRideDetailResponseDto {
         }
 
         @Override
-        public PendingRequestsStep withCrewMembers(List<CrewMemberDto> crewMembers) {
+        public BuildStep withCrewMembers(List<CrewMemberDto> crewMembers) {
             this.crewMembers = crewMembers;
             return this;
         }
 
         @Override
-        public BuildStep withPendingRequests(List<PendingRequestDto> pendingRequests) {
-            this.pendingRequests = pendingRequests;
-            return this;
-        }
-
-        @Override
-        public MyRideDetailResponseDto build() {
-            return new MyRideDetailResponseDto(
+        public MyRequestDetailResponseDto build() {
+            return new MyRequestDetailResponseDto(
                     this.rideId,
+                    this.requestStatus,
                     this.departureTime,
                     this.sourceHubName,
                     this.sourceHubLatitude,
@@ -194,8 +196,7 @@ public class MyRideDetailResponseDto {
                     this.poolPrice,
                     this.totalSeats,
                     this.availableSeats,
-                    this.crewMembers,
-                    this.pendingRequests
+                    this.crewMembers
             );
         }
     }

@@ -1,5 +1,6 @@
 package com.caboolo.backend.ride.dto;
 
+import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -11,16 +12,17 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MyRideResponseDto {
-    private Long rideId;
+    private String rideId;
     private LocalDateTime departureTime;
     private String sourceHubName;
     private String destinationHubName;
     private List<RiderInfoDto> participants;
     private Integer availableSeats;
     private BigDecimal poolPrice;
+    private RideUserMappingStatus userStatus;
 
     public static interface RideIdStep {
-        DepartureTimeStep withRideId(Long rideId);
+        DepartureTimeStep withRideId(String rideId);
     }
 
     public static interface DepartureTimeStep {
@@ -48,18 +50,20 @@ public class MyRideResponseDto {
     }
 
     public static interface BuildStep {
+        BuildStep withUserStatus(RideUserMappingStatus userStatus);
         MyRideResponseDto build();
     }
 
 
     public static class Builder implements RideIdStep, DepartureTimeStep, SourceHubNameStep, DestinationHubNameStep, ParticipantsStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
-        private Long rideId;
+        private String rideId;
         private LocalDateTime departureTime;
         private String sourceHubName;
         private String destinationHubName;
         private List<RiderInfoDto> participants;
         private Integer availableSeats;
         private BigDecimal poolPrice;
+        private RideUserMappingStatus userStatus;
 
         private Builder() {
         }
@@ -69,7 +73,7 @@ public class MyRideResponseDto {
         }
 
         @Override
-        public DepartureTimeStep withRideId(Long rideId) {
+        public DepartureTimeStep withRideId(String rideId) {
             this.rideId = rideId;
             return this;
         }
@@ -111,6 +115,12 @@ public class MyRideResponseDto {
         }
 
         @Override
+        public BuildStep withUserStatus(RideUserMappingStatus userStatus) {
+            this.userStatus = userStatus;
+            return this;
+        }
+
+        @Override
         public MyRideResponseDto build() {
             return new MyRideResponseDto(
                     this.rideId,
@@ -119,7 +129,8 @@ public class MyRideResponseDto {
                     this.destinationHubName,
                     this.participants,
                     this.availableSeats,
-                    this.poolPrice
+                    this.poolPrice,
+                    this.userStatus
             );
         }
     }

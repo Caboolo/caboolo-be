@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 public class RideReviewResponseDto {
     @NotNull(message = "rideId cannot be null")
-    private Long rideId;
+    private String rideId;
 
     @NotBlank(message = "byUserId cannot be null or blank")
     private String byUserId;
@@ -21,7 +21,7 @@ public class RideReviewResponseDto {
     private List<UserReviewDto> reviews;
 
     public static interface RideIdStep {
-        ByUserIdStep withRideId(Long rideId);
+        ByUserIdStep withRideId(String rideId);
     }
 
     public static interface ByUserIdStep {
@@ -37,16 +37,19 @@ public class RideReviewResponseDto {
     }
 
     public static class Builder implements RideIdStep, ByUserIdStep, ReviewsStep, BuildStep {
-        private Long rideId;
+        private String rideId;
         private String byUserId;
         private List<UserReviewDto> reviews;
 
-        public static RideIdStep builder() {
+        private Builder() {
+        }
+
+        public static RideIdStep rideReviewResponseDto() {
             return new Builder();
         }
 
         @Override
-        public ByUserIdStep withRideId(Long rideId) {
+        public ByUserIdStep withRideId(String rideId) {
             this.rideId = rideId;
             return this;
         }
@@ -65,7 +68,11 @@ public class RideReviewResponseDto {
 
         @Override
         public RideReviewResponseDto build() {
-            return new RideReviewResponseDto(rideId, byUserId, reviews);
+            return new RideReviewResponseDto(
+                this.rideId,
+                this.byUserId,
+                this.reviews
+            );
         }
     }
 }
