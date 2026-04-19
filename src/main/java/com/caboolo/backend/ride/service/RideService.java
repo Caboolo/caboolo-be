@@ -333,11 +333,12 @@ public class RideService {
                     return new RuntimeException("Ride not found: " + rideId);
                 });
 
-        // 2. Fetch all mappings for this ride
-        List<RideUserMapping> allMappings = rideUserMappingService.findByRideId(rideId);
+        // 2. Fetch only relevant mappings: current user's mapping + active crew (CREATED/ACCEPTED)
+        List<RideUserMapping> relevantMappings = rideUserMappingService.findRelevantMappings(
+                rideId, userId, RideUserMappingStatus.ACTIVE_STATUSES);
 
         // 3. Find the current user's request status
-        RideUserMappingStatus requestStatus = allMappings.stream()
+        RideUserMappingStatus requestStatus = relevantMappings.stream()
                 .filter(m -> m.getUserId().equals(userId))
                 .map(RideUserMapping::getStatus)
                 .findFirst()
@@ -347,7 +348,7 @@ public class RideService {
                 });
 
         // 4. Get crew members (CREATED + ACCEPTED only)
-        List<RideUserMapping> crewMappings = allMappings.stream()
+        List<RideUserMapping> crewMappings = relevantMappings.stream()
                 .filter(m -> RideUserMappingStatus.ACTIVE_STATUSES.contains(m.getStatus()))
                 .toList();
 
