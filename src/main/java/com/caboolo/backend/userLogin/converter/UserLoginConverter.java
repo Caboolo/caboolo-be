@@ -2,6 +2,7 @@ package com.caboolo.backend.userLogin.converter;
 
 import com.caboolo.backend.auth.dto.AuthResponse;
 import com.caboolo.backend.userLogin.domain.UserLogin;
+import com.caboolo.backend.userLogin.dto.UserLoginDto;
 
 /**
  * Converts UserLogin domain entities to their corresponding DTOs.
@@ -21,6 +22,20 @@ public final class UserLoginConverter {
                 .withFirebaseUid(userLogin.getFirebaseUid())
                 .withMessage("Login successful")
                 .withPhoneNumber(userLogin.getPhoneNumber())
+                .build();
+    }
+
+    /**
+     * Converts a UserLogin domain entity to a UserLoginDto.
+     */
+    public static UserLoginDto toUserLoginDto(UserLogin userLogin) {
+        return UserLoginDto.Builder.userLoginDto()
+                .withUserLoginId(userLogin.getUserLoginId())
+                .withFirebaseUid(userLogin.getFirebaseUid())
+                .withPhoneNumber(userLogin.getPhoneNumber())
+                .withDateCreated(userLogin.getDateCreated())
+                .withLastModified(userLogin.getLastModified())
+                .withIsDeleted(userLogin.isDeleted())
                 .build();
     }
 }

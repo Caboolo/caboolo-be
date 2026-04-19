@@ -3,7 +3,9 @@ package com.caboolo.backend.userLogin.service;
 import com.caboolo.backend.auth.dto.AuthResponse;
 import com.caboolo.backend.userLogin.converter.UserLoginConverter;
 import com.caboolo.backend.userLogin.domain.UserLogin;
+import com.caboolo.backend.userLogin.dto.UserLoginDto;
 import com.caboolo.backend.userLogin.repository.UserLoginRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -52,5 +54,22 @@ public class UserLoginService {
         }
         log.info("Login handled successfully for uid={}", uid);
         return UserLoginConverter.toAuthResponse(userLogin);
+    }
+
+    // -----------------------------------------------------------------------
+    // Lookup
+    // -----------------------------------------------------------------------
+
+    /**
+     * Finds a UserLogin record by its Firebase UID (used as the external userId).
+     *
+     * @param userId the Firebase UID of the user
+     * @return the corresponding {@link UserLoginDto}
+     * @throws EntityNotFoundException if no record exists for the given userId
+     */
+    public UserLoginDto findByUserId(String userId) {
+        UserLogin userLogin = userLoginRepository.findByFirebaseUid(userId)
+                .orElseThrow(() -> new EntityNotFoundException("No user login record found for userId: " + userId));
+        return UserLoginConverter.toUserLoginDto(userLogin);
     }
 }
