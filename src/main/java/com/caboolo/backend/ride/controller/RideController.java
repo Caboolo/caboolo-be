@@ -31,7 +31,7 @@ public class RideController extends BaseController {
     }
 
     @PostMapping("/create")
-    public RestEntity<String> createRide(@RequestBody RideRequestDto request) {
+    public RestEntity<String> createRide(@RequestBody RideRequestDto request) throws Exception {
         log.info("Creating new ride for user: {}", request.getUserId());
         String rideId = rideService.createRide(request);
         log.info("Ride created successfully with id: {}", rideId);
