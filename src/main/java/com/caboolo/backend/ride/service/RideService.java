@@ -414,6 +414,13 @@ public class RideService {
                     String srcHubName = hubsMap.get(ride.getSourceHubId());
                     String destHubName = hubsMap.get(ride.getDestinationHubId());
 
+                    // Derive the current user's status for this ride (null if no mapping exists)
+                    RideUserMappingStatus userStatus = pMapping.stream()
+                            .filter(m -> m.getUserId().equals(userId))
+                            .map(RideUserMapping::getStatus)
+                            .findFirst()
+                            .orElse(null);
+
                     return MyRideResponseDto.Builder.myRideResponseDto()
                             .withRideId(ride.getRideId())
                             .withDepartureTime(ride.getDepartureTime())
@@ -422,6 +429,7 @@ public class RideService {
                             .withParticipants(participants)
                             .withAvailableSeats(availableSeats)
                             .withPoolPrice(ride.getPoolPrice())
+                            .withUserStatus(userStatus)
                             .build();
                 })
                 .collect(Collectors.toList());
