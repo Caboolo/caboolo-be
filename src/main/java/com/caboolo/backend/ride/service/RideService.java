@@ -25,6 +25,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.apache.commons.codec.binary.StringUtils;
+import org.apache.poi.util.StringUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -51,10 +53,14 @@ public class RideService {
     }
 
     @Transactional
-    public String createRide(RideRequestDto request) {
+    public String createRide(RideRequestDto request) throws Exception {
         String rideId = sequenceGenerator.nextId();
         log.info("Creating ride rideId={}, userId={}, sourceHubId={}, destinationHubId={}, departureTime={}",
                 rideId, request.getUserId(), request.getSourceHubId(), request.getDestinationHubId(), request.getDepartureTime());
+
+        if(StringUtils.equals(request.getSourceHubId(), request. getDestinationHubId())) {
+            throw new Exception("Ride cannot be created as source and destination hubs are same.");
+        }
 
         // 1. Create and Save Ride
         Ride ride = Ride.Builder.ride()
