@@ -20,6 +20,9 @@ public class Hub extends GenericIdEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "display_name")
+    private String displayName;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     private HubType type;
@@ -42,7 +45,11 @@ public class Hub extends GenericIdEntity {
     }
 
     public static interface NameStep {
-        TypeStep withName(String name);
+        DisplayNameStep withName(String name);
+    }
+
+    public static interface DisplayNameStep {
+        TypeStep withDisplayName(String displayName);
     }
 
     public static interface TypeStep {
@@ -70,9 +77,10 @@ public class Hub extends GenericIdEntity {
     }
 
 
-    public static class Builder implements HubIdStep, NameStep, TypeStep, CityStep, PriorityStep, LatitudeStep, LongitudeStep, BuildStep {
+    public static class Builder implements HubIdStep, NameStep, DisplayNameStep, TypeStep, CityStep, PriorityStep, LatitudeStep, LongitudeStep, BuildStep {
         private String hubId;
         private String name;
+        private String displayName;
         private HubType type;
         private City city;
         private Integer priority;
@@ -93,8 +101,14 @@ public class Hub extends GenericIdEntity {
         }
 
         @Override
-        public TypeStep withName(String name) {
+        public DisplayNameStep withName(String name) {
             this.name = name;
+            return this;
+        }
+
+        @Override
+        public TypeStep withDisplayName(String displayName) {
+            this.displayName = displayName;
             return this;
         }
 
@@ -133,6 +147,7 @@ public class Hub extends GenericIdEntity {
             return new Hub(
                     this.hubId,
                     this.name,
+                    this.displayName,
                     this.type,
                     this.city,
                     this.priority,
