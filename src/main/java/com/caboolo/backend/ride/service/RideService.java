@@ -234,10 +234,8 @@ public class RideService {
         RideDetailResponseDto generalDetail = getRideDetail(rideId);
 
         // 2. Fetch all mappings for this ride to get pending requests
-        List<RideUserMapping> allMappings = rideUserMappingService.findByRideId(rideId);
-        List<RideUserMapping> pendingMappings = allMappings.stream()
-                .filter(m -> m.getStatus() == RideUserMappingStatus.PENDING)
-                .toList();
+        List<RideUserMapping> pendingMappings =
+                rideUserMappingService.findByRideIdAndStatus(rideId, RideUserMappingStatus.PENDING);
 
         // 3. Resolve user details for pending mappings
         Set<String> pendingUserIds = pendingMappings.stream()
@@ -291,13 +289,8 @@ public class RideService {
                     return new RuntimeException("Ride not found: " + rideId);
                 });
 
-        // 2. Fetch all mappings for this ride
-        List<RideUserMapping> allMappings = rideUserMappingService.findByRideId(rideId);
-
-        // 3. Keep only active crew
-        List<RideUserMapping> crewMappings = allMappings.stream()
-                .filter(m -> RideUserMappingStatus.ACTIVE_STATUSES.contains(m.getStatus()))
-                .toList();
+        // 2. Fetch all active mappings for this ride
+        List<RideUserMapping> crewMappings = rideUserMappingService.findByRideIdAndStatusIn(rideId, RideUserMappingStatus.ACTIVE_STATUSES);
 
         // 4. Collect all user IDs for bulk lookup
         Set<String> activeUserIds = crewMappings.stream()
@@ -317,6 +310,15 @@ public class RideService {
 
         com.caboolo.backend.hub.domain.Hub sourceHub = hubMap.get(sourceHubId);
         com.caboolo.backend.hub.domain.Hub destHub = hubMap.get(destinationHubId);
+
+        if (sourceHub == null) {
+            log.error("Source hub not found for id: {}", sourceHubId);
+            throw new RuntimeException("Source hub not found: " + sourceHubId);
+        }
+        if (destHub == null) {
+            log.error("Destination hub not found for id: {}", destinationHubId);
+            throw new RuntimeException("Destination hub not found: " + destinationHubId);
+        }
 
         // 6. Build crew member DTOs
         List<CrewMemberDto> crewMembers = crewMappings.stream()
@@ -339,12 +341,12 @@ public class RideService {
         return RideDetailResponseDto.builder()
                 .rideId(ride.getRideId())
                 .departureTime(ride.getDepartureTime())
-                .sourceHubName(sourceHub != null ? sourceHub.getName() : "Unknown Hub")
-                .sourceHubLatitude(sourceHub != null ? sourceHub.getLatitude() : null)
-                .sourceHubLongitude(sourceHub != null ? sourceHub.getLongitude() : null)
-                .destinationHubName(destHub != null ? destHub.getName() : "Unknown Hub")
-                .destinationHubLatitude(destHub != null ? destHub.getLatitude() : null)
-                .destinationHubLongitude(destHub != null ? destHub.getLongitude() : null)
+                .sourceHubName(sourceHub.getName())
+                .sourceHubLatitude(sourceHub.getLatitude())
+                .sourceHubLongitude(sourceHub.getLongitude())
+                .destinationHubName(destHub.getName())
+                .destinationHubLatitude(destHub.getLatitude())
+                .destinationHubLongitude(destHub.getLongitude())
                 .poolPrice(ride.getPoolPrice())
                 .totalSeats(ride.getTotalSeats())
                 .availableSeats(ride.getTotalSeats() - crewCount)

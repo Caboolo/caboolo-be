@@ -15,12 +15,8 @@ import java.util.Optional;
 @Repository
 public interface RideUserRequestMappingRepository extends JpaRepository<RideUserRequestMapping, Long> {
 
-    List<RideUserRequestMapping> findByRideIdAndRequestorId(String rideId, String requestorId);
-
     Optional<RideUserRequestMapping> findByRideIdAndRequestorIdAndApproverId(
             String rideId, String requestorId, String approverId);
-
-    List<RideUserRequestMapping> findByRequestorIdAndStatus(String requestorId, RideUserRequestStatus status);
 
     List<RideUserRequestMapping> findByRideIdAndRequestorIdAndStatus(
             String rideId, String requestorId, RideUserRequestStatus status);

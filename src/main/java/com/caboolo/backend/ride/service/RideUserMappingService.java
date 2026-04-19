@@ -63,12 +63,16 @@ public class RideUserMappingService {
         return rideUserMappingRepository.findByUserIdAndStatus(userId, rideUserMappingStatus);
     }
 
-    public List<RideUserMapping> findByRideIdInAndStatusIn(Set<String> activeRideIds, Set<RideUserMappingStatus> rideUserMappingStatuses) {
-        return rideUserMappingRepository.findByRideIdInAndStatusIn(activeRideIds, rideUserMappingStatuses);
+    public List<RideUserMapping> findByRideIdAndStatus(String rideId, RideUserMappingStatus status) {
+        return rideUserMappingRepository.findByRideIdAndStatus(rideId, status);
     }
 
-    public List<RideUserMapping> findByRideId(String rideId) {
-        return rideUserMappingRepository.findByRideId(rideId);
+    public List<RideUserMapping> findByRideIdInAndStatusIn(Set<String> rideIds, Set<RideUserMappingStatus> rideUserMappingStatuses) {
+        return rideUserMappingRepository.findByRideIdInAndStatusIn(rideIds, rideUserMappingStatuses);
+    }
+
+    public List<RideUserMapping> findByRideIdAndStatusIn(String rideId, Set<RideUserMappingStatus> rideUserMappingStatuses) {
+        return rideUserMappingRepository.findByRideIdAndStatusIn(rideId, rideUserMappingStatuses);
     }
 
     public List<RideUserMapping> findByRideIdAndUserIdOrStatusIn(String rideId, String userId, java.util.Collection<RideUserMappingStatus> activeStatuses) {

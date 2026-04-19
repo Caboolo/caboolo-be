@@ -16,8 +16,9 @@ public interface RideUserMappingRepository extends JpaRepository<RideUserMapping
 
     Optional<RideUserMapping> findByRideIdAndUserId(String rideId, String userId);
     List<RideUserMapping> findByUserIdAndStatus(String userId, RideUserMappingStatus status);
-    List<RideUserMapping> findByRideIdInAndStatusIn(Collection<String> rideIds, Collection<com.caboolo.backend.ride.enums.RideUserMappingStatus> statuses);
-    List<RideUserMapping> findByRideId(String rideId);
+    List<RideUserMapping> findByRideIdAndStatus(String rideId, RideUserMappingStatus status);
+    List<RideUserMapping> findByRideIdAndStatusIn(String rideId, Collection<RideUserMappingStatus> status);
+    List<RideUserMapping> findByRideIdInAndStatusIn(Collection<String> rideIds, Collection<RideUserMappingStatus> statuses);
 
     @Query("""
         SELECT m FROM RideUserMapping m
