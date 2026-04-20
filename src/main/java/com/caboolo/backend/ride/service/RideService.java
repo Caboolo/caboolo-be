@@ -253,7 +253,7 @@ public class RideService {
 
         // 4. Fetch comments for pending requestors
         Map<String, String> commentsByRequestorId = rideUserRequestMappingService
-                .getCommentsByRequestorIds(generalDetail.getRideId(), pendingUserIds);
+                .getCommentsByRideIdAndRequestorIds(generalDetail.getRideId(), pendingUserIds);
 
         // 5. Build pending request DTOs
         List<PendingRequestDto> pendingRequests = pendingMappings.stream()

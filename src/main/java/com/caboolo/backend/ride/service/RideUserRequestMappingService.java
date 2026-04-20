@@ -12,7 +12,6 @@ import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import com.caboolo.backend.ride.repository.RideUserRequestMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -327,7 +326,7 @@ public class RideUserRequestMappingService {
      * Returns a map of requestorId → comment for the given ride and requestor IDs.
      * Picks the first row's comment per requestor (all rows share the same comment).
      */
-    public Map<String, String> getCommentsByRequestorIds(String rideId, Collection<String> requestorIds) {
+    public Map<String, String> getCommentsByRideIdAndRequestorIds(String rideId, Collection<String> requestorIds) {
         if (requestorIds.isEmpty()) {
             return Collections.emptyMap();
         }
