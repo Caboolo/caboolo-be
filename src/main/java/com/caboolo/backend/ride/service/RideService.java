@@ -146,13 +146,16 @@ public class RideService {
     }
 
     public List<MyRideResponseDto> getMyRides(String userId) {
-        // 1. Find all rides where the user is the "lead" (CREATED status)
-        List<RideUserMapping> leadMappings = rideUserMappingService.findByUserIdAndStatus(userId, RideUserMappingStatus.CREATED);
-        if (leadMappings.isEmpty()) {
+        // 1. Find all rides where the user is involved
+        List<RideUserMapping> userMappings = rideUserMappingService.findByUserId(userId);
+        if (userMappings.isEmpty()) {
             return new ArrayList<>();
         }
 
-        List<String> rideIds = leadMappings.stream()
+        Map<String, RideUserMappingStatus> statusByRideId = userMappings.stream()
+                .collect(Collectors.toMap(RideUserMapping::getRideId, RideUserMapping::getStatus));
+
+        List<String> rideIds = userMappings.stream()
                 .map(RideUserMapping::getRideId)
                 .collect(Collectors.toList());
 
@@ -223,6 +226,7 @@ public class RideService {
                             .withParticipants(participants)
                             .withAvailableSeats(ride.getTotalSeats() - rideParticipantCount)
                             .withPoolPrice(ride.getPoolPrice())
+                            .withUserStatus(statusByRideId.get(ride.getRideId()))
                             .build();
                 })
                 .collect(Collectors.toList());
