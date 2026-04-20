@@ -1,16 +1,21 @@
 package com.caboolo.backend.ride.dto;
 
-import lombok.*;
+import com.caboolo.backend.ride.enums.RideUserMappingStatus;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CrewMemberDto {
+public class RideParticipantDto {
     private String userId;
     private String name;
     private String imageUrl;
     private Double avgRating;
     private Integer totalRides;
+    private RideUserMappingStatus status;
+    private String comment;
 
     public static interface UserIdStep {
         NameStep withUserId(String userId);
@@ -29,24 +34,35 @@ public class CrewMemberDto {
     }
 
     public static interface TotalRidesStep {
-        BuildStep withTotalRides(Integer totalRides);
+        StatusStep withTotalRides(Integer totalRides);
+    }
+
+    public static interface StatusStep {
+        CommentStep withStatus(RideUserMappingStatus status);
+    }
+
+    public static interface CommentStep {
+        BuildStep withComment(String comment);
     }
 
     public static interface BuildStep {
-        CrewMemberDto build();
+        RideParticipantDto build();
     }
 
-    public static class Builder implements UserIdStep, NameStep, ImageUrlStep, AvgRatingStep, TotalRidesStep, BuildStep {
+
+    public static class Builder implements UserIdStep, NameStep, ImageUrlStep, AvgRatingStep, TotalRidesStep, StatusStep, CommentStep, BuildStep {
         private String userId;
         private String name;
         private String imageUrl;
         private Double avgRating;
         private Integer totalRides;
+        private RideUserMappingStatus status;
+        private String comment;
 
         private Builder() {
         }
 
-        public static UserIdStep crewMemberDto() {
+        public static UserIdStep rideParticipantDto() {
             return new Builder();
         }
 
@@ -75,19 +91,33 @@ public class CrewMemberDto {
         }
 
         @Override
-        public BuildStep withTotalRides(Integer totalRides) {
+        public StatusStep withTotalRides(Integer totalRides) {
             this.totalRides = totalRides;
             return this;
         }
 
         @Override
-        public CrewMemberDto build() {
-            return new CrewMemberDto(
+        public CommentStep withStatus(RideUserMappingStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        @Override
+        public BuildStep withComment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
+        @Override
+        public RideParticipantDto build() {
+            return new RideParticipantDto(
                     this.userId,
                     this.name,
                     this.imageUrl,
                     this.avgRating,
-                    this.totalRides
+                    this.totalRides,
+                    this.status,
+                    this.comment
             );
         }
     }

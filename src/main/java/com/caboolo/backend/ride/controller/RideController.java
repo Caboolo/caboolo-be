@@ -6,6 +6,7 @@ import com.caboolo.backend.ride.dto.MyRequestResponseDto;
 import com.caboolo.backend.ride.dto.MyRequestDetailResponseDto;
 import com.caboolo.backend.ride.dto.MyRideResponseDto;
 import com.caboolo.backend.ride.dto.MyRideDetailResponseDto;
+import com.caboolo.backend.ride.dto.RideParticipantDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
 import com.caboolo.backend.ride.dto.RideDetailResponseDto;
 import com.caboolo.backend.ride.service.RideService;
@@ -73,6 +74,12 @@ public class RideController extends BaseController {
     public RestEntity<MyRideDetailResponseDto> getMyRideDetail(@PathVariable String rideId) {
         log.info("Fetching ride detail for rideId: {} ", rideId);
         return successResponse(rideService.getMyRideDetail(rideId), "Ride detail retrieved successfully");
+    }
+
+    @GetMapping("/my-rides/{rideId}/inactive-participants")
+    public RestEntity<List<RideParticipantDto>> getMyRideInactiveParticipants(@PathVariable String rideId) {
+        log.info("Fetching inactive participants for rideId: {}", rideId);
+        return successResponse(rideService.getMyRideInactiveParticipants(rideId), "Inactive participants retrieved successfully");
     }
 
     @GetMapping("/{rideId}")
