@@ -73,7 +73,7 @@ public class RideService {
         rideRepository.save(ride);
 
         // 2. Create and Save RideUserMapping for the creator via the specialized service
-        rideUserMappingService.createMapping(rideId, request.getUserId(), RideUserMappingStatus.CREATED);
+        rideUserMappingService.createMapping(rideId, request.getUserId(), RideUserMappingStatus.CREATED, null);
         log.info("Ride created successfully: rideId={}", rideId);
 
         return rideId;

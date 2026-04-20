@@ -28,6 +28,7 @@ public class RideUserRequestMappingService {
     private final RideUserMappingRepository rideUserMappingRepository;
     private final SequenceGenerator sequenceGenerator;
     private final ApplicationEventPublisher eventPublisher;
+    private final RideUserMappingService rideUserMappingService;
 
     // ─────────────────────────────────────────────────────────────────────────
     // 1. Request to Join Ride
@@ -64,7 +65,10 @@ public class RideUserRequestMappingService {
         }
 
         // Create placeholder RideUserMapping for requester (PENDING)
-        String mappingId = sequenceGenerator.nextId();
+        RideUserMapping placeholderMapping = rideUserMappingService.createMapping(rideId, requesterId,
+                RideUserMappingStatus.PENDING, joinRideRequestDto.getComment());
+
+        String mappingId = placeholderMapping.getRideUserMappingId();
 
         // Create one request row per existing participant
         for (RideUserMapping participant : activeParticipants) {
@@ -80,14 +84,6 @@ public class RideUserRequestMappingService {
             requestMappingRepository.save(requestRow);
         }
 
-        RideUserMapping placeholderMapping = RideUserMapping.Builder.rideUserMapping()
-                .withRideUserMappingId(mappingId)
-                .withRideId(rideId)
-                .withUserId(requesterId)
-                .withStatus(RideUserMappingStatus.PENDING)
-                .withComment(joinRideRequestDto.getComment())
-                .build();
-        rideUserMappingRepository.save(placeholderMapping);
         log.info("Join request created for requesterId={}, rideId={}, notified {} participant(s)",
                 requesterId, rideId, activeParticipants.size());
 
