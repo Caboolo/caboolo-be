@@ -5,6 +5,7 @@ import com.caboolo.backend.notification.event.RideNotificationEvent;
 import com.caboolo.backend.notification.event.RideNotificationType;
 import com.caboolo.backend.ride.domain.RideUserMapping;
 import com.caboolo.backend.ride.domain.RideUserRequestMapping;
+import com.caboolo.backend.ride.dto.JoinRideRequestDto;
 import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import com.caboolo.backend.ride.enums.RideUserRequestStatus;
 import com.caboolo.backend.ride.repository.RideUserMappingRepository;
@@ -41,7 +42,8 @@ public class RideUserRequestMappingService {
      * {@link RideUserMapping} for the requester.
      */
     @Transactional
-    public void requestToJoinRide(String rideId, String requesterId) {
+    public void requestToJoinRide(String rideId, JoinRideRequestDto joinRideRequestDto) {
+        String requesterId = joinRideRequestDto.getRequesterId();
         log.info("User requesterId={} is requesting to join rideId={}", requesterId, rideId);
         // Guard: user must not already be an active member
         Optional<RideUserMapping> existingActive = rideUserMappingRepository.findByRideIdAndUserId(rideId, requesterId);
@@ -75,6 +77,7 @@ public class RideUserRequestMappingService {
                     .withApproverId(participant.getUserId())
                     .withRideUserMappingId(mappingId)
                     .withStatus(RideUserRequestStatus.PENDING)
+                    .withComment(joinRideRequestDto.getComment())
                     .build();
             requestMappingRepository.save(requestRow);
         }
@@ -318,5 +321,23 @@ public class RideUserRequestMappingService {
         eventPublisher.publishEvent(
                 RideNotificationEvent.of(RideNotificationType.MEMBER_LEFT, rideId, userId, crewUserIds)
         );
+    }
+
+    /**
+     * Returns a map of requestorId → comment for the given ride and requestor IDs.
+     * Picks the first row's comment per requestor (all rows share the same comment).
+     */
+    public Map<String, String> getCommentsByRequestorIds(String rideId, Collection<String> requestorIds) {
+        if (requestorIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return requestMappingRepository.findByRideIdAndRequestorIdIn(rideId, requestorIds)
+                .stream()
+                .filter(r -> r.getComment() != null)
+                .collect(Collectors.toMap(
+                        RideUserRequestMapping::getRequestorId,
+                        RideUserRequestMapping::getComment,
+                        (first, second) -> first  // keep first if duplicates
+                ));
     }
 }

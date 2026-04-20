@@ -34,6 +34,9 @@ public class RideUserRequestMapping extends GenericIdEntity {
     @Column(name = "status", nullable = false)
     private RideUserRequestStatus status;
 
+    @Column(name = "comment")
+    private String comment;
+
     public static interface RideUserRequestMappingIdStep {
         RideIdStep withRideUserRequestMappingId(String rideUserRequestMappingId);
     }
@@ -59,6 +62,7 @@ public class RideUserRequestMapping extends GenericIdEntity {
     }
 
     public static interface BuildStep {
+        BuildStep withComment(String comment);
         RideUserRequestMapping build();
     }
 
@@ -71,6 +75,7 @@ public class RideUserRequestMapping extends GenericIdEntity {
         private String approverId;
         private String rideUserMappingId;
         private RideUserRequestStatus status;
+        private String comment;
 
         private Builder() {
         }
@@ -116,6 +121,12 @@ public class RideUserRequestMapping extends GenericIdEntity {
         }
 
         @Override
+        public BuildStep withComment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
+        @Override
         public RideUserRequestMapping build() {
             return new RideUserRequestMapping(
                     this.rideUserRequestMappingId,
@@ -123,7 +134,8 @@ public class RideUserRequestMapping extends GenericIdEntity {
                     this.requestorId,
                     this.approverId,
                     this.rideUserMappingId,
-                    this.status
+                    this.status,
+                    this.comment
             );
         }
     }

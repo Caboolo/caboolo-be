@@ -13,6 +13,7 @@ public class PendingRequestDto {
     private Double avgRating;
     private Integer totalRides;
     private RideUserMappingStatus status;
+    private String comment;
 
     public static interface UserIdStep {
         NameStep withUserId(String userId);
@@ -39,6 +40,7 @@ public class PendingRequestDto {
     }
 
     public static interface BuildStep {
+        BuildStep withComment(String comment);
         PendingRequestDto build();
     }
 
@@ -49,6 +51,7 @@ public class PendingRequestDto {
         private Double avgRating;
         private Integer totalRides;
         private RideUserMappingStatus status;
+        private String comment;
 
         private Builder() {
         }
@@ -94,6 +97,12 @@ public class PendingRequestDto {
         }
 
         @Override
+        public BuildStep withComment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
+        @Override
         public PendingRequestDto build() {
             return new PendingRequestDto(
                     this.userId,
@@ -101,7 +110,8 @@ public class PendingRequestDto {
                     this.imageUrl,
                     this.avgRating,
                     this.totalRides,
-                    this.status
+                    this.status,
+                    this.comment
             );
         }
     }
