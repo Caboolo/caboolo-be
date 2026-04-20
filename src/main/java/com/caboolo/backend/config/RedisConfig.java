@@ -46,8 +46,8 @@ public class RedisConfig {
     @Value("${spring.data.redis.lettuce.pool.max-active:16}")
     private int poolMaxActive;
 
-    @Value("${spring.data.redis.lettuce.pool.max-wait:2000ms}")
-    private Duration poolMaxWait;
+    @Value("${spring.data.redis.lettuce.pool.max-wait:2000}")
+    private long poolMaxWait;
 
     /* ── Connection factory bean ── */
 
@@ -58,7 +58,7 @@ public class RedisConfig {
         poolConfig.setMinIdle(poolMinIdle);
         poolConfig.setMaxIdle(poolMaxIdle);
         poolConfig.setMaxTotal(poolMaxActive);
-        poolConfig.setMaxWait(poolMaxWait);
+        poolConfig.setMaxWait(Duration.ofMillis(poolMaxWait));
         poolConfig.setTestOnBorrow(true);
         poolConfig.setTestWhileIdle(true);
 
