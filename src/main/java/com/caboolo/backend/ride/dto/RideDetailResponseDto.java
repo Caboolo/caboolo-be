@@ -25,5 +25,5 @@ public class RideDetailResponseDto {
     private BigDecimal poolPrice;
     private Integer totalSeats;
     private Integer availableSeats;
-    private List<CrewMemberDto> crewMembers;
+    private List<RideParticipantDto> participants;
 }

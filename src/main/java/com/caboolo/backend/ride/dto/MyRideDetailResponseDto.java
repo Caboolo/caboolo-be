@@ -21,8 +21,8 @@ public class MyRideDetailResponseDto {
     private BigDecimal poolPrice;
     private Integer totalSeats;
     private Integer availableSeats;
-    private List<CrewMemberDto> crewMembers;
-    private List<PendingRequestDto> pendingRequests;
+    private List<RideParticipantDto> crewMembers;
+    private List<RideParticipantDto> pendingRequests;
 
     public static interface RideIdStep {
         DepartureTimeStep withRideId(String rideId);
@@ -69,11 +69,11 @@ public class MyRideDetailResponseDto {
     }
 
     public static interface CrewMembersStep {
-        PendingRequestsStep withCrewMembers(List<CrewMemberDto> crewMembers);
+        PendingRequestsStep withCrewMembers(List<RideParticipantDto> crewMembers);
     }
 
     public static interface PendingRequestsStep {
-        BuildStep withPendingRequests(List<PendingRequestDto> pendingRequests);
+        BuildStep withPendingRequests(List<RideParticipantDto> pendingRequests);
     }
 
     public static interface BuildStep {
@@ -92,8 +92,8 @@ public class MyRideDetailResponseDto {
         private BigDecimal poolPrice;
         private Integer totalSeats;
         private Integer availableSeats;
-        private List<CrewMemberDto> crewMembers;
-        private List<PendingRequestDto> pendingRequests;
+        private List<RideParticipantDto> crewMembers;
+        private List<RideParticipantDto> pendingRequests;
 
         private Builder() {
         }
@@ -169,13 +169,13 @@ public class MyRideDetailResponseDto {
         }
 
         @Override
-        public PendingRequestsStep withCrewMembers(List<CrewMemberDto> crewMembers) {
+        public PendingRequestsStep withCrewMembers(List<RideParticipantDto> crewMembers) {
             this.crewMembers = crewMembers;
             return this;
         }
 
         @Override
-        public BuildStep withPendingRequests(List<PendingRequestDto> pendingRequests) {
+        public BuildStep withPendingRequests(List<RideParticipantDto> pendingRequests) {
             this.pendingRequests = pendingRequests;
             return this;
         }
