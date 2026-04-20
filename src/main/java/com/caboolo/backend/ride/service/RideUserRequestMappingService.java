@@ -5,12 +5,12 @@ import com.caboolo.backend.notification.event.RideNotificationEvent;
 import com.caboolo.backend.notification.event.RideNotificationType;
 import com.caboolo.backend.ride.domain.RideUserMapping;
 import com.caboolo.backend.ride.domain.RideUserRequestMapping;
+import com.caboolo.backend.ride.dto.JoinRideRequestDto;
 import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import com.caboolo.backend.ride.enums.RideUserRequestStatus;
 import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import com.caboolo.backend.ride.repository.RideUserRequestMappingRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -41,7 +41,8 @@ public class RideUserRequestMappingService {
      * {@link RideUserMapping} for the requester.
      */
     @Transactional
-    public void requestToJoinRide(String rideId, String requesterId) {
+    public void requestToJoinRide(String rideId, JoinRideRequestDto joinRideRequestDto) {
+        String requesterId = joinRideRequestDto.getRequesterId();
         log.info("User requesterId={} is requesting to join rideId={}", requesterId, rideId);
         // Guard: user must not already be an active member
         Optional<RideUserMapping> existingActive = rideUserMappingRepository.findByRideIdAndUserId(rideId, requesterId);
@@ -84,6 +85,7 @@ public class RideUserRequestMappingService {
                 .withRideId(rideId)
                 .withUserId(requesterId)
                 .withStatus(RideUserMappingStatus.PENDING)
+                .withComment(joinRideRequestDto.getComment())
                 .build();
         rideUserMappingRepository.save(placeholderMapping);
         log.info("Join request created for requesterId={}, rideId={}, notified {} participant(s)",

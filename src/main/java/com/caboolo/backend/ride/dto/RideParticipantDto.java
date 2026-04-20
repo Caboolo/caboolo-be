@@ -15,6 +15,7 @@ public class RideParticipantDto {
     private Double avgRating;
     private Integer totalRides;
     private RideUserMappingStatus status;
+    private String comment;
 
     public static interface UserIdStep {
         NameStep withUserId(String userId);
@@ -37,20 +38,26 @@ public class RideParticipantDto {
     }
 
     public static interface StatusStep {
-        BuildStep withStatus(RideUserMappingStatus status);
+        CommentStep withStatus(RideUserMappingStatus status);
+    }
+
+    public static interface CommentStep {
+        BuildStep withComment(String comment);
     }
 
     public static interface BuildStep {
         RideParticipantDto build();
     }
 
-    public static class Builder implements UserIdStep, NameStep, ImageUrlStep, AvgRatingStep, TotalRidesStep, StatusStep, BuildStep {
+
+    public static class Builder implements UserIdStep, NameStep, ImageUrlStep, AvgRatingStep, TotalRidesStep, StatusStep, CommentStep, BuildStep {
         private String userId;
         private String name;
         private String imageUrl;
         private Double avgRating;
         private Integer totalRides;
         private RideUserMappingStatus status;
+        private String comment;
 
         private Builder() {
         }
@@ -90,8 +97,14 @@ public class RideParticipantDto {
         }
 
         @Override
-        public BuildStep withStatus(RideUserMappingStatus status) {
+        public CommentStep withStatus(RideUserMappingStatus status) {
             this.status = status;
+            return this;
+        }
+
+        @Override
+        public BuildStep withComment(String comment) {
+            this.comment = comment;
             return this;
         }
 
@@ -103,7 +116,8 @@ public class RideParticipantDto {
                     this.imageUrl,
                     this.avgRating,
                     this.totalRides,
-                    this.status
+                    this.status,
+                    this.comment
             );
         }
     }

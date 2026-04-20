@@ -26,6 +26,9 @@ public class RideUserMapping extends GenericIdEntity {
     @Column(name = "status", nullable = false)
     private RideUserMappingStatus status;
 
+    @Column(name = "comment")
+    private String comment;
+
     public static interface RideUserMappingIdStep {
         RideIdStep withRideUserMappingId(String rideUserMappingId);
     }
@@ -39,18 +42,24 @@ public class RideUserMapping extends GenericIdEntity {
     }
 
     public static interface StatusStep {
-        BuildStep withStatus(RideUserMappingStatus status);
+        CommentStep withStatus(RideUserMappingStatus status);
+    }
+
+    public static interface CommentStep {
+        BuildStep withComment(String comment);
     }
 
     public static interface BuildStep {
         RideUserMapping build();
     }
 
-    public static class Builder implements RideUserMappingIdStep, RideIdStep, UserIdStep, StatusStep, BuildStep {
+
+    public static class Builder implements RideUserMappingIdStep, RideIdStep, UserIdStep, StatusStep, CommentStep, BuildStep {
         private String rideUserMappingId;
         private String rideId;
         private String userId;
         private RideUserMappingStatus status;
+        private String comment;
 
         private Builder() {
         }
@@ -78,8 +87,14 @@ public class RideUserMapping extends GenericIdEntity {
         }
 
         @Override
-        public BuildStep withStatus(RideUserMappingStatus status) {
+        public CommentStep withStatus(RideUserMappingStatus status) {
             this.status = status;
+            return this;
+        }
+
+        @Override
+        public BuildStep withComment(String comment) {
+            this.comment = comment;
             return this;
         }
 
@@ -89,7 +104,8 @@ public class RideUserMapping extends GenericIdEntity {
                     this.rideUserMappingId,
                     this.rideId,
                     this.userId,
-                    this.status
+                    this.status,
+                    this.comment
             );
         }
     }

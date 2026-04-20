@@ -253,6 +253,12 @@ public class RideService {
         Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(allUserIds).stream()
             .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
+        Map<String, String> userIdToCommentsMap =
+                allMappings.stream()
+                        .collect(Collectors.toMap(
+                                RideUserMapping::getUserId,
+                                RideUserMapping::getComment));
+
         // 4. Partition into crew (CREATED/ACCEPTED) and pending — status comes from DB
         List<RideParticipantDto> crewMembers = allMappings.stream()
             .filter(m -> RideUserMappingStatus.ACTIVE_STATUSES.contains(m.getStatus()))
@@ -266,6 +272,7 @@ public class RideService {
                     .withAvgRating(ud.getAvgRating())
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
+                    .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .build();
             })
             .filter(Objects::nonNull)
@@ -283,6 +290,7 @@ public class RideService {
                     .withAvgRating(ud.getAvgRating())
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
+                    .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .build();
             })
             .filter(Objects::nonNull)
@@ -317,6 +325,12 @@ public class RideService {
             return Collections.emptyList();
         }
 
+        Map<String, String> userIdToCommentsMap =
+                inactiveMappings.stream()
+                        .collect(Collectors.toMap(
+                                RideUserMapping::getUserId,
+                                RideUserMapping::getComment));
+
         Set<String> userIds = inactiveMappings.stream()
             .map(RideUserMapping::getUserId)
             .collect(Collectors.toSet());
@@ -335,6 +349,7 @@ public class RideService {
                     .withAvgRating(ud.getAvgRating())
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
+                    .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .build();
             })
             .filter(Objects::nonNull)
@@ -353,6 +368,12 @@ public class RideService {
         // 2. Fetch all active mappings for this ride
         List<RideUserMapping> crewMappings = rideUserMappingService.findByRideIdAndStatusIn(rideId,
             RideUserMappingStatus.ACTIVE_STATUSES);
+
+        Map<String, String> userIdToCommentsMap =
+                crewMappings.stream()
+                        .collect(Collectors.toMap(
+                                RideUserMapping::getUserId,
+                                RideUserMapping::getComment));
 
         // 3. Collect all user IDs for bulk lookup
         Set<String> activeUserIds = crewMappings.stream()
@@ -394,6 +415,7 @@ public class RideService {
                     .withAvgRating(ud.getAvgRating())
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
+                    .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .build();
             })
             .filter(Objects::nonNull)
@@ -449,6 +471,12 @@ public class RideService {
             .map(RideUserMapping::getUserId)
             .collect(Collectors.toSet());
 
+        Map<String, String> userIdToCommentsMap =
+                crewMappings.stream()
+                        .collect(Collectors.toMap(
+                                RideUserMapping::getUserId,
+                                RideUserMapping::getComment));
+
         Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(crewUserIds).stream()
             .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
@@ -476,6 +504,7 @@ public class RideService {
                     .withAvgRating(ud.getAvgRating())
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
+                    .withComment(userIdToCommentsMap.get(m.getUserId()))
                     .build();
             })
             .filter(Objects::nonNull)

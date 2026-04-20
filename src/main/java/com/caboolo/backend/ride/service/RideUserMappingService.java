@@ -32,6 +32,7 @@ public class RideUserMappingService {
                 .withRideId(rideId)
                 .withUserId(userId)
                 .withStatus(status)
+                .withComment(null)
                 .build();
         
         rideUserMappingRepository.save(mapping);

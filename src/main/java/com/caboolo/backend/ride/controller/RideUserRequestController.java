@@ -2,6 +2,7 @@ package com.caboolo.backend.ride.controller;
 
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
+import com.caboolo.backend.ride.dto.JoinRideRequestDto;
 import com.caboolo.backend.ride.service.RideUserRequestMappingService;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,8 +26,11 @@ public class RideUserRequestController extends BaseController {
     @PostMapping("/{rideId}/join")
     public RestEntity<Void> requestToJoinRide(
             @PathVariable String rideId,
-            @RequestParam String requesterId) {
-        rideUserRequestMappingService.requestToJoinRide(rideId, requesterId);
+            @RequestBody JoinRideRequestDto joinRideRequestDto) {
+
+        rideUserRequestMappingService.requestToJoinRide(
+                rideId, joinRideRequestDto);
+
         return successResponse("Join request raised successfully");
     }
 
