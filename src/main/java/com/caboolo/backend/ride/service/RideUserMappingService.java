@@ -23,7 +23,7 @@ public class RideUserMappingService {
     private final SequenceGenerator sequenceGenerator;
 
     @Transactional
-    public void createMapping(String rideId, String userId, RideUserMappingStatus status) {
+    public RideUserMapping createMapping(String rideId, String userId, RideUserMappingStatus status, String comments) {
         String mappingId = sequenceGenerator.nextId();
         log.info("Creating RideUserMapping: mappingId={}, rideId={}, userId={}, status={}", mappingId, rideId, userId, status);
         
@@ -32,11 +32,12 @@ public class RideUserMappingService {
                 .withRideId(rideId)
                 .withUserId(userId)
                 .withStatus(status)
-                .withComment(null)
+                .withComment(comments)
                 .build();
         
         rideUserMappingRepository.save(mapping);
         log.info("RideUserMapping created successfully: mappingId={}, rideId={}, userId={}", mappingId, rideId, userId);
+        return mapping;
     }
 
     @Transactional
