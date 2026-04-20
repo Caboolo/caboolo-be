@@ -26,14 +26,12 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             "  AND r.departure_time BETWEEN :startTime AND :endTime " +
             "  AND r.source_hub_id = :airportHubId " +
             "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
-            "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId) " +
             "ORDER BY ST_Distance_Sphere(POINT(h.longitude, h.latitude), POINT(:longitude, :latitude)) ASC",
             countQuery = "SELECT count(r.ride_id) FROM ride r " +
             "WHERE r.status = :status " +
             "  AND r.departure_time BETWEEN :startTime AND :endTime " +
             "  AND r.source_hub_id = :airportHubId " +
-            "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
-            "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId)",
+            "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0",
             nativeQuery = true)
     Page<Ride> findAvailableRidesFromAirportSortedByDistance(
             @Param("status") String status,
@@ -51,14 +49,12 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             "  AND r.departure_time BETWEEN :startTime AND :endTime " +
             "  AND r.destination_hub_id = :airportHubId " +
             "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
-            "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId) " +
             "ORDER BY ST_Distance_Sphere(POINT(h.longitude, h.latitude), POINT(:longitude, :latitude)) ASC",
             countQuery = "SELECT count(r.ride_id) FROM ride r " +
             "WHERE r.status = :status " +
             "  AND r.departure_time BETWEEN :startTime AND :endTime " +
             "  AND r.destination_hub_id = :airportHubId " +
-            "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
-            "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId)",
+            "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0",
             nativeQuery = true)
     Page<Ride> findAvailableRidesToAirportSortedByDistance(
             @Param("status") String status,
@@ -76,15 +72,13 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             "  AND r.source_hub_id = :airportHubId " +
             "  AND r.destination_hub_id = :otherHubId " +
             "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
-            "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId) " +
             "ORDER BY r.departure_time ASC",
             countQuery = "SELECT count(r.ride_id) FROM ride r " +
             "WHERE r.status = :status " +
             "  AND r.departure_time BETWEEN :startTime AND :endTime " +
             "  AND r.source_hub_id = :airportHubId " +
             "  AND r.destination_hub_id = :otherHubId " +
-            "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
-            "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId)",
+            "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0",
             nativeQuery = true)
     Page<Ride> findAvailableRidesFromAirportByExactHubs(
             @Param("status") String status,
@@ -101,15 +95,13 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             "  AND r.destination_hub_id = :airportHubId " +
             "  AND r.source_hub_id = :otherHubId " +
             "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
-            "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId) " +
             "ORDER BY r.departure_time ASC",
             countQuery = "SELECT count(r.ride_id) FROM ride r " +
             "WHERE r.status = :status " +
             "  AND r.departure_time BETWEEN :startTime AND :endTime " +
             "  AND r.destination_hub_id = :airportHubId " +
             "  AND r.source_hub_id = :otherHubId " +
-            "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0 " +
-            "  AND NOT EXISTS (SELECT 1 FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.user_id = :userId)",
+            "  AND (r.total_seats - (SELECT COUNT(*) FROM ride_user_mapping m WHERE m.ride_id = r.ride_id AND m.status IN ('CREATED', 'ACCEPTED'))) > 0",
             nativeQuery = true)
     Page<Ride> findAvailableRidesToAirportByExactHubs(
             @Param("status") String status,
