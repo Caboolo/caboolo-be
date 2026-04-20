@@ -76,7 +76,6 @@ public class RideUserRequestMappingService {
                     .withApproverId(participant.getUserId())
                     .withRideUserMappingId(mappingId)
                     .withStatus(RideUserRequestStatus.PENDING)
-                    .withComment(joinRideRequestDto.getComment())
                     .build();
             requestMappingRepository.save(requestRow);
         }
@@ -86,6 +85,7 @@ public class RideUserRequestMappingService {
                 .withRideId(rideId)
                 .withUserId(requesterId)
                 .withStatus(RideUserMappingStatus.PENDING)
+                .withComment(joinRideRequestDto.getComment())
                 .build();
         rideUserMappingRepository.save(placeholderMapping);
         log.info("Join request created for requesterId={}, rideId={}, notified {} participant(s)",
@@ -320,23 +320,5 @@ public class RideUserRequestMappingService {
         eventPublisher.publishEvent(
                 RideNotificationEvent.of(RideNotificationType.MEMBER_LEFT, rideId, userId, crewUserIds)
         );
-    }
-
-    /**
-     * Returns a map of requestorId → comment for the given ride and requestor IDs.
-     * Picks the first row's comment per requestor (all rows share the same comment).
-     */
-    public Map<String, String> getCommentsByRideIdAndRequestorIds(String rideId, Collection<String> requestorIds) {
-        if (requestorIds.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return requestMappingRepository.findByRideIdAndRequestorIdIn(rideId, requestorIds)
-                .stream()
-                .filter(r -> r.getComment() != null)
-                .collect(Collectors.toMap(
-                        RideUserRequestMapping::getRequestorId,
-                        RideUserRequestMapping::getComment,
-                        (first, second) -> first  // keep first if duplicates
-                ));
     }
 }

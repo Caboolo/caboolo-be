@@ -33,15 +33,13 @@ public class RideService {
 
     private final RideRepository rideRepository;
     private final RideUserMappingService rideUserMappingService;
-    private final RideUserRequestMappingService rideUserRequestMappingService;
     private final UserDetailService userDetailService;
     private final HubService hubService;
     private final SequenceGenerator sequenceGenerator;
 
-    public RideService(RideRepository rideRepository, RideUserMappingService rideUserMappingService, RideUserRequestMappingService rideUserRequestMappingService, UserDetailService userDetailService, HubService hubService, SequenceGenerator sequenceGenerator) {
+    public RideService(RideRepository rideRepository, RideUserMappingService rideUserMappingService, UserDetailService userDetailService, HubService hubService, SequenceGenerator sequenceGenerator) {
         this.rideRepository = rideRepository;
         this.rideUserMappingService = rideUserMappingService;
-        this.rideUserRequestMappingService = rideUserRequestMappingService;
         this.userDetailService = userDetailService;
         this.hubService = hubService;
         this.sequenceGenerator = sequenceGenerator;
@@ -252,10 +250,12 @@ public class RideService {
                 .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
         // 4. Fetch comments for pending requestors
-        Map<String, String> commentsByRequestorId = rideUserRequestMappingService
-                .getCommentsByRideIdAndRequestorIds(generalDetail.getRideId(), pendingUserIds);
+        Map<String, String> commentsByRequestorId =
+                pendingMappings.stream()
+                        .collect(Collectors.toMap(
+                                RideUserMapping::getUserId,
+                                RideUserMapping::getComment));
 
-        // 5. Build pending request DTOs
         List<PendingRequestDto> pendingRequests = pendingMappings.stream()
                 .map(m -> {
                     UserDetail ud = userDetailMap.get(m.getUserId());
