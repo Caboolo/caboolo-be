@@ -253,8 +253,26 @@ public class RideService {
         Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(allUserIds).stream()
             .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
-        // 4. Build unified participant DTOs — status comes directly from the DB mapping
-        List<RideParticipantDto> participants = allMappings.stream()
+        // 4. Partition into crew (CREATED/ACCEPTED) and pending — status comes from DB
+        List<RideParticipantDto> crewMembers = allMappings.stream()
+            .filter(m -> RideUserMappingStatus.ACTIVE_STATUSES.contains(m.getStatus()))
+            .map(m -> {
+                UserDetail ud = userDetailMap.get(m.getUserId());
+                if (ud == null) return null;
+                return RideParticipantDto.Builder.rideParticipantDto()
+                    .withUserId(ud.getUserId())
+                    .withName(ud.getName())
+                    .withImageUrl(ud.getImageUrl())
+                    .withAvgRating(ud.getAvgRating())
+                    .withTotalRides(ud.getTotalReviews())
+                    .withStatus(m.getStatus())
+                    .build();
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+
+        List<RideParticipantDto> pendingRequests = allMappings.stream()
+            .filter(m -> m.getStatus() == RideUserMappingStatus.PENDING)
             .map(m -> {
                 UserDetail ud = userDetailMap.get(m.getUserId());
                 if (ud == null) return null;
@@ -283,9 +301,11 @@ public class RideService {
             .withPoolPrice(generalDetail.getPoolPrice())
             .withTotalSeats(generalDetail.getTotalSeats())
             .withAvailableSeats(generalDetail.getAvailableSeats())
-            .withParticipants(participants)
+            .withCrewMembers(crewMembers)
+            .withPendingRequests(pendingRequests)
             .build();
     }
+
 
     public List<RideParticipantDto> getMyRideInactiveParticipants(String rideId) {
         log.info("Fetching inactive participants for rideId={}", rideId);
