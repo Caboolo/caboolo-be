@@ -21,8 +21,7 @@ public class MyRideDetailResponseDto {
     private BigDecimal poolPrice;
     private Integer totalSeats;
     private Integer availableSeats;
-    private List<CrewMemberDto> crewMembers;
-    private List<PendingRequestDto> pendingRequests;
+    private List<RideParticipantDto> participants;
 
     public static interface RideIdStep {
         DepartureTimeStep withRideId(String rideId);
@@ -65,22 +64,15 @@ public class MyRideDetailResponseDto {
     }
 
     public static interface AvailableSeatsStep {
-        CrewMembersStep withAvailableSeats(Integer availableSeats);
-    }
-
-    public static interface CrewMembersStep {
-        PendingRequestsStep withCrewMembers(List<CrewMemberDto> crewMembers);
-    }
-
-    public static interface PendingRequestsStep {
-        BuildStep withPendingRequests(List<PendingRequestDto> pendingRequests);
+        BuildStep withAvailableSeats(Integer availableSeats);
     }
 
     public static interface BuildStep {
+        BuildStep withParticipants(List<RideParticipantDto> participants);
         MyRideDetailResponseDto build();
     }
 
-    public static class Builder implements RideIdStep, DepartureTimeStep, SourceHubNameStep, SourceHubLatitudeStep, SourceHubLongitudeStep, DestinationHubNameStep, DestinationHubLatitudeStep, DestinationHubLongitudeStep, PoolPriceStep, TotalSeatsStep, AvailableSeatsStep, CrewMembersStep, PendingRequestsStep, BuildStep {
+    public static class Builder implements RideIdStep, DepartureTimeStep, SourceHubNameStep, SourceHubLatitudeStep, SourceHubLongitudeStep, DestinationHubNameStep, DestinationHubLatitudeStep, DestinationHubLongitudeStep, PoolPriceStep, TotalSeatsStep, AvailableSeatsStep, BuildStep {
         private String rideId;
         private LocalDateTime departureTime;
         private String sourceHubName;
@@ -92,8 +84,7 @@ public class MyRideDetailResponseDto {
         private BigDecimal poolPrice;
         private Integer totalSeats;
         private Integer availableSeats;
-        private List<CrewMemberDto> crewMembers;
-        private List<PendingRequestDto> pendingRequests;
+        private List<RideParticipantDto> participants;
 
         private Builder() {
         }
@@ -163,20 +154,14 @@ public class MyRideDetailResponseDto {
         }
 
         @Override
-        public CrewMembersStep withAvailableSeats(Integer availableSeats) {
+        public BuildStep withAvailableSeats(Integer availableSeats) {
             this.availableSeats = availableSeats;
             return this;
         }
 
         @Override
-        public PendingRequestsStep withCrewMembers(List<CrewMemberDto> crewMembers) {
-            this.crewMembers = crewMembers;
-            return this;
-        }
-
-        @Override
-        public BuildStep withPendingRequests(List<PendingRequestDto> pendingRequests) {
-            this.pendingRequests = pendingRequests;
+        public BuildStep withParticipants(List<RideParticipantDto> participants) {
+            this.participants = participants;
             return this;
         }
 
@@ -194,8 +179,7 @@ public class MyRideDetailResponseDto {
                     this.poolPrice,
                     this.totalSeats,
                     this.availableSeats,
-                    this.crewMembers,
-                    this.pendingRequests
+                    this.participants
             );
         }
     }
