@@ -31,9 +31,4 @@ public interface RideUserRequestMappingRepository extends JpaRepository<RideUser
             @Param("rideId") String rideId,
             @Param("requestorId") String requestorId);
 
-    /**
-     * Fetches request rows for a given ride and set of requestor IDs, used to retrieve comments.
-     */
-    List<RideUserRequestMapping> findByRideIdAndRequestorIdIn(String rideId, java.util.Collection<String> requestorIds);
-
 }
