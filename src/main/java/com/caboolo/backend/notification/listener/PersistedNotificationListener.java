@@ -4,7 +4,6 @@ import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.notification.domain.Notification;
 import com.caboolo.backend.notification.event.RideNotificationEvent;
 import com.caboolo.backend.notification.service.NotificationService;
-import com.caboolo.backend.userdetails.domain.UserDetail;
 import com.caboolo.backend.userdetails.service.UserDetailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,12 +34,10 @@ public class PersistedNotificationListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleRideNotification(RideNotificationEvent event) {
         try {
-            switch (event.getType()) {
-                case RIDE_REQUEST_SENT -> handleRideRequestSent(event);
-                case RIDE_CONFIRMED -> handleRideConfirmed(event);
-                case MATCH_FOUND -> handleMatchFound(event);
-                case MEMBER_LEFT -> handleMemberLeft(event);
-                default -> log.warn("Unknown ride notification type: {}", event.getType());
+            if (event.getType().shouldPersist()) {
+                persistNotifications(event);
+            } else {
+                log.warn("Unknown ride notification type: {}", event.getType());
             }
         } catch (Exception e) {
             log.error("Failed to persist ride notification [type={}, rideId={}]: {}",
@@ -48,36 +45,16 @@ public class PersistedNotificationListener {
         }
     }
 
-    private void handleRideRequestSent(RideNotificationEvent event) {
-        String actorName = resolveUserName(event.getSenderUserId(), "Someone");
-        String title = "New Join Request";
-        String body = actorName + " wants to join your ride";
-        persistNotifications(event, title, body);
-    }
 
-    private void handleRideConfirmed(RideNotificationEvent event) {
-        String title = "Ride Confirmed";
-        String body = "Your request to join the ride has been accepted!";
-        persistNotifications(event, title, body);
-    }
-
-    private void handleMatchFound(RideNotificationEvent event) {
-        String actorName = resolveUserName(event.getSenderUserId(), "A new member");
-        String title = "New Crew Member";
-        String body = actorName + " has joined your ride";
-        persistNotifications(event, title, body);
-    }
-
-    private void handleMemberLeft(RideNotificationEvent event) {
-        String actorName = resolveUserName(event.getSenderUserId(), "A member");
-        String title = "Member Left";
-        String body = actorName + " has left the ride";
-        persistNotifications(event, title, body);
-    }
-
-    private void persistNotifications(RideNotificationEvent event, String title, String body) {
+    private void persistNotifications(RideNotificationEvent event) {
         if (event.getRecipientUserIds() == null || event.getRecipientUserIds().isEmpty()) {
             return;
+        }
+
+        String body = event.getBody();
+        if (body != null && body.contains("%s")) {
+            String actorName = resolveUserName(event.getSenderUserId(), "Someone");
+            body = String.format(body, actorName);
         }
 
         List<Notification> notifications = new ArrayList<>();
@@ -85,7 +62,7 @@ public class PersistedNotificationListener {
             Notification notification = Notification.Builder.notification()
                     .withNotificationId(sequenceGenerator.nextId())
                     .withUserId(recipientId)
-                    .withTitle(title)
+                    .withTitle(event.getTitle())
                     .withBody(body)
                     .withType(event.getType().name())
                     .withSenderUserId(event.getSenderUserId())
@@ -99,9 +76,10 @@ public class PersistedNotificationListener {
     }
 
     private String resolveUserName(String userId, String fallback) {
+        if (userId == null) return fallback;
         try {
-            UserDetail user = userDetailService.getUserDetailEntity(userId);
-            return user.getName() != null ? user.getName() : fallback;
+            String user = userDetailService.getNameByUserId(userId);
+            return user != null ? user: fallback;
         } catch (Exception e) {
             log.warn("Could not resolve user name for persisting notification {}: {}", userId, e.getMessage());
             return fallback;

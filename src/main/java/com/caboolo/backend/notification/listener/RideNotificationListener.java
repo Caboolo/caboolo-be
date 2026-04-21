@@ -45,12 +45,11 @@ public class RideNotificationListener {
     }
 
     private void handleRideRequestSent(RideNotificationEvent event) {
-        String actorName = resolveUserName(event.getSenderUserId(), "Someone");
-
+        String body = formatBody(event);
         notificationService.sendToUsers(
                 event.getRecipientUserIds(),
-                "New Join Request",
-                actorName + " wants to join your ride",
+                event.getTitle(),
+                body,
                 Map.of(
                         "rideId", String.valueOf(event.getRideId()),
                         "requesterId", event.getSenderUserId(),
@@ -60,10 +59,11 @@ public class RideNotificationListener {
     }
 
     private void handleRideConfirmed(RideNotificationEvent event) {
+        String body = formatBody(event);
         notificationService.sendToUsers(
                 event.getRecipientUserIds(),
-                "Ride Confirmed. ",
-                "Your request to join the ride has been accepted!",
+                event.getTitle(),
+                body,
                 Map.of(
                         "rideId", String.valueOf(event.getRideId()),
                         "type", "RIDE_CONFIRMED"
@@ -72,12 +72,11 @@ public class RideNotificationListener {
     }
 
     private void handleMatchFound(RideNotificationEvent event) {
-        String actorName = resolveUserName(event.getSenderUserId(), "A new member");
-
+        String body = formatBody(event);
         notificationService.sendToUsers(
                 event.getRecipientUserIds(),
-                "New Crew Member",
-                actorName + " has joined your ride",
+                event.getTitle(),
+                body,
                 Map.of(
                         "rideId", String.valueOf(event.getRideId()),
                         "requesterId", event.getSenderUserId(),
@@ -87,12 +86,11 @@ public class RideNotificationListener {
     }
 
     private void handleMemberLeft(RideNotificationEvent event) {
-        String actorName = resolveUserName(event.getSenderUserId(), "A member");
-
+        String body = formatBody(event);
         notificationService.sendToUsers(
                 event.getRecipientUserIds(),
-                "Member Left",
-                actorName + " has left the ride",
+                event.getTitle(),
+                body,
                 Map.of(
                         "rideId", String.valueOf(event.getRideId()),
                         "userId", event.getSenderUserId(),
@@ -101,7 +99,17 @@ public class RideNotificationListener {
         );
     }
 
+    private String formatBody(RideNotificationEvent event) {
+        String body = event.getBody();
+        if (body != null && body.contains("%s")) {
+            String actorName = resolveUserName(event.getSenderUserId(), "Someone");
+            body = String.format(body, actorName);
+        }
+        return body;
+    }
+
     private String resolveUserName(String userId, String fallback) {
+        if (userId == null) return fallback;
         try {
             UserDetail user = userDetailService.getUserDetailEntity(userId);
             return user.getName() != null ? user.getName() : fallback;
