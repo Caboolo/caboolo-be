@@ -1,5 +1,7 @@
 package com.caboolo.backend.notification.listener;
 
+import com.caboolo.backend.core.idgen.SequenceGenerator;
+import com.caboolo.backend.notification.domain.Notification;
 import com.caboolo.backend.notification.event.RideNotificationEvent;
 import com.caboolo.backend.notification.service.NotificationService;
 import com.caboolo.backend.userdetails.domain.UserDetail;
@@ -11,21 +13,23 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.event.TransactionPhase;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Listens for {@link RideNotificationEvent}s and sends FCM push notifications.
+ * Listens for {@link RideNotificationEvent}s and saves notifications to the database.
  * <p>
- * Runs AFTER_COMMIT so notifications are only sent when the transaction succeeds.
+ * Runs AFTER_COMMIT so notifications are only saved when the related transaction succeeds.
  * Runs @Async so it never blocks the calling thread.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RideNotificationListener {
+public class PersistedNotificationListener {
 
     private final NotificationService notificationService;
     private final UserDetailService userDetailService;
+    private final SequenceGenerator sequenceGenerator;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -39,66 +43,59 @@ public class RideNotificationListener {
                 default -> log.warn("Unknown ride notification type: {}", event.getType());
             }
         } catch (Exception e) {
-            log.error("Failed to process ride notification [type={}, rideId={}]: {}",
+            log.error("Failed to persist ride notification [type={}, rideId={}]: {}",
                     event.getType(), event.getRideId(), e.getMessage());
         }
     }
 
     private void handleRideRequestSent(RideNotificationEvent event) {
         String actorName = resolveUserName(event.getSenderUserId(), "Someone");
-
-        notificationService.sendToUsers(
-                event.getRecipientUserIds(),
-                "New Join Request",
-                actorName + " wants to join your ride",
-                Map.of(
-                        "rideId", String.valueOf(event.getRideId()),
-                        "requesterId", event.getSenderUserId(),
-                        "type", "RIDE_REQUEST_SENT"
-                )
-        );
+        String title = "New Join Request";
+        String body = actorName + " wants to join your ride";
+        persistNotifications(event, title, body);
     }
 
     private void handleRideConfirmed(RideNotificationEvent event) {
-        notificationService.sendToUsers(
-                event.getRecipientUserIds(),
-                "Ride Confirmed. ",
-                "Your request to join the ride has been accepted!",
-                Map.of(
-                        "rideId", String.valueOf(event.getRideId()),
-                        "type", "RIDE_CONFIRMED"
-                )
-        );
+        String title = "Ride Confirmed";
+        String body = "Your request to join the ride has been accepted!";
+        persistNotifications(event, title, body);
     }
 
     private void handleMatchFound(RideNotificationEvent event) {
         String actorName = resolveUserName(event.getSenderUserId(), "A new member");
-
-        notificationService.sendToUsers(
-                event.getRecipientUserIds(),
-                "New Crew Member",
-                actorName + " has joined your ride",
-                Map.of(
-                        "rideId", String.valueOf(event.getRideId()),
-                        "requesterId", event.getSenderUserId(),
-                        "type", "MATCH_FOUND"
-                )
-        );
+        String title = "New Crew Member";
+        String body = actorName + " has joined your ride";
+        persistNotifications(event, title, body);
     }
 
     private void handleMemberLeft(RideNotificationEvent event) {
         String actorName = resolveUserName(event.getSenderUserId(), "A member");
+        String title = "Member Left";
+        String body = actorName + " has left the ride";
+        persistNotifications(event, title, body);
+    }
 
-        notificationService.sendToUsers(
-                event.getRecipientUserIds(),
-                "Member Left",
-                actorName + " has left the ride",
-                Map.of(
-                        "rideId", String.valueOf(event.getRideId()),
-                        "userId", event.getSenderUserId(),
-                        "type", "MEMBER_LEFT"
-                )
-        );
+    private void persistNotifications(RideNotificationEvent event, String title, String body) {
+        if (event.getRecipientUserIds() == null || event.getRecipientUserIds().isEmpty()) {
+            return;
+        }
+
+        List<Notification> notifications = new ArrayList<>();
+        for (String recipientId : event.getRecipientUserIds()) {
+            Notification notification = Notification.Builder.notification()
+                    .withNotificationId(sequenceGenerator.nextId())
+                    .withUserId(recipientId)
+                    .withTitle(title)
+                    .withBody(body)
+                    .withType(event.getType().name())
+                    .withSenderUserId(event.getSenderUserId())
+                    .withRideId(event.getRideId())
+                    .withIsRead(false)
+                    .build();
+            notifications.add(notification);
+        }
+
+        notificationService.saveInAppNotifications(notifications);
     }
 
     private String resolveUserName(String userId, String fallback) {
@@ -106,7 +103,7 @@ public class RideNotificationListener {
             UserDetail user = userDetailService.getUserDetailEntity(userId);
             return user.getName() != null ? user.getName() : fallback;
         } catch (Exception e) {
-            log.warn("Could not resolve user name for {}: {}", userId, e.getMessage());
+            log.warn("Could not resolve user name for persisting notification {}: {}", userId, e.getMessage());
             return fallback;
         }
     }

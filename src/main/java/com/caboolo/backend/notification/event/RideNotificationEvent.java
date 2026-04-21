@@ -17,16 +17,16 @@ public class RideNotificationEvent {
     private final String rideId;
 
     /** The user who triggered the event (requester / leaver) */
-    private final String actorUserId;
+    private final String senderUserId;
 
     /** Users who should receive the notification */
     private final List<String> recipientUserIds;
 
     private RideNotificationEvent(RideNotificationType type, String rideId,
-                                  String actorUserId, List<String> recipientUserIds) {
+                                  String senderUserId, List<String> recipientUserIds) {
         this.type = type;
         this.rideId = rideId;
-        this.actorUserId = actorUserId;
+        this.senderUserId = senderUserId;
         this.recipientUserIds = recipientUserIds;
     }
 
