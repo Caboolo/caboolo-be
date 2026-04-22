@@ -373,7 +373,8 @@ public class RideService {
                 crewMappings.stream()
                         .collect(Collectors.toMap(
                                 RideUserMapping::getUserId,
-                                RideUserMapping::getComment));
+                                RideUserMapping::getComment
+                        ));
 
         // 3. Collect all user IDs for bulk lookup
         Set<String> activeUserIds = crewMappings.stream()
