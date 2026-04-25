@@ -267,7 +267,8 @@ public class RideUserRequestMappingService {
                     return new RuntimeException("Requester's RideUserMapping not found");
                 });
 
-        if (requesterMapping.getStatus() == RideUserMappingStatus.PENDING) {
+        if (requesterMapping.getStatus() == RideUserMappingStatus.PENDING
+                || requesterMapping.getStatus() == RideUserMappingStatus.CREATED) {
             requesterMapping.setStatus(RideUserMappingStatus.WITHDRAWN);
             rideUserMappingRepository.save(requesterMapping);
             log.info("Ride request withdrawn successfully for requesterId={}, rideId={}", requesterId, rideId);
