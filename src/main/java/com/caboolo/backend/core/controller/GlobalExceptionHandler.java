@@ -251,19 +251,6 @@ public class GlobalExceptionHandler extends BaseController {
         return errorResponse("A processing error occurred due to an invalid data index.", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // -------------------------------------------------------------------------
-    // Catch-all
-    // -------------------------------------------------------------------------
-
-    /**
-     * Fallback handler for any unhandled {@link RuntimeException}.
-     */
-    @ExceptionHandler(RuntimeException.class)
-    public RestEntity<Void> handleRuntimeException(RuntimeException ex) {
-        log.error("Unhandled runtime exception — {}", ex.getMessage(), ex);
-        return errorResponse("An unexpected error occurred. Please try again later.", HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
     /**
      * Ultimate fallback handler for any {@link Exception} not caught above.
      */
