@@ -261,7 +261,7 @@ public class GlobalExceptionHandler extends BaseController {
     @ExceptionHandler(RuntimeException.class)
     public RestEntity<Void> handleRuntimeException(RuntimeException ex) {
         log.error("Unhandled runtime exception — {}", ex.getMessage(), ex);
-        return errorResponse("An unexpected error occurred. Please try again later.", HttpStatus.INTERNAL_SERVER_ERROR);
+        return errorResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**
