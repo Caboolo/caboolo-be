@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MyRequestResponseDto {
+    private String rideId;
     private RideUserMappingStatus requestStatus;
     private String sourceHubName;
     private String destinationHubName;
@@ -18,6 +19,10 @@ public class MyRequestResponseDto {
     private List<RiderInfoDto> activePassengers;
     private Integer availableSeats;
     private BigDecimal poolPrice;
+
+    public static interface RideIdStep {
+        RequestStatusStep withRideId(String rideId);
+    }
 
     public static interface RequestStatusStep {
         SourceHubNameStep withRequestStatus(RideUserMappingStatus requestStatus);
@@ -38,11 +43,11 @@ public class MyRequestResponseDto {
     public static interface ActivePassengersStep {
         AvailableSeatsStep withActivePassengers(List<RiderInfoDto> activePassengers);
     }
-    
+
     public static interface AvailableSeatsStep {
         PoolPriceStep withAvailableSeats(Integer availableSeats);
     }
-    
+
     public static interface PoolPriceStep {
         BuildStep withPoolPrice(BigDecimal poolPrice);
     }
@@ -51,8 +56,10 @@ public class MyRequestResponseDto {
         MyRequestResponseDto build();
     }
 
-
-    public static class Builder implements RequestStatusStep, SourceHubNameStep, DestinationHubNameStep, DepartureTimeStep, ActivePassengersStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
+    public static class Builder
+        implements RideIdStep, RequestStatusStep, SourceHubNameStep, DestinationHubNameStep, DepartureTimeStep,
+        ActivePassengersStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
+        private String rideId;
         private RideUserMappingStatus requestStatus;
         private String sourceHubName;
         private String destinationHubName;
@@ -64,8 +71,14 @@ public class MyRequestResponseDto {
         private Builder() {
         }
 
-        public static RequestStatusStep myRequestResponseDto() {
+        public static RideIdStep myRequestResponseDto() {
             return new Builder();
+        }
+
+        @Override
+        public RequestStatusStep withRideId(String rideId) {
+            this.rideId = rideId;
+            return this;
         }
 
         @Override
@@ -113,13 +126,14 @@ public class MyRequestResponseDto {
         @Override
         public MyRequestResponseDto build() {
             return new MyRequestResponseDto(
-                    this.requestStatus,
-                    this.sourceHubName,
-                    this.destinationHubName,
-                    this.departureTime,
-                    this.activePassengers,
-                    this.availableSeats,
-                    this.poolPrice
+                this.rideId,
+                this.requestStatus,
+                this.sourceHubName,
+                this.destinationHubName,
+                this.departureTime,
+                this.activePassengers,
+                this.availableSeats,
+                this.poolPrice
             );
         }
     }
