@@ -257,6 +257,6 @@ public class GlobalExceptionHandler extends BaseController {
     @ExceptionHandler(Exception.class)
     public RestEntity<Void> handleGenericException(Exception ex) {
         log.error("Unhandled exception — {}", ex.getMessage(), ex);
-        return errorResponse("An internal server error occurred.", HttpStatus.INTERNAL_SERVER_ERROR);
+        return errorResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
