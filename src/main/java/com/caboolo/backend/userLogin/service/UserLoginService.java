@@ -54,6 +54,7 @@ public class UserLoginService {
             // New user — generate a stable internal userId
             log.info("New user detected, generating new internal userId");
             userLogin = UserLogin.Builder.userLogin()
+                    .withUserLoginId(sequenceGenerator.nextId())
                     .withUserId(sequenceGenerator.nextId())
                     .withPhoneNumber(phoneNumber)
                     .build();

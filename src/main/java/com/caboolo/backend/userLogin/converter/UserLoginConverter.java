@@ -29,11 +29,12 @@ public final class UserLoginConverter {
      */
     public static UserLoginDto toUserLoginDto(UserLogin userLogin) {
         return UserLoginDto.Builder.userLoginDto()
-                .withUserId(userLogin.getUserId())
-                .withPhoneNumber(userLogin.getPhoneNumber())
                 .withDateCreated(userLogin.getDateCreated())
                 .withLastModified(userLogin.getLastModified())
                 .withIsDeleted(userLogin.isDeleted())
+                .withUserId(userLogin.getUserId())
+                .withUserLoginId(userLogin.getUserLoginId())
+                .withPhoneNumber(userLogin.getPhoneNumber())
                 .build();
     }
 }
