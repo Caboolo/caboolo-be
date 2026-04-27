@@ -136,6 +136,7 @@ public class RideService {
                 int acceptedCount = acceptedMappings.size();
 
                 return MyRequestResponseDto.Builder.myRequestResponseDto()
+                    .withRideId(ride.getRideId())
                     .withRequestStatus(um.getStatus())
                     .withSourceHubName(ride.getSourceHubId().toString())
                     .withDestinationHubName(ride.getDestinationHubId().toString())
@@ -253,11 +254,8 @@ public class RideService {
         Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(allUserIds).stream()
             .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
-        Map<String, String> userIdToCommentsMap =
-                allMappings.stream()
-                        .collect(Collectors.toMap(
-                                RideUserMapping::getUserId,
-                                RideUserMapping::getComment));
+        Map<String, String> userIdToCommentsMap = new HashMap<>();
+        allMappings.forEach(m -> userIdToCommentsMap.put(m.getUserId(), m.getComment()));
 
         // 4. Partition into crew (CREATED/ACCEPTED) and pending — status comes from DB
         List<RideParticipantDto> crewMembers = allMappings.stream()
@@ -325,11 +323,8 @@ public class RideService {
             return Collections.emptyList();
         }
 
-        Map<String, String> userIdToCommentsMap =
-                inactiveMappings.stream()
-                        .collect(Collectors.toMap(
-                                RideUserMapping::getUserId,
-                                RideUserMapping::getComment));
+        Map<String, String> userIdToCommentsMap = new HashMap<>();
+        inactiveMappings.forEach(m -> userIdToCommentsMap.put(m.getUserId(), m.getComment()));
 
         Set<String> userIds = inactiveMappings.stream()
             .map(RideUserMapping::getUserId)
@@ -369,11 +364,8 @@ public class RideService {
         List<RideUserMapping> crewMappings = rideUserMappingService.findByRideIdAndStatusIn(rideId,
             RideUserMappingStatus.ACTIVE_STATUSES);
 
-        Map<String, String> userIdToCommentsMap =
-                crewMappings.stream()
-                        .collect(Collectors.toMap(
-                                RideUserMapping::getUserId,
-                                RideUserMapping::getComment));
+        Map<String, String> userIdToCommentsMap = new HashMap<>();
+        crewMappings.forEach(m -> userIdToCommentsMap.put(m.getUserId(), m.getComment()));
 
         // 3. Collect all user IDs for bulk lookup
         Set<String> activeUserIds = crewMappings.stream()
@@ -471,11 +463,8 @@ public class RideService {
             .map(RideUserMapping::getUserId)
             .collect(Collectors.toSet());
 
-        Map<String, String> userIdToCommentsMap =
-                crewMappings.stream()
-                        .collect(Collectors.toMap(
-                                RideUserMapping::getUserId,
-                                RideUserMapping::getComment));
+        Map<String, String> userIdToCommentsMap = new HashMap<>();
+        crewMappings.forEach(m -> userIdToCommentsMap.put(m.getUserId(), m.getComment()));
 
         Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(crewUserIds).stream()
             .collect(Collectors.toMap(UserDetail::getUserId, u -> u));

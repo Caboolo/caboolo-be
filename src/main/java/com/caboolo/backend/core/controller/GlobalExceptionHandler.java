@@ -46,8 +46,8 @@ public class GlobalExceptionHandler extends BaseController {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public RestEntity<Void> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
         String details = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining("; "));
+            .map(FieldError::getDefaultMessage)
+            .collect(Collectors.joining("; "));
 
         String message = "Validation failed: " + details;
         log.warn("Validation error — {}", message, ex);
@@ -61,9 +61,9 @@ public class GlobalExceptionHandler extends BaseController {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public RestEntity<Void> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
         String message = String.format(
-                "Parameter '%s' must be of type '%s'",
-                ex.getName(),
-                ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown");
+            "Parameter '%s' must be of type '%s'",
+            ex.getName(),
+            ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown");
 
         log.warn("Type mismatch — {}", message, ex);
         return errorResponse(message, HttpStatus.BAD_REQUEST);
@@ -95,8 +95,8 @@ public class GlobalExceptionHandler extends BaseController {
     @ExceptionHandler(ConstraintViolationException.class)
     public RestEntity<Void> handleConstraintViolation(ConstraintViolationException ex) {
         String details = ex.getConstraintViolations().stream()
-                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
-                .collect(Collectors.joining("; "));
+            .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+            .collect(Collectors.joining("; "));
 
         log.warn("Constraint violation — {}", details, ex);
         return errorResponse("Constraint violation: " + details, HttpStatus.BAD_REQUEST);
@@ -172,8 +172,8 @@ public class GlobalExceptionHandler extends BaseController {
     public RestEntity<Void> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         log.error("Data integrity violation — {}", ex.getMostSpecificCause().getMessage(), ex);
         return errorResponse(
-                "A data integrity violation occurred. The record may already exist or a required field is missing.",
-                HttpStatus.CONFLICT);
+            "A data integrity violation occurred. The record may already exist or a required field is missing.",
+            HttpStatus.CONFLICT);
     }
 
     // -------------------------------------------------------------------------
@@ -204,7 +204,8 @@ public class GlobalExceptionHandler extends BaseController {
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public RestEntity<Void> handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex) {
         log.error("Optimistic locking failure — {}", ex.getMessage(), ex);
-        return errorResponse("The record was updated by another user. Please refresh and try again.", HttpStatus.CONFLICT);
+        return errorResponse("The record was updated by another user. Please refresh and try again.",
+            HttpStatus.CONFLICT);
     }
 
     // -------------------------------------------------------------------------
@@ -220,13 +221,15 @@ public class GlobalExceptionHandler extends BaseController {
     @ExceptionHandler(MissingRequestHeaderException.class)
     public RestEntity<Void> handleMissingRequestHeader(MissingRequestHeaderException ex) {
         log.warn("Missing request header — {}", ex.getMessage(), ex);
-        return errorResponse(String.format("Required header '%s' is missing", ex.getHeaderName()), HttpStatus.BAD_REQUEST);
+        return errorResponse(String.format("Required header '%s' is missing", ex.getHeaderName()),
+            HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MissingPathVariableException.class)
     public RestEntity<Void> handleMissingPathVariable(MissingPathVariableException ex) {
         log.warn("Missing path variable — {}", ex.getMessage(), ex);
-        return errorResponse(String.format("Required path variable '%s' is missing", ex.getVariableName()), HttpStatus.BAD_REQUEST);
+        return errorResponse(String.format("Required path variable '%s' is missing", ex.getVariableName()),
+            HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
@@ -248,28 +251,13 @@ public class GlobalExceptionHandler extends BaseController {
     @ExceptionHandler(IndexOutOfBoundsException.class)
     public RestEntity<Void> handleIndexOutOfBounds(IndexOutOfBoundsException ex) {
         log.error("Index out of bounds exception — {}", ex.getMessage(), ex);
-        return errorResponse("A processing error occurred due to an invalid data index.", HttpStatus.INTERNAL_SERVER_ERROR);
+        return errorResponse("A processing error occurred due to an invalid data index.",
+            HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // -------------------------------------------------------------------------
-    // Catch-all
-    // -------------------------------------------------------------------------
-
-    /**
-     * Fallback handler for any unhandled {@link RuntimeException}.
-     */
-    @ExceptionHandler(RuntimeException.class)
-    public RestEntity<Void> handleRuntimeException(RuntimeException ex) {
-        log.error("Unhandled runtime exception — {}", ex.getMessage(), ex);
-        return errorResponse("An unexpected error occurred. Please try again later.", HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    /**
-     * Ultimate fallback handler for any {@link Exception} not caught above.
-     */
     @ExceptionHandler(Exception.class)
     public RestEntity<Void> handleGenericException(Exception ex) {
         log.error("Unhandled exception — {}", ex.getMessage(), ex);
-        return errorResponse("An internal server error occurred.", HttpStatus.INTERNAL_SERVER_ERROR);
+        return errorResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

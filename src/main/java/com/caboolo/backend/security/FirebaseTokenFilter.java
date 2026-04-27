@@ -46,7 +46,11 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (FirebaseAuthException e) {
-                log.error("Firebase token verification failed: {}", e.getMessage(), e);
+                log.error("Firebase token verification failed: {}", e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"success\":false,\"message\":\"usser logged out. please relogin\",\"data\":null}");
+                return;
             }
         }
 
