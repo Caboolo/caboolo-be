@@ -33,7 +33,7 @@ public class AuthController extends BaseController {
             FirebaseToken decodedToken = authService.verifyToken(loginRequestDto.getIdToken());
             String uid = decodedToken.getUid();
             log.debug("Token verified for uid: {}", uid);
-            AuthResponse authResponse = userLoginService.handleLogin(uid, loginRequestDto.getPhoneNumber());
+            AuthResponse authResponse = userLoginService.handleLogin(loginRequestDto.getPhoneNumber());
             log.info("Login successful for user: {}", uid);
             return successResponse(authResponse, "Login successful");
         } catch (FirebaseAuthException e) {

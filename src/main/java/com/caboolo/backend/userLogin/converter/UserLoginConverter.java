@@ -30,7 +30,6 @@ public final class UserLoginConverter {
     public static UserLoginDto toUserLoginDto(UserLogin userLogin) {
         return UserLoginDto.Builder.userLoginDto()
                 .withUserId(userLogin.getUserId())
-                .withFirebaseUid(userLogin.getFirebaseUid())
                 .withPhoneNumber(userLogin.getPhoneNumber())
                 .withDateCreated(userLogin.getDateCreated())
                 .withLastModified(userLogin.getLastModified())

@@ -15,9 +15,6 @@ public class UserLoginDto extends GenericEntityDto {
     /** Internal sequence-generated identifier for this user. */
     private String userId;
 
-    /** Firebase UID — used for internal mapping but no longer the primary identifier for API consumers. */
-    private String firebaseUid;
-
     private String phoneNumber;
 
     // -------------------------------------------------------------------------
@@ -25,11 +22,7 @@ public class UserLoginDto extends GenericEntityDto {
     // -------------------------------------------------------------------------
 
     public static interface UserIdStep {
-        FirebaseUidStep withUserId(String userId);
-    }
-
-    public static interface FirebaseUidStep {
-        PhoneNumberStep withFirebaseUid(String firebaseUid);
+        PhoneNumberStep withUserId(String userId);
     }
 
     public static interface PhoneNumberStep {
@@ -44,10 +37,9 @@ public class UserLoginDto extends GenericEntityDto {
     }
 
     public static class Builder
-            implements UserIdStep, FirebaseUidStep, PhoneNumberStep, BuildStep {
+            implements UserIdStep, PhoneNumberStep, BuildStep {
 
         private String userId;
-        private String firebaseUid;
         private String phoneNumber;
         private LocalDateTime dateCreated;
         private LocalDateTime lastModified;
@@ -60,14 +52,8 @@ public class UserLoginDto extends GenericEntityDto {
         }
 
         @Override
-        public FirebaseUidStep withUserId(String userId) {
+        public PhoneNumberStep withUserId(String userId) {
             this.userId = userId;
-            return this;
-        }
-
-        @Override
-        public PhoneNumberStep withFirebaseUid(String firebaseUid) {
-            this.firebaseUid = firebaseUid;
             return this;
         }
 
@@ -97,7 +83,7 @@ public class UserLoginDto extends GenericEntityDto {
 
         @Override
         public UserLoginDto build() {
-            UserLoginDto dto = new UserLoginDto(userId, firebaseUid, phoneNumber);
+            UserLoginDto dto = new UserLoginDto(userId, phoneNumber);
             dto.setDateCreated(dateCreated);
             dto.setLastModified(lastModified);
             dto.setDeleted(isDeleted);
