@@ -7,6 +7,7 @@ import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -69,10 +70,6 @@ public class RideUserMappingService {
         return rideUserMappingRepository.findByUserId(userId);
     }
 
-    public List<RideUserMapping> findByRideIdAndStatus(String rideId, RideUserMappingStatus status) {
-        return rideUserMappingRepository.findByRideIdAndStatus(rideId, status);
-    }
-
     public List<RideUserMapping> findByRideIdInAndStatusIn(Set<String> rideIds, Set<RideUserMappingStatus> rideUserMappingStatuses) {
         return rideUserMappingRepository.findByRideIdInAndStatusIn(rideIds, rideUserMappingStatuses);
     }
@@ -81,7 +78,7 @@ public class RideUserMappingService {
         return rideUserMappingRepository.findByRideIdAndStatusIn(rideId, rideUserMappingStatuses);
     }
 
-    public List<RideUserMapping> findByRideIdAndUserIdOrStatusIn(String rideId, String userId, java.util.Collection<RideUserMappingStatus> activeStatuses) {
+    public List<RideUserMapping> findByRideIdAndUserIdOrStatusIn(String rideId, String userId, Collection<RideUserMappingStatus> activeStatuses) {
         return rideUserMappingRepository.findByRideIdAndUserIdOrStatusIn(rideId, userId, activeStatuses);
     }
 }
