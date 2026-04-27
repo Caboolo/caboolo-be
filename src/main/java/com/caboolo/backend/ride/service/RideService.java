@@ -136,6 +136,7 @@ public class RideService {
                 int acceptedCount = acceptedMappings.size();
 
                 return MyRequestResponseDto.Builder.myRequestResponseDto()
+                    .withRideId(ride.getRideId())
                     .withRequestStatus(um.getStatus())
                     .withSourceHubName(ride.getSourceHubId().toString())
                     .withDestinationHubName(ride.getDestinationHubId().toString())
