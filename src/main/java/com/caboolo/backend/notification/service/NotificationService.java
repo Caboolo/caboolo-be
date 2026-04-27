@@ -2,10 +2,10 @@ package com.caboolo.backend.notification.service;
 
 import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.notification.domain.UserFcmToken;
+import com.caboolo.backend.notification.repository.NotificationRepository;
 import com.caboolo.backend.notification.repository.UserFcmTokenRepository;
 import com.google.firebase.messaging.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +17,12 @@ import java.util.stream.Collectors;
 public class NotificationService {
 
     private final UserFcmTokenRepository fcmTokenRepository;
+    private final NotificationRepository notificationRepository;
     private final SequenceGenerator sequenceGenerator;
 
-    public NotificationService(UserFcmTokenRepository fcmTokenRepository, SequenceGenerator sequenceGenerator) {
+    public NotificationService(UserFcmTokenRepository fcmTokenRepository, NotificationRepository notificationRepository, SequenceGenerator sequenceGenerator) {
         this.fcmTokenRepository = fcmTokenRepository;
+        this.notificationRepository = notificationRepository;
         this.sequenceGenerator = sequenceGenerator;
     }
 
@@ -108,6 +110,18 @@ public class NotificationService {
     // ─────────────────────────────────────────────────────────────────────────
     // Internal
     // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Batch saves in-app notifications to the database.
+     */
+    @Transactional
+    public void saveInAppNotifications(Collection<com.caboolo.backend.notification.domain.Notification> notifications) {
+        if (notifications == null || notifications.isEmpty()) {
+            return;
+        }
+        notificationRepository.saveAll(notifications);
+        log.info("Saved {} in-app notifications", notifications.size());
+    }
 
     private void sendToTokens(List<String> fcmTokens, String title, String body, Map<String, String> data) {
         Notification notification = Notification.builder()

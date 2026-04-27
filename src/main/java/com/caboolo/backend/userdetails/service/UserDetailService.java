@@ -330,8 +330,12 @@ public class UserDetailService {
         userDetailRepository.save(details);
     }
 
-
     public List<UserDetail> findByUserIdIn(Set<String> participantUserIds) {
         return userDetailRepository.findByUserIdIn(participantUserIds);
+    }
+
+    public String getNameByUserId(String userId) {
+        return userDetailRepository.findNameByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
     }
 }

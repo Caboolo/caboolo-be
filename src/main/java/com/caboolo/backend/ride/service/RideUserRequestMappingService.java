@@ -10,6 +10,7 @@ import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import com.caboolo.backend.ride.enums.RideUserRequestStatus;
 import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import com.caboolo.backend.ride.repository.RideUserRequestMappingRepository;
+import com.caboolo.backend.ride.repository.RideUserRequestMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -92,8 +93,11 @@ public class RideUserRequestMappingService {
                 .map(RideUserMapping::getUserId)
                 .collect(Collectors.toList());
 
+        String title = "New Join Request";
+        String body = "%s wants to join your ride";
+
         eventPublisher.publishEvent(
-                RideNotificationEvent.of(RideNotificationType.RIDE_REQUEST_SENT, rideId, requesterId, crewUserIds)
+                RideNotificationEvent.of(RideNotificationType.RIDE_REQUEST_SENT, rideId, requesterId, crewUserIds, title, body)
         );
     }
 
@@ -165,9 +169,8 @@ public class RideUserRequestMappingService {
             userMapping.setStatus(RideUserMappingStatus.ACCEPTED);
             rideUserMappingRepository.save(userMapping);
 
-            // Publish event → notify requester: ride confirmed
             eventPublisher.publishEvent(
-                    RideNotificationEvent.of(RideNotificationType.RIDE_CONFIRMED, rideId, requesterId, List.of(requesterId))
+                    RideNotificationEvent.of(RideNotificationType.RIDE_CONFIRMED, rideId, requesterId, List.of(requesterId), "Ride Confirmed", "Your request to join the ride has been accepted!")
             );
 
             // Publish event → notify crew: new member joined
@@ -176,8 +179,11 @@ public class RideUserRequestMappingService {
                     .distinct()
                     .collect(Collectors.toList());
 
+            String title = "New Crew Member";
+            String body = "%s has joined your ride";
+
             eventPublisher.publishEvent(
-                    RideNotificationEvent.of(RideNotificationType.MATCH_FOUND, rideId, requesterId, crewUserIds)
+                    RideNotificationEvent.of(RideNotificationType.MATCH_FOUND, rideId, requesterId, crewUserIds, title, body)
             );
         }
     }
@@ -313,8 +319,11 @@ public class RideUserRequestMappingService {
                 .distinct()
                 .collect(Collectors.toList());
 
+        String title = "Member Left";
+        String body = "%s has left the ride";
+
         eventPublisher.publishEvent(
-                RideNotificationEvent.of(RideNotificationType.MEMBER_LEFT, rideId, userId, crewUserIds)
+                RideNotificationEvent.of(RideNotificationType.MEMBER_LEFT, rideId, userId, crewUserIds, title, body)
         );
     }
 }
