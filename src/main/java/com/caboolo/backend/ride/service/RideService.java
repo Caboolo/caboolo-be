@@ -113,6 +113,14 @@ public class RideService {
         Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(allActiveUserIds).stream()
             .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
+        // Bulk fetch hub names for all rides
+        Set<String> hubIds = new HashSet<>();
+        rides.forEach(ride -> {
+            hubIds.add(ride.getSourceHubId());
+            hubIds.add(ride.getDestinationHubId());
+        });
+        Map<String, String> hubNamesMap = hubService.getHubNames(hubIds);
+
         return userMappings.stream()
             .map(um -> {
                 Ride ride = rideMap.get(um.getRideId());
@@ -138,8 +146,8 @@ public class RideService {
                 return MyRequestResponseDto.Builder.myRequestResponseDto()
                     .withRideId(ride.getRideId())
                     .withRequestStatus(um.getStatus())
-                    .withSourceHubName(ride.getSourceHubId().toString())
-                    .withDestinationHubName(ride.getDestinationHubId().toString())
+                    .withSourceHubName(hubNamesMap.getOrDefault(ride.getSourceHubId(), "Unknown Hub"))
+                    .withDestinationHubName(hubNamesMap.getOrDefault(ride.getDestinationHubId(), "Unknown Hub"))
                     .withDepartureTime(ride.getDepartureTime())
                     .withActivePassengers(activePassengers)
                     .withAvailableSeats(ride.getTotalSeats() - acceptedCount)
@@ -442,7 +450,7 @@ public class RideService {
 
         // 2. Fetch only relevant mappings: current user's mapping + active crew (CREATED/ACCEPTED)
         List<RideUserMapping> relevantMappings = rideUserMappingService.findByRideIdAndUserIdOrStatusIn(
-            rideId, userId, RideUserMappingStatus.ACTIVE_STATUSES);
+            rideId, userId, EnumSet.of(RideUserMappingStatus.PENDING));
 
         // 3. Find the current user's request status
         RideUserMappingStatus requestStatus = relevantMappings.stream()
