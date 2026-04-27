@@ -28,31 +28,42 @@ public class UserLoginService {
     // Auth flow
     // -----------------------------------------------------------------------
 
-    public AuthResponse handleLogin(String uid, String phoneNumber) {
-        log.info("Handling login for uid={}", uid);
-        Optional<UserLogin> existingUserOpt = userLoginRepository.findByFirebaseUid(uid);
+    /**
+     * Handles login for a given phone number.
+     * <p>
+     * If a record already exists for that phone number the existing internal
+     * {@code userId} is returned unchanged.  If no record exists a new one
+     * is created with a sequence-generated {@code userId}.
+     *
+     * @param phoneNumber the phone number extracted from the Firebase token
+     * @return an {@link AuthResponse} containing the internal userId
+     */
+    public AuthResponse handleLogin(String phoneNumber) {
+        log.info("Handling login for phone={}", phoneNumber);
+
         UserLogin userLogin;
 
-        if (existingUserOpt.isEmpty()) {
-            log.info("New user detected, creating UserLogin record for uid={}", uid);
+        Optional<UserLogin> userByPhone = (phoneNumber != null)
+                ? userLoginRepository.findByPhoneNumber(phoneNumber)
+                : Optional.empty();
+
+        if (userByPhone.isPresent()) {
+            userLogin = userByPhone.get();
+            log.info("Existing user found by phone number. Internal userId={}", userLogin.getUserId());
+        } else {
+            // New user — generate a stable internal userId
+            log.info("New user detected, generating new internal userId");
             userLogin = UserLogin.Builder.userLogin()
                     .withUserLoginId(sequenceGenerator.nextId())
-                    .withFirebaseUid(uid)
+                    .withUserId(sequenceGenerator.nextId())
                     .withPhoneNumber(phoneNumber)
                     .build();
 
             userLogin = userLoginRepository.save(userLogin);
-            log.info("New UserLogin record created for uid={}", uid);
-        } else {
-            userLogin = existingUserOpt.get();
-            // Update phone number if missing or changed
-            if (phoneNumber != null && !phoneNumber.equals(userLogin.getPhoneNumber())) {
-                log.info("Updating phone number for uid={}", uid);
-                userLogin.setPhoneNumber(phoneNumber);
-                userLogin = userLoginRepository.save(userLogin);
-            }
+            log.info("New UserLogin record created. userId={}", userLogin.getUserId());
         }
-        log.info("Login handled successfully for uid={}", uid);
+
+        log.info("Login handled successfully for userId={}", userLogin.getUserId());
         return UserLoginConverter.toAuthResponse(userLogin);
     }
 
@@ -61,14 +72,14 @@ public class UserLoginService {
     // -----------------------------------------------------------------------
 
     /**
-     * Finds a UserLogin record by its Firebase UID (used as the external userId).
+     * Finds a UserLogin record by its internal sequence-generated userId.
      *
-     * @param userId the Firebase UID of the user
+     * @param userId the internal userId
      * @return the corresponding {@link UserLoginDto}
      * @throws EntityNotFoundException if no record exists for the given userId
      */
     public UserLoginDto findByUserId(String userId) {
-        UserLogin userLogin = userLoginRepository.findByFirebaseUid(userId)
+        UserLogin userLogin = userLoginRepository.findByUserId(userId)
                 .orElseThrow(() -> new EntityNotFoundException("No user login record found for userId: " + userId));
         return UserLoginConverter.toUserLoginDto(userLogin);
     }

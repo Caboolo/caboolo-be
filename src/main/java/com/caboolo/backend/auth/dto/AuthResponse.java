@@ -8,12 +8,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthResponse {
-    private String firebaseUid;
+    private String userId;
     private String message;
     private String phoneNumber;
 
-    public static interface FirebaseUidStep {
-        MessageStep withFirebaseUid(String firebaseUid);
+    public static interface UserIdStep {
+        MessageStep withUserId(String userId);
     }
 
     public static interface MessageStep {
@@ -29,21 +29,21 @@ public class AuthResponse {
     }
 
 
-    public static class Builder implements FirebaseUidStep, MessageStep, PhoneNumberStep, BuildStep {
-        private String firebaseUid;
+    public static class Builder implements UserIdStep, MessageStep, PhoneNumberStep, BuildStep {
+        private String userId;
         private String message;
         private String phoneNumber;
 
         private Builder() {
         }
 
-        public static FirebaseUidStep authResponse() {
+        public static UserIdStep authResponse() {
             return new Builder();
         }
 
         @Override
-        public MessageStep withFirebaseUid(String firebaseUid) {
-            this.firebaseUid = firebaseUid;
+        public MessageStep withUserId(String userId) {
+            this.userId = userId;
             return this;
         }
 
@@ -62,7 +62,7 @@ public class AuthResponse {
         @Override
         public AuthResponse build() {
             return new AuthResponse(
-                    this.firebaseUid,
+                    this.userId,
                     this.message,
                     this.phoneNumber
             );

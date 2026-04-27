@@ -48,8 +48,8 @@ public class UserDetailsController extends BaseController {
      */
     @GetMapping("/profile")
     public RestEntity<UserDetailResponseDto> getProfile(
-            @AuthenticationPrincipal String firebaseUid) {
-        return successResponse(userDetailService.getProfile(firebaseUid), "Profile retrieved successfully");
+            @AuthenticationPrincipal String userId) {
+        return successResponse(userDetailService.getProfile(userId), "Profile retrieved successfully");
     }
 
     /**
@@ -59,9 +59,9 @@ public class UserDetailsController extends BaseController {
      */
     @PutMapping("/profile")
     public RestEntity<UserDetailResponseDto> updateProfile(
-            @AuthenticationPrincipal String firebaseUid,
+            @AuthenticationPrincipal String userId,
             @Valid @RequestBody UserDetailRequestDto request) {
-        return successResponse(userDetailService.updateProfile(firebaseUid, request), "Profile updated successfully");
+        return successResponse(userDetailService.updateProfile(userId, request), "Profile updated successfully");
     }
 
     /**
@@ -71,9 +71,9 @@ public class UserDetailsController extends BaseController {
      */
     @PostMapping("/profile/photo")
     public RestEntity<String> uploadPhoto(
-            @AuthenticationPrincipal String firebaseUid,
+            @AuthenticationPrincipal String userId,
             @RequestParam("file") MultipartFile file) {
-        return successResponse(userDetailService.uploadProfilePhoto(firebaseUid, file), "Photo uploaded successfully");
+        return successResponse(userDetailService.uploadProfilePhoto(userId, file), "Photo uploaded successfully");
     }
 
     /**
@@ -83,8 +83,8 @@ public class UserDetailsController extends BaseController {
      */
     @DeleteMapping("/profile")
     public RestEntity<Void> deleteAccount(
-            @AuthenticationPrincipal String firebaseUid) {
-        userDetailService.softDeleteUser(firebaseUid);
+            @AuthenticationPrincipal String userId) {
+        userDetailService.softDeleteUser(userId);
         return successResponse("Account deleted successfully");
     }
 

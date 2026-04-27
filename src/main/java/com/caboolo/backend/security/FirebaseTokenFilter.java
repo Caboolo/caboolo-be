@@ -1,6 +1,8 @@
 package com.caboolo.backend.security;
 
 import com.caboolo.backend.auth.service.AuthService;
+import com.caboolo.backend.userLogin.domain.UserLogin;
+import com.caboolo.backend.userLogin.repository.UserLoginRepository;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import lombok.extern.slf4j.Slf4j;
@@ -21,16 +23,18 @@ import java.util.ArrayList;
 public class FirebaseTokenFilter extends OncePerRequestFilter {
 
     private final AuthService authService;
+    private final UserLoginRepository userLoginRepository;
 
-    public FirebaseTokenFilter(AuthService authService) {
+    public FirebaseTokenFilter(AuthService authService, UserLoginRepository userLoginRepository) {
         this.authService = authService;
+        this.userLoginRepository = userLoginRepository;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        
+
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -38,18 +42,24 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             log.debug("Authenticating request with Firebase token");
             try {
                 FirebaseToken decodedToken = authService.verifyToken(idToken);
-                String uid = decodedToken.getUid();
-                log.debug("Found valid token for user: {}", uid);
-                
+                String phoneNumber = (String) decodedToken.getClaims().get("phone_number");
+                log.debug("Resolved phone number from token: {}", phoneNumber);
+
+                // Look up internal userId by phone number
+                UserLogin userLogin = userLoginRepository.findByPhoneNumber(phoneNumber)
+                        .orElseThrow(() -> new RuntimeException("User not found for phone: " + phoneNumber));
+                String internalUserId = userLogin.getUserId();
+                log.debug("Resolved internal userId: {} for phone: {}", internalUserId, phoneNumber);
+
                 UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(uid, idToken, new ArrayList<>());
-                
+                    new UsernamePasswordAuthenticationToken(internalUserId, idToken, new ArrayList<>());
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (FirebaseAuthException e) {
-                log.error("Firebase token verification failed: {}", e.getMessage());
+            } catch (Exception e) {
+                log.error("Authentication failed: {}", e.getMessage());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
-                response.getWriter().write("{\"success\":false,\"message\":\"usser logged out. please relogin\",\"data\":null}");
+                response.getWriter().write("{\"success\":false,\"message\":\"user logged out or not found. please relogin\",\"data\":null}");
                 return;
             }
         }

@@ -18,18 +18,18 @@ public class UserLogin extends GenericIdEntity {
     @Column(name = "user_login_id")
     private String userLoginId;
 
-    @Column(name = "firebase_uid", nullable = false, unique = true)
-    private String firebaseUid;
+    @Column(name = "user_id", nullable = false, unique = true)
+    private String userId;
 
     @Column(name = "phone_number", unique = true)
     private String phoneNumber;
 
     public static interface UserLoginIdStep {
-        FirebaseUidStep withUserLoginId(String userLoginId);
+        UserIdStep withUserLoginId(String userLoginId);
     }
 
-    public static interface FirebaseUidStep {
-        PhoneNumberStep withFirebaseUid(String firebaseUid);
+    public static interface UserIdStep {
+        PhoneNumberStep withUserId(String userId);
     }
 
     public static interface PhoneNumberStep {
@@ -40,9 +40,10 @@ public class UserLogin extends GenericIdEntity {
         UserLogin build();
     }
 
-    public static class Builder implements UserLoginIdStep, FirebaseUidStep, PhoneNumberStep, BuildStep {
+
+    public static class Builder implements UserLoginIdStep, UserIdStep, PhoneNumberStep, BuildStep {
         private String userLoginId;
-        private String firebaseUid;
+        private String userId;
         private String phoneNumber;
 
         private Builder() {
@@ -53,14 +54,14 @@ public class UserLogin extends GenericIdEntity {
         }
 
         @Override
-        public FirebaseUidStep withUserLoginId(String userLoginId) {
+        public UserIdStep withUserLoginId(String userLoginId) {
             this.userLoginId = userLoginId;
             return this;
         }
 
         @Override
-        public PhoneNumberStep withFirebaseUid(String firebaseUid) {
-            this.firebaseUid = firebaseUid;
+        public PhoneNumberStep withUserId(String userId) {
+            this.userId = userId;
             return this;
         }
 
@@ -74,7 +75,7 @@ public class UserLogin extends GenericIdEntity {
         public UserLogin build() {
             return new UserLogin(
                     this.userLoginId,
-                    this.firebaseUid,
+                    this.userId,
                     this.phoneNumber
             );
         }

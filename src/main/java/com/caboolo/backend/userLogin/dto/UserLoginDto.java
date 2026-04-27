@@ -12,24 +12,38 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class UserLoginDto extends GenericEntityDto {
 
-    /** Internal sequence-generated identifier for this login record. */
-    private String userLoginId;
+    /** Internal sequence-generated identifier for this user. */
+    private String userId;
 
-    /** Firebase UID — acts as the external userId for API consumers. */
-    private String firebaseUid;
+    private String userLoginId;
 
     private String phoneNumber;
 
-    // -------------------------------------------------------------------------
-    // Step Builder
-    // -------------------------------------------------------------------------
-
-    public static interface UserLoginIdStep {
-        FirebaseUidStep withUserLoginId(String userLoginId);
+    public UserLoginDto(LocalDateTime dateCreated, LocalDateTime lastModified, boolean isDeleted, String userId, String userLoginId, String phoneNumber) {
+        super(dateCreated, lastModified, isDeleted);
+        this.userId = userId;
+        this.userLoginId = userLoginId;
+        this.phoneNumber = phoneNumber;
     }
 
-    public static interface FirebaseUidStep {
-        PhoneNumberStep withFirebaseUid(String firebaseUid);
+    public static interface DateCreatedStep {
+        LastModifiedStep withDateCreated(LocalDateTime dateCreated);
+    }
+
+    public static interface LastModifiedStep {
+        IsDeletedStep withLastModified(LocalDateTime lastModified);
+    }
+
+    public static interface IsDeletedStep {
+        UserIdStep withIsDeleted(boolean isDeleted);
+    }
+
+    public static interface UserIdStep {
+        UserLoginIdStep withUserId(String userId);
+    }
+
+    public static interface UserLoginIdStep {
+        PhoneNumberStep withUserLoginId(String userLoginId);
     }
 
     public static interface PhoneNumberStep {
@@ -37,37 +51,52 @@ public class UserLoginDto extends GenericEntityDto {
     }
 
     public static interface BuildStep {
-        BuildStep withDateCreated(LocalDateTime dateCreated);
-        BuildStep withLastModified(LocalDateTime lastModified);
-        BuildStep withIsDeleted(boolean isDeleted);
         UserLoginDto build();
     }
 
-    public static class Builder
-            implements UserLoginIdStep, FirebaseUidStep, PhoneNumberStep, BuildStep {
 
-        private String userLoginId;
-        private String firebaseUid;
-        private String phoneNumber;
+    public static class Builder implements DateCreatedStep, LastModifiedStep, IsDeletedStep, UserIdStep, UserLoginIdStep, PhoneNumberStep, BuildStep {
         private LocalDateTime dateCreated;
         private LocalDateTime lastModified;
         private boolean isDeleted;
+        private String userId;
+        private String userLoginId;
+        private String phoneNumber;
 
-        private Builder() {}
+        private Builder() {
+        }
 
-        public static UserLoginIdStep userLoginDto() {
+        public static DateCreatedStep userLoginDto() {
             return new Builder();
         }
 
         @Override
-        public FirebaseUidStep withUserLoginId(String userLoginId) {
-            this.userLoginId = userLoginId;
+        public LastModifiedStep withDateCreated(LocalDateTime dateCreated) {
+            this.dateCreated = dateCreated;
             return this;
         }
 
         @Override
-        public PhoneNumberStep withFirebaseUid(String firebaseUid) {
-            this.firebaseUid = firebaseUid;
+        public IsDeletedStep withLastModified(LocalDateTime lastModified) {
+            this.lastModified = lastModified;
+            return this;
+        }
+
+        @Override
+        public UserIdStep withIsDeleted(boolean isDeleted) {
+            this.isDeleted = isDeleted;
+            return this;
+        }
+
+        @Override
+        public UserLoginIdStep withUserId(String userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        @Override
+        public PhoneNumberStep withUserLoginId(String userLoginId) {
+            this.userLoginId = userLoginId;
             return this;
         }
 
@@ -78,30 +107,15 @@ public class UserLoginDto extends GenericEntityDto {
         }
 
         @Override
-        public BuildStep withDateCreated(LocalDateTime dateCreated) {
-            this.dateCreated = dateCreated;
-            return this;
-        }
-
-        @Override
-        public BuildStep withLastModified(LocalDateTime lastModified) {
-            this.lastModified = lastModified;
-            return this;
-        }
-
-        @Override
-        public BuildStep withIsDeleted(boolean isDeleted) {
-            this.isDeleted = isDeleted;
-            return this;
-        }
-
-        @Override
         public UserLoginDto build() {
-            UserLoginDto dto = new UserLoginDto(userLoginId, firebaseUid, phoneNumber);
-            dto.setDateCreated(dateCreated);
-            dto.setLastModified(lastModified);
-            dto.setDeleted(isDeleted);
-            return dto;
+            return new UserLoginDto(
+                    this.dateCreated,
+                    this.lastModified,
+                    this.isDeleted,
+                    this.userId,
+                    this.userLoginId,
+                    this.phoneNumber
+            );
         }
     }
 }
