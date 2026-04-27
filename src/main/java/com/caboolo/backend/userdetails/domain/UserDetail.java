@@ -24,7 +24,7 @@ public class UserDetail extends GenericIdEntity {
     private String name;
 
     @Column(name = "user_id", nullable = false, unique = true)
-    private String userId; // this is firebaseUserId we got from user_login
+    private String userId; // internal generated userId from user_login record
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender", length = 20)

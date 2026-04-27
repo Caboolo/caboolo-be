@@ -15,8 +15,8 @@ import com.caboolo.backend.core.domain.GenericIdEntity;
 @EqualsAndHashCode(callSuper = true)
 public class UserLogin extends GenericIdEntity {
 
-    @Column(name = "user_login_id")
-    private String userLoginId;
+    @Column(name = "user_id")
+    private String userId;
 
     @Column(name = "firebase_uid", nullable = false, unique = true)
     private String firebaseUid;
@@ -24,8 +24,8 @@ public class UserLogin extends GenericIdEntity {
     @Column(name = "phone_number", unique = true)
     private String phoneNumber;
 
-    public static interface UserLoginIdStep {
-        FirebaseUidStep withUserLoginId(String userLoginId);
+    public static interface UserIdStep {
+        FirebaseUidStep withUserId(String userId);
     }
 
     public static interface FirebaseUidStep {
@@ -40,21 +40,21 @@ public class UserLogin extends GenericIdEntity {
         UserLogin build();
     }
 
-    public static class Builder implements UserLoginIdStep, FirebaseUidStep, PhoneNumberStep, BuildStep {
-        private String userLoginId;
+    public static class Builder implements UserIdStep, FirebaseUidStep, PhoneNumberStep, BuildStep {
+        private String userId;
         private String firebaseUid;
         private String phoneNumber;
 
         private Builder() {
         }
 
-        public static UserLoginIdStep userLogin() {
+        public static UserIdStep userLogin() {
             return new Builder();
         }
 
         @Override
-        public FirebaseUidStep withUserLoginId(String userLoginId) {
-            this.userLoginId = userLoginId;
+        public FirebaseUidStep withUserId(String userId) {
+            this.userId = userId;
             return this;
         }
 
@@ -73,7 +73,7 @@ public class UserLogin extends GenericIdEntity {
         @Override
         public UserLogin build() {
             return new UserLogin(
-                    this.userLoginId,
+                    this.userId,
                     this.firebaseUid,
                     this.phoneNumber
             );

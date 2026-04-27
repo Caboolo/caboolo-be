@@ -128,13 +128,13 @@ public class UserDetailService {
     /**
      * Fetch the profile for the authenticated user.
      */
-    public UserDetailResponseDto getProfile(String firebaseUid) {
-        UserLoginDto userLoginDto = userLoginService.findByUserId(firebaseUid);
-        UserDetail details = userDetailRepository.findByUserId(firebaseUid).orElseGet(() ->
+    public UserDetailResponseDto getProfile(String userId) {
+        UserLoginDto userLoginDto = userLoginService.findByUserId(userId);
+        UserDetail details = userDetailRepository.findByUserId(userId).orElseGet(() ->
             UserDetail.Builder.userDetails()
                 .withUserDetailsId(sequenceGenerator.nextId())
                 .withName(null)
-                .withUserId(firebaseUid)
+                .withUserId(userId)
                 .withGender(null)
                 .withImageUrl(null)
                 .withEmail(null)
@@ -152,12 +152,12 @@ public class UserDetailService {
     /**
      * Update display name and/or email.
      */
-    public UserDetailResponseDto updateProfile(String firebaseUid, UserDetailRequestDto request) {
-        UserDetail details = userDetailRepository.findByUserId(firebaseUid)
+    public UserDetailResponseDto updateProfile(String userId, UserDetailRequestDto request) {
+        UserDetail details = userDetailRepository.findByUserId(userId)
             .orElseGet(() -> UserDetail.Builder.userDetails()
                 .withUserDetailsId(sequenceGenerator.nextId())
                 .withName(null)
-                .withUserId(firebaseUid)
+                .withUserId(userId)
                 .withGender(null)
                 .withImageUrl(null)
                 .withEmail(null)
@@ -185,15 +185,15 @@ public class UserDetailService {
      * The previous photo is soft-replaced: the old file is deleted from the storage
      * provider but the user record itself is never hard-deleted.
      */
-    public String uploadProfilePhoto(String firebaseUid, MultipartFile file) {
-        log.info("Uploading profile photo for userId={}, fileName={}", firebaseUid, file.getOriginalFilename());
+    public String uploadProfilePhoto(String userId, MultipartFile file) {
+        log.info("Uploading profile photo for userId={}, fileName={}", userId, file.getOriginalFilename());
         validatePhoto(file);
 
-        UserDetail details = userDetailRepository.findByUserId(firebaseUid)
+        UserDetail details = userDetailRepository.findByUserId(userId)
             .orElseGet(() -> UserDetail.Builder.userDetails()
                 .withUserDetailsId(sequenceGenerator.nextId())
                 .withName(null)
-                .withUserId(firebaseUid)
+                .withUserId(userId)
                 .withGender(null)
                 .withImageUrl(null)
                 .withEmail(null)
@@ -207,7 +207,7 @@ public class UserDetailService {
 
         // Delete old photo from provider if one exists
         if (details.getPhotoPublicId() != null && !details.getPhotoPublicId().isBlank()) {
-            log.info("Deleting old profile photo for userId={}, publicId={}", firebaseUid, details.getPhotoPublicId());
+            log.info("Deleting old profile photo for userId={}, publicId={}", userId, details.getPhotoPublicId());
             storageService.delete(details.getPhotoPublicId());
         }
 
@@ -216,7 +216,7 @@ public class UserDetailService {
         details.setImageUrl(result.getUrl());
         details.setPhotoPublicId(result.getPublicId());
         userDetailRepository.save(details);
-        log.info("Profile photo uploaded successfully for userId={}, publicId={}", firebaseUid, result.getPublicId());
+        log.info("Profile photo uploaded successfully for userId={}, publicId={}", userId, result.getPublicId());
 
         return details.getImageUrl();
     }
@@ -224,12 +224,12 @@ public class UserDetailService {
     /**
      * Soft-delete a user (isDeleted = true). The record stays in the DB.
      */
-    public void softDeleteUser(String firebaseUid) {
-        log.info("Soft-deleting user: userId={}", firebaseUid);
-        UserLogin userLogin = findActiveUserOrThrow(firebaseUid);
+    public void softDeleteUser(String userId) {
+        log.info("Soft-deleting user: userId={}", userId);
+        UserLogin userLogin = findActiveUserOrThrow(userId);
         userLogin.setDeleted(true);
         userLoginRepository.save(userLogin);
-        log.info("User soft-deleted successfully: userId={}", firebaseUid);
+        log.info("User soft-deleted successfully: userId={}", userId);
     }
 
     // -----------------------------------------------------------------------
@@ -251,9 +251,9 @@ public class UserDetailService {
         }
     }
 
-    private UserLogin findActiveUserOrThrow(String firebaseUid) {
-        return userLoginRepository.findByFirebaseUidAndIsDeletedFalse(firebaseUid)
-            .orElseThrow(() -> new RuntimeException("User not found: " + firebaseUid));
+    private UserLogin findActiveUserOrThrow(String userId) {
+        return userLoginRepository.findByUserIdAndIsDeletedFalse(userId)
+            .orElseThrow(() -> new RuntimeException("User not found: " + userId));
     }
 
     public ProfileDto getMyProfileHeader(String userId) {

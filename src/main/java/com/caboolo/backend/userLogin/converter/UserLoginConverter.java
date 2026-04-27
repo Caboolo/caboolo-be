@@ -17,9 +17,8 @@ public final class UserLoginConverter {
      * Converts a UserLogin domain entity to an AuthResponse DTO.
      */
     public static AuthResponse toAuthResponse(UserLogin userLogin) {
-
         return AuthResponse.Builder.authResponse()
-                .withFirebaseUid(userLogin.getFirebaseUid())
+                .withUserId(userLogin.getUserId())
                 .withMessage("Login successful")
                 .withPhoneNumber(userLogin.getPhoneNumber())
                 .build();
@@ -30,7 +29,7 @@ public final class UserLoginConverter {
      */
     public static UserLoginDto toUserLoginDto(UserLogin userLogin) {
         return UserLoginDto.Builder.userLoginDto()
-                .withUserLoginId(userLogin.getUserLoginId())
+                .withUserId(userLogin.getUserId())
                 .withFirebaseUid(userLogin.getFirebaseUid())
                 .withPhoneNumber(userLogin.getPhoneNumber())
                 .withDateCreated(userLogin.getDateCreated())

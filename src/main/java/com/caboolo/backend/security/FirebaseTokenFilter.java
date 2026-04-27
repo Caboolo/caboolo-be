@@ -21,9 +21,11 @@ import java.util.ArrayList;
 public class FirebaseTokenFilter extends OncePerRequestFilter {
 
     private final AuthService authService;
+    private final com.caboolo.backend.userLogin.service.UserLoginService userLoginService;
 
-    public FirebaseTokenFilter(AuthService authService) {
+    public FirebaseTokenFilter(AuthService authService, com.caboolo.backend.userLogin.service.UserLoginService userLoginService) {
         this.authService = authService;
+        this.userLoginService = userLoginService;
     }
 
     @Override
@@ -39,17 +41,21 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             try {
                 FirebaseToken decodedToken = authService.verifyToken(idToken);
                 String uid = decodedToken.getUid();
-                log.debug("Found valid token for user: {}", uid);
+                log.debug("Found valid token for firebaseUid: {}", uid);
+
+                // Look up internal userId
+                String internalUserId = userLoginService.findByFirebaseUid(uid).getUserId();
+                log.debug("Resolved internal userId: {} for firebaseUid: {}", internalUserId, uid);
                 
                 UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(uid, idToken, new ArrayList<>());
+                    new UsernamePasswordAuthenticationToken(internalUserId, idToken, new ArrayList<>());
                 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (FirebaseAuthException e) {
-                log.error("Firebase token verification failed: {}", e.getMessage());
+            } catch (Exception e) {
+                log.error("Authentication failed: {}", e.getMessage());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
-                response.getWriter().write("{\"success\":false,\"message\":\"usser logged out. please relogin\",\"data\":null}");
+                response.getWriter().write("{\"success\":false,\"message\":\"user logged out or not found. please relogin\",\"data\":null}");
                 return;
             }
         }

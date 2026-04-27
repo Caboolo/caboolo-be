@@ -12,10 +12,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class UserLoginDto extends GenericEntityDto {
 
-    /** Internal sequence-generated identifier for this login record. */
-    private String userLoginId;
+    /** Internal sequence-generated identifier for this user. */
+    private String userId;
 
-    /** Firebase UID — acts as the external userId for API consumers. */
+    /** Firebase UID — used for internal mapping but no longer the primary identifier for API consumers. */
     private String firebaseUid;
 
     private String phoneNumber;
@@ -24,8 +24,8 @@ public class UserLoginDto extends GenericEntityDto {
     // Step Builder
     // -------------------------------------------------------------------------
 
-    public static interface UserLoginIdStep {
-        FirebaseUidStep withUserLoginId(String userLoginId);
+    public static interface UserIdStep {
+        FirebaseUidStep withUserId(String userId);
     }
 
     public static interface FirebaseUidStep {
@@ -44,9 +44,9 @@ public class UserLoginDto extends GenericEntityDto {
     }
 
     public static class Builder
-            implements UserLoginIdStep, FirebaseUidStep, PhoneNumberStep, BuildStep {
+            implements UserIdStep, FirebaseUidStep, PhoneNumberStep, BuildStep {
 
-        private String userLoginId;
+        private String userId;
         private String firebaseUid;
         private String phoneNumber;
         private LocalDateTime dateCreated;
@@ -55,13 +55,13 @@ public class UserLoginDto extends GenericEntityDto {
 
         private Builder() {}
 
-        public static UserLoginIdStep userLoginDto() {
+        public static UserIdStep userLoginDto() {
             return new Builder();
         }
 
         @Override
-        public FirebaseUidStep withUserLoginId(String userLoginId) {
-            this.userLoginId = userLoginId;
+        public FirebaseUidStep withUserId(String userId) {
+            this.userId = userId;
             return this;
         }
 
@@ -97,7 +97,7 @@ public class UserLoginDto extends GenericEntityDto {
 
         @Override
         public UserLoginDto build() {
-            UserLoginDto dto = new UserLoginDto(userLoginId, firebaseUid, phoneNumber);
+            UserLoginDto dto = new UserLoginDto(userId, firebaseUid, phoneNumber);
             dto.setDateCreated(dateCreated);
             dto.setLastModified(lastModified);
             dto.setDeleted(isDeleted);

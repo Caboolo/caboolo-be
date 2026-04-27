@@ -19,10 +19,9 @@ public class UserLoginController extends BaseController {
     }
 
     /**
-     * GET /api/v1/user-login?userId={firebaseUid}
+     * GET /api/v1/user-login?userId={userId}
      *
-     * Retrieves a UserLogin record by the Firebase UID that was assigned
-     * during authentication. The {@code userId} param is the firebaseUid.
+     * Retrieves a UserLogin record by the internal generated userId.
      */
     @GetMapping
     public RestEntity<UserLoginDto> getUserLogin(@RequestParam String userId) {
