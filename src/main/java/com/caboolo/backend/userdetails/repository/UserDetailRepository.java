@@ -15,4 +15,5 @@ public interface UserDetailRepository extends JpaRepository<UserDetail, Long> {
 
     Optional<String> findNameByUserId(String userId);
 
+    boolean existsByPhoneNumber(String phoneNumber);
 }

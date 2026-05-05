@@ -1,6 +1,7 @@
 package com.caboolo.backend.userLogin.service;
 
 import com.caboolo.backend.auth.dto.AuthResponse;
+import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.userLogin.converter.UserLoginConverter;
 import com.caboolo.backend.userLogin.domain.UserLogin;
 import com.caboolo.backend.userLogin.dto.UserLoginDto;
@@ -16,12 +17,15 @@ import java.util.Optional;
 public class UserLoginService {
 
     private final UserLoginRepository userLoginRepository;
-    private final com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator;
+    private final SequenceGenerator sequenceGenerator;
+
+    private final UserLoginConverter userLoginConverter;
 
     public UserLoginService(UserLoginRepository userLoginRepository,
-                            com.caboolo.backend.core.idgen.SequenceGenerator sequenceGenerator) {
+                            SequenceGenerator sequenceGenerator, UserLoginConverter userLoginConverter) {
         this.userLoginRepository = userLoginRepository;
         this.sequenceGenerator = sequenceGenerator;
+        this.userLoginConverter = userLoginConverter;
     }
 
     // -----------------------------------------------------------------------
@@ -64,7 +68,7 @@ public class UserLoginService {
         }
 
         log.info("Login handled successfully for userId={}", userLogin.getUserId());
-        return UserLoginConverter.toAuthResponse(userLogin);
+        return userLoginConverter.toAuthResponse(userLogin);
     }
 
     // -----------------------------------------------------------------------
@@ -81,6 +85,6 @@ public class UserLoginService {
     public UserLoginDto findByUserId(String userId) {
         UserLogin userLogin = userLoginRepository.findByUserId(userId)
                 .orElseThrow(() -> new EntityNotFoundException("No user login record found for userId: " + userId));
-        return UserLoginConverter.toUserLoginDto(userLogin);
+        return userLoginConverter.toUserLoginDto(userLogin);
     }
 }
