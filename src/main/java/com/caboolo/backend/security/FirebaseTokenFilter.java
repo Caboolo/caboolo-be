@@ -43,6 +43,13 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             try {
                 FirebaseToken decodedToken = authService.verifyToken(idToken);
                 String phoneNumber = (String) decodedToken.getClaims().get("phone_number");
+                if (phoneNumber != null) {
+                    phoneNumber = phoneNumber.replaceAll("\\D", "");
+
+                    if (phoneNumber.length() >= 10) {
+                        phoneNumber = phoneNumber.substring(phoneNumber.length() - 10);
+                    }
+                }
                 log.debug("Resolved phone number from token: {}", phoneNumber);
 
                 // Look up internal userId by phone number
