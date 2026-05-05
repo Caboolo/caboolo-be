@@ -149,6 +149,10 @@ public class UserDetailService {
         return userDetailsConverter.toDetailResponseDto(details);
     }
 
+    public boolean existsByPhoneNumber(String phoneNumber) {
+        return userDetailRepository.existsByPhoneNumber(phoneNumber);
+    }
+
     /**
      * Update display name and/or email.
      */

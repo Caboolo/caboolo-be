@@ -11,6 +11,7 @@ public class AuthResponse {
     private String userId;
     private String message;
     private String phoneNumber;
+    private boolean isProfileCreated;
 
     public static interface UserIdStep {
         MessageStep withUserId(String userId);
@@ -21,18 +22,22 @@ public class AuthResponse {
     }
 
     public static interface PhoneNumberStep {
-        BuildStep withPhoneNumber(String phoneNumber);
+        IsProfileCreatedStep withPhoneNumber(String phoneNumber);
+    }
+
+    public static interface IsProfileCreatedStep {
+        BuildStep withIsProfileCreated(boolean isProfileCreated);
     }
 
     public static interface BuildStep {
         AuthResponse build();
     }
 
-
-    public static class Builder implements UserIdStep, MessageStep, PhoneNumberStep, BuildStep {
+    public static class Builder implements UserIdStep, MessageStep, PhoneNumberStep, IsProfileCreatedStep, BuildStep {
         private String userId;
         private String message;
         private String phoneNumber;
+        private boolean isProfileCreated;
 
         private Builder() {
         }
@@ -54,17 +59,24 @@ public class AuthResponse {
         }
 
         @Override
-        public BuildStep withPhoneNumber(String phoneNumber) {
+        public IsProfileCreatedStep withPhoneNumber(String phoneNumber) {
             this.phoneNumber = phoneNumber;
+            return this;
+        }
+
+        @Override
+        public BuildStep withIsProfileCreated(boolean isProfileCreated) {
+            this.isProfileCreated = isProfileCreated;
             return this;
         }
 
         @Override
         public AuthResponse build() {
             return new AuthResponse(
-                    this.userId,
-                    this.message,
-                    this.phoneNumber
+                this.userId,
+                this.message,
+                this.phoneNumber,
+                this.isProfileCreated
             );
         }
     }
