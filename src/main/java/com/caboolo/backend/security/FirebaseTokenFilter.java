@@ -53,8 +53,9 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                 log.debug("Resolved phone number from token: {}", phoneNumber);
 
                 // Look up internal userId by phone number
+                String finalPhoneNumber = phoneNumber;
                 UserLogin userLogin = userLoginRepository.findByPhoneNumber(phoneNumber)
-                        .orElseThrow(() -> new RuntimeException("User not found for phone: " + phoneNumber));
+                        .orElseThrow(() -> new RuntimeException("User not found for phone: " + finalPhoneNumber));
                 String internalUserId = userLogin.getUserId();
                 log.debug("Resolved internal userId: {} for phone: {}", internalUserId, phoneNumber);
 
