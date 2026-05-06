@@ -16,6 +16,7 @@ import com.caboolo.backend.userdetails.converter.UserDetailsConverter;
 import com.caboolo.backend.userdetails.domain.UserDetail;
 import com.caboolo.backend.userdetails.dto.UserDetailResponseDto;
 import com.caboolo.backend.userdetails.repository.UserDetailRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -40,19 +41,16 @@ public class UserDetailService {
     private final UserDetailsConverter userDetailsConverter;
     private final ReviewRepository reviewRepository;
 
-    private final UserLoginService userLoginService;
-
     public UserDetailService(UserDetailRepository userDetailRepository, UserLoginRepository userLoginRepository,
                              StorageService storageService, SequenceGenerator sequenceGenerator,
                              UserDetailsConverter userDetailsConverter,
-                             ReviewRepository reviewRepository, UserLoginService userLoginService) {
+                             ReviewRepository reviewRepository) {
         this.userDetailRepository = userDetailRepository;
         this.userLoginRepository = userLoginRepository;
         this.storageService = storageService;
         this.sequenceGenerator = sequenceGenerator;
         this.userDetailsConverter = userDetailsConverter;
         this.reviewRepository = reviewRepository;
-        this.userLoginService = userLoginService;
     }
 
     public UserDetailResponseDto createOrUpdateUserDetails(UserDetailRequestDto requestDto) {
@@ -129,7 +127,10 @@ public class UserDetailService {
      * Fetch the profile for the authenticated user.
      */
     public UserDetailResponseDto getProfile(String userId) {
-        UserLoginDto userLoginDto = userLoginService.findByUserId(userId);
+        Optional<UserLogin> userLogin = userLoginRepository.findByUserId(userId);
+        if(userLogin.isEmpty()) {
+            throw new EntityNotFoundException("no user login found with id " + userId);
+        }
         UserDetail details = userDetailRepository.findByUserId(userId).orElseGet(() ->
             UserDetail.Builder.userDetails()
                 .withUserDetailsId(sequenceGenerator.nextId())
@@ -138,7 +139,7 @@ public class UserDetailService {
                 .withGender(null)
                 .withImageUrl(null)
                 .withEmail(null)
-                .withPhoneNumber(userLoginDto.getPhoneNumber())
+                .withPhoneNumber(userLogin.get().getPhoneNumber())
                 .withPhotoPublicId(null)
                 .withAvgRating(null)
                 .withTotalReviews(null)
