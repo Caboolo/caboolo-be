@@ -245,6 +245,94 @@ public class RideService {
             .collect(Collectors.toList());
     }
 
+    public List<MyRideResponseDto> getMyPastRides(String userId) {
+        // 1. Find all mappings where the user has a past-ride-eligible status
+        List<RideUserMapping> userMappings = rideUserMappingService.findByUserIdAndStatusIn(
+            userId, RideUserMappingStatus.PAST_RIDE_STATUSES);
+        if (userMappings.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        Map<String, RideUserMappingStatus> statusByRideId = userMappings.stream()
+            .collect(Collectors.toMap(RideUserMapping::getRideId, RideUserMapping::getStatus));
+
+        List<String> rideIds = userMappings.stream()
+            .map(RideUserMapping::getRideId)
+            .collect(Collectors.toList());
+
+        // 2. Bulk Fetch Ride Details with status COMPLETED
+        List<Ride> completedRides = rideRepository.findByStatusAndRideIdIn(RideStatus.COMPLETED, rideIds);
+
+        if (completedRides.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        Set<String> completedRideIds = completedRides.stream()
+            .map(Ride::getRideId)
+            .collect(Collectors.toSet());
+
+        // 3. Bulk Fetch all active participant mappings for these rides
+        List<RideUserMapping> allParticipantMappings = rideUserMappingService.findByRideIdInAndStatusIn(
+            completedRideIds, RideUserMappingStatus.ACTIVE_STATUSES);
+
+        Map<String, List<RideUserMapping>> mappingsByRideId = allParticipantMappings.stream()
+            .collect(Collectors.groupingBy(RideUserMapping::getRideId));
+
+        // 4. Collect all User IDs and Hub IDs for bulk lookup
+        Set<String> participantUserIds = allParticipantMappings.stream()
+            .map(RideUserMapping::getUserId)
+            .collect(Collectors.toSet());
+
+        Set<String> hubIds = new HashSet<>();
+        completedRides.forEach(ride -> {
+            hubIds.add(ride.getSourceHubId());
+            hubIds.add(ride.getDestinationHubId());
+        });
+
+        // 5. Bulk Fetch User Details and Hub Names
+        Map<String, UserDetail> userDetailsMap =
+            userDetailService.findByUserIdIn(participantUserIds)
+                .stream()
+                .collect(Collectors.toMap(
+                    UserDetail::getUserId,
+                    ud -> ud
+                ));
+
+        Map<String, String> hubNamesMap = hubService.getHubNames(hubIds);
+
+        // 6. Construct the Response
+        return completedRides.stream()
+            .map(ride -> {
+                List<RideUserMapping> pMapping = mappingsByRideId.getOrDefault(ride.getRideId(), new ArrayList<>());
+
+                List<RiderInfoDto> participants = pMapping.stream()
+                    .map(pm -> {
+                        UserDetail detail = userDetailsMap.get(pm.getUserId());
+                        return RiderInfoDto.Builder.passengerInfoDto()
+                            .withUserId(pm.getUserId())
+                            .withName(detail.getName())
+                            .withImageUrl(detail.getImageUrl())
+                            .withAvgRating(detail.getAvgRating())
+                            .build();
+                    })
+                    .collect(Collectors.toList());
+
+                int rideParticipantCount = pMapping.size();
+
+                return MyRideResponseDto.Builder.myRideResponseDto()
+                    .withRideId(ride.getRideId())
+                    .withDepartureTime(ride.getDepartureTime())
+                    .withSourceHubName(hubNamesMap.getOrDefault(ride.getSourceHubId(), "Unknown Hub"))
+                    .withDestinationHubName(hubNamesMap.getOrDefault(ride.getDestinationHubId(), "Unknown Hub"))
+                    .withParticipants(participants)
+                    .withAvailableSeats(ride.getTotalSeats() - rideParticipantCount)
+                    .withPoolPrice(ride.getPoolPrice())
+                    .withUserStatus(statusByRideId.get(ride.getRideId()))
+                    .build();
+            })
+            .collect(Collectors.toList());
+    }
+
     public MyRideDetailResponseDto getMyRideDetail(String rideId) {
         log.info("Fetching my ride detail for rideId={}", rideId);
         // 1. Fetch common generic ride detail

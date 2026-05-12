@@ -66,6 +66,10 @@ public class RideUserMappingService {
         return rideUserMappingRepository.findByUserIdAndStatus(userId, rideUserMappingStatus);
     }
 
+    public List<RideUserMapping> findByUserIdAndStatusIn(String userId, Set<RideUserMappingStatus> statuses) {
+        return rideUserMappingRepository.findByUserIdAndStatusIn(userId, statuses);
+    }
+
     public List<RideUserMapping> findByUserId(String userId) {
         return rideUserMappingRepository.findByUserId(userId);
     }
