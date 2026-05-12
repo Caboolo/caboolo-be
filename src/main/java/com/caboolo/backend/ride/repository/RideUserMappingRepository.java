@@ -18,7 +18,6 @@ public interface RideUserMappingRepository extends JpaRepository<RideUserMapping
     List<RideUserMapping> findByUserIdAndStatus(String userId, RideUserMappingStatus status);
     List<RideUserMapping> findByUserIdAndStatusIn(String userId, Collection<RideUserMappingStatus> statuses);
     List<RideUserMapping> findByUserId(String userId);
-    List<RideUserMapping> findByRideIdAndStatus(String rideId, RideUserMappingStatus status);
     List<RideUserMapping> findByRideIdAndStatusIn(String rideId, Collection<RideUserMappingStatus> status);
     List<RideUserMapping> findByRideIdInAndStatusIn(Collection<String> rideIds, Collection<RideUserMappingStatus> statuses);
 
