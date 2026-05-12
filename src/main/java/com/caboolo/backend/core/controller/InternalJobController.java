@@ -22,4 +22,11 @@ public class InternalJobController extends BaseController {
         int count = rideService.markRidesAsCompleted();
         return successResponse("Successfully processed. Rides marked as COMPLETED: " + count);
     }
+
+    @PostMapping("/mark-rides-ongoing")
+    public RestEntity<String> markRidesAsOngoing() {
+        log.info("Received internal request to mark rides as ONGOING");
+        int count = rideService.markRidesAsOngoing();
+        return successResponse("Successfully processed. Rides marked as ONGOING: " + count);
+    }
 }
