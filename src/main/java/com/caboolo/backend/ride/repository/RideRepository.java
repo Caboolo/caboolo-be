@@ -19,7 +19,7 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
     List<Ride> findByRideIdIn(List<String> rideIds);
     List<Ride> findByStatusAndRideIdIn(RideStatus status, Collection<String> rideIds);
     Optional<Ride> findByRideId(String rideId);
-    List<Ride> findByStatusInAndDepartureTimeBefore(Collection<RideStatus> statuses, LocalDateTime timeThreshold);
+    List<Ride> findByStatusAndDepartureTimeBefore(RideStatus status, LocalDateTime timeThreshold);
 
     @Query(value = "SELECT r.* FROM ride r " +
             "JOIN hub h ON r.destination_hub_id = h.hub_id " +

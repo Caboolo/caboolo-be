@@ -666,8 +666,7 @@ public class RideService {
         log.info("Starting markRidesAsCompleted logic");
         LocalDateTime thresholdTime = LocalDateTime.now().minusHours(6);
         
-        List<Ride> ridesToComplete = rideRepository.findByStatusInAndDepartureTimeBefore(
-                Set.of(RideStatus.SCHEDULED, RideStatus.ONGOING), 
+        List<Ride> ridesToComplete = rideRepository.findByStatusAndDepartureTimeBefore(RideStatus.ONGOING,
                 thresholdTime
         );
 
@@ -693,8 +692,7 @@ public class RideService {
         log.info("Starting markRidesAsOngoing logic");
         LocalDateTime thresholdTime = LocalDateTime.now();
         
-        List<Ride> ridesToOngoing = rideRepository.findByStatusInAndDepartureTimeBefore(
-                Set.of(RideStatus.SCHEDULED), 
+        List<Ride> ridesToOngoing = rideRepository.findByStatusAndDepartureTimeBefore(RideStatus.SCHEDULED,
                 thresholdTime
         );
 

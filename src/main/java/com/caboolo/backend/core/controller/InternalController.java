@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/internal/jobs")
 @RequiredArgsConstructor
-public class InternalJobController extends BaseController {
+public class InternalController extends BaseController {
 
     private final RideService rideService;
 
