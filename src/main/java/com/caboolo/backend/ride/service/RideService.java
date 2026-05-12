@@ -660,4 +660,31 @@ public class RideService {
         rideRepository.save(ride);
         log.info("Pool price updated successfully for rideId={}", rideId);
     }
+
+    @Transactional
+    public int markRidesAsCompleted() {
+        log.info("Starting markRidesAsCompleted logic");
+        LocalDateTime thresholdTime = LocalDateTime.now().minusHours(6);
+        
+        List<Ride> ridesToComplete = rideRepository.findByStatusInAndDepartureTimeBefore(
+                Set.of(RideStatus.SCHEDULED, RideStatus.ONGOING), 
+                thresholdTime
+        );
+
+        if (ridesToComplete.isEmpty()) {
+            log.info("No rides found to mark as completed.");
+            return 0;
+        }
+
+        log.info("Found {} rides to mark as COMPLETED", ridesToComplete.size());
+
+        for (Ride ride : ridesToComplete) {
+            ride.setStatus(RideStatus.COMPLETED);
+        }
+
+        rideRepository.saveAll(ridesToComplete);
+        log.info("Successfully marked {} rides as COMPLETED", ridesToComplete.size());
+        
+        return ridesToComplete.size();
+    }
 }
