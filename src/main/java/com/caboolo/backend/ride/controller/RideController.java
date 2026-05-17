@@ -6,6 +6,7 @@ import com.caboolo.backend.ride.dto.MyRequestResponseDto;
 import com.caboolo.backend.ride.dto.MyRequestDetailResponseDto;
 import com.caboolo.backend.ride.dto.MyRideResponseDto;
 import com.caboolo.backend.ride.dto.MyRideDetailResponseDto;
+import com.caboolo.backend.ride.dto.MyPastRideDetailResponseDto;
 import com.caboolo.backend.ride.dto.RideParticipantDto;
 import com.caboolo.backend.ride.dto.RideRequestDto;
 import com.caboolo.backend.ride.dto.RideDetailResponseDto;
@@ -73,6 +74,14 @@ public class RideController extends BaseController {
     @GetMapping("/my-past-rides")
     public RestEntity<List<MyRideResponseDto>> getMyPastRides(@RequestParam String userId) {
         return successResponse(rideService.getMyPastRides(userId), "My past rides retrieved successfully");
+    }
+
+    @GetMapping("/my-past-rides/{rideId}")
+    public RestEntity<MyPastRideDetailResponseDto> getMyPastRideDetail(
+            @PathVariable String rideId,
+            @RequestParam String userId) {
+        log.info("Fetching past ride detail for rideId: {}, userId: {}", rideId, userId);
+        return successResponse(rideService.getMyPastRideDetail(rideId, userId), "Past ride detail retrieved successfully");
     }
 
     @GetMapping("/my-rides/{rideId}")

@@ -85,4 +85,8 @@ public class RideUserMappingService {
     public List<RideUserMapping> findByRideIdAndUserIdOrStatusIn(String rideId, String userId, Collection<RideUserMappingStatus> activeStatuses) {
         return rideUserMappingRepository.findByRideIdAndUserIdOrStatusIn(rideId, userId, activeStatuses);
     }
+
+    public Optional<RideUserMapping> findByRideIdAndUserId(String rideId, String userId) {
+        return rideUserMappingRepository.findByRideIdAndUserId(rideId, userId);
+    }
 }
