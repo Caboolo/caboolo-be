@@ -2,7 +2,6 @@ package com.caboolo.backend.review.controller;
 
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
-import com.caboolo.backend.review.enums.ReviewTag;
 import com.caboolo.backend.review.service.RatingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +19,7 @@ public class RatingController extends BaseController {
     private final RatingService ratingService;
 
     @GetMapping("/tags")
-    public RestEntity<Map<Integer, List<ReviewTag>>> getRatingTags() {
+    public RestEntity<Map<Integer, List<String>>> getRatingTags() {
         return successResponse(ratingService.getRatingTagsGroupedByStars(), "Rating tags retrieved successfully");
     }
 }

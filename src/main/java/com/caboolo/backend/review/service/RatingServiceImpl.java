@@ -23,19 +23,19 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Map<Integer, List<ReviewTag>> getRatingTagsGroupedByStars() {
+    public Map<Integer, List<String>> getRatingTagsGroupedByStars() {
         try {
             Object cachedData = redisTemplate.opsForValue().get(RATING_TAGS_CACHE_KEY);
             if (cachedData instanceof Map) {
                 log.info("Returning rating tags from cache");
-                return (Map<Integer, List<ReviewTag>>) cachedData;
+                return (Map<Integer, List<String>>) cachedData;
             }
         } catch (Exception e) {
             log.error("Failed to fetch rating tags from Redis cache", e);
         }
 
         log.info("Fetching rating tags from source (fallback)");
-        Map<Integer, List<ReviewTag>> tags = getDefaultTags();
+        Map<Integer, List<String>> tags = getDefaultTags();
 
         try {
             redisTemplate.opsForValue().set(RATING_TAGS_CACHE_KEY, tags, CACHE_DURATION);
@@ -47,33 +47,33 @@ public class RatingServiceImpl implements RatingService {
         return tags;
     }
 
-    private Map<Integer, List<ReviewTag>> getDefaultTags() {
-        Map<Integer, List<ReviewTag>> tags = new HashMap<>();
+    private Map<Integer, List<String>> getDefaultTags() {
+        Map<Integer, List<String>> tags = new HashMap<>();
         
         tags.put(5, Arrays.asList(
-                ReviewTag.FRIENDLY, ReviewTag.GREAT_CONVERSATION, ReviewTag.PUNCTUAL, ReviewTag.RESPECTFUL, 
-                ReviewTag.CLEAN_PASSENGER, ReviewTag.HELPFUL, ReviewTag.SMOOTH_RIDE, ReviewTag.COOPERATIVE, ReviewTag.RECOMMENDED
+                ReviewTag.FRIENDLY.getDisplayName(), ReviewTag.GREAT_CONVERSATION.getDisplayName(), ReviewTag.PUNCTUAL.getDisplayName(), ReviewTag.RESPECTFUL.getDisplayName(), 
+                ReviewTag.CLEAN_PASSENGER.getDisplayName(), ReviewTag.HELPFUL.getDisplayName(), ReviewTag.SMOOTH_RIDE.getDisplayName(), ReviewTag.COOPERATIVE.getDisplayName(), ReviewTag.RECOMMENDED.getDisplayName()
         ));
         
         tags.put(4, Arrays.asList(
-                ReviewTag.POLITE, ReviewTag.MOSTLY_ON_TIME, ReviewTag.GOOD_BEHAVIOUR, 
-                ReviewTag.COMFORTABLE_RIDE, ReviewTag.EASY_GOING, ReviewTag.RESPONSIVE
+                ReviewTag.POLITE.getDisplayName(), ReviewTag.MOSTLY_ON_TIME.getDisplayName(), ReviewTag.GOOD_BEHAVIOUR.getDisplayName(), 
+                ReviewTag.COMFORTABLE_RIDE.getDisplayName(), ReviewTag.EASY_GOING.getDisplayName(), ReviewTag.RESPONSIVE.getDisplayName()
         ));
         
         tags.put(3, Arrays.asList(
-                ReviewTag.AVERAGE_EXPERIENCE, ReviewTag.OKAY_RIDE, ReviewTag.COULD_IMPROVE_PUNCTUALITY, 
-                ReviewTag.LESS_INTERACTIVE, ReviewTag.NEUTRAL_EXPERIENCE, ReviewTag.ACCEPTABLE_BEHAVIOUR
+                ReviewTag.AVERAGE_EXPERIENCE.getDisplayName(), ReviewTag.OKAY_RIDE.getDisplayName(), ReviewTag.COULD_IMPROVE_PUNCTUALITY.getDisplayName(), 
+                ReviewTag.LESS_INTERACTIVE.getDisplayName(), ReviewTag.NEUTRAL_EXPERIENCE.getDisplayName(), ReviewTag.ACCEPTABLE_BEHAVIOUR.getDisplayName()
         ));
         
         tags.put(2, Arrays.asList(
-                ReviewTag.LATE_ARRIVAL, ReviewTag.POOR_COMMUNICATION, ReviewTag.UNTIDY, 
-                ReviewTag.UNCOMFORTABLE_RIDE, ReviewTag.DISTRACTING_BEHAVIOUR, ReviewTag.INCONSIDERATE
+                ReviewTag.LATE_ARRIVAL.getDisplayName(), ReviewTag.POOR_COMMUNICATION.getDisplayName(), ReviewTag.UNTIDY.getDisplayName(), 
+                ReviewTag.UNCOMFORTABLE_RIDE.getDisplayName(), ReviewTag.DISTRACTING_BEHAVIOUR.getDisplayName(), ReviewTag.INCONSIDERATE.getDisplayName()
         ));
         
         tags.put(1, Arrays.asList(
-                ReviewTag.VERY_LATE, ReviewTag.RUDE_BEHAVIOUR, ReviewTag.HARASSMENT, 
-                ReviewTag.SMOKING_DURING_RIDE, ReviewTag.VEHICLE_UNCLEAN, ReviewTag.RECKLESS_BEHAVIOUR, 
-                ReviewTag.ABUSIVE_LANGUAGE, ReviewTag.FELT_UNSAFE
+                ReviewTag.VERY_LATE.getDisplayName(), ReviewTag.RUDE_BEHAVIOUR.getDisplayName(), ReviewTag.HARASSMENT.getDisplayName(), 
+                ReviewTag.SMOKING_DURING_RIDE.getDisplayName(), ReviewTag.VEHICLE_UNCLEAN.getDisplayName(), ReviewTag.RECKLESS_BEHAVIOUR.getDisplayName(), 
+                ReviewTag.ABUSIVE_LANGUAGE.getDisplayName(), ReviewTag.FELT_UNSAFE.getDisplayName()
         ));
         
         return tags;
