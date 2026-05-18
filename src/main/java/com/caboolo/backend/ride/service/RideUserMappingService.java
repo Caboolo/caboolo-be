@@ -86,6 +86,10 @@ public class RideUserMappingService {
         return rideUserMappingRepository.findByRideIdAndUserIdOrStatusIn(rideId, userId, activeStatuses);
     }
 
+    public Optional<RideUserMapping> findByRideIdAndUserId(String rideId, String userId) {
+        return rideUserMappingRepository.findByRideIdAndUserId(rideId, userId);
+    }
+
     @Transactional
     public void saveAll(List<RideUserMapping> mappings) {
         rideUserMappingRepository.saveAll(mappings);

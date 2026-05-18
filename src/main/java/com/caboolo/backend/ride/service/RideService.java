@@ -333,6 +333,93 @@ public class RideService {
             .collect(Collectors.toList());
     }
 
+    public MyPastRideDetailResponseDto getMyPastRideDetail(String rideId, String userId) {
+        log.info("Fetching past ride detail for rideId={}, userId={}", rideId, userId);
+
+        // 1. Fetch the ride
+        Ride ride = rideRepository.findByRideId(rideId)
+            .orElseThrow(() -> {
+                log.error("Ride not found for rideId={}", rideId);
+                return new RuntimeException("Ride not found: " + rideId);
+            });
+
+        // 2. Fetch the requesting user's own mapping to get their status
+        RideUserMappingStatus userStatus = rideUserMappingService.findByRideIdAndUserId(rideId, userId)
+            .map(RideUserMapping::getStatus)
+            .orElseThrow(() -> {
+                log.error("No mapping found for rideId={}, userId={}", rideId, userId);
+                return new RuntimeException("No past ride record found for this user and ride");
+            });
+
+        // 3. Fetch only participants who successfully took the ride (CREATED + ACCEPTED)
+        List<RideUserMapping> activeMappings = rideUserMappingService.findByRideIdAndStatusIn(
+            rideId, RideUserMappingStatus.ACTIVE_STATUSES);
+
+        // 4. Bulk-resolve user details for active participants
+        Set<String> activeUserIds = activeMappings.stream()
+            .map(RideUserMapping::getUserId)
+            .collect(Collectors.toSet());
+
+        Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(activeUserIds).stream()
+            .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
+
+        Map<String, String> userIdToCommentsMap = new HashMap<>();
+        activeMappings.forEach(m -> userIdToCommentsMap.put(m.getUserId(), m.getComment()));
+
+        // 5. Bulk-resolve hub details
+        Set<String> hubIds = new HashSet<>();
+        hubIds.add(ride.getSourceHubId());
+        hubIds.add(ride.getDestinationHubId());
+        Map<String, Hub> hubMap = hubService.getHubsByIds(hubIds);
+
+        Hub sourceHub = hubMap.get(ride.getSourceHubId());
+        Hub destHub = hubMap.get(ride.getDestinationHubId());
+
+        if (sourceHub == null) {
+            log.error("Source hub not found for id: {}", ride.getSourceHubId());
+            throw new RuntimeException("Source hub not found: " + ride.getSourceHubId());
+        }
+        if (destHub == null) {
+            log.error("Destination hub not found for id: {}", ride.getDestinationHubId());
+            throw new RuntimeException("Destination hub not found: " + ride.getDestinationHubId());
+        }
+
+        // 6. Build participant DTOs
+        List<RideParticipantDto> participants = activeMappings.stream()
+            .map(m -> {
+                UserDetail ud = userDetailMap.get(m.getUserId());
+                if (ud == null) return null;
+                return RideParticipantDto.Builder.rideParticipantDto()
+                    .withUserId(ud.getUserId())
+                    .withName(ud.getName())
+                    .withImageUrl(ud.getImageUrl())
+                    .withAvgRating(ud.getAvgRating())
+                    .withTotalRides(ud.getTotalReviews())
+                    .withStatus(m.getStatus())
+                    .withComment(userIdToCommentsMap.get(ud.getUserId()))
+                    .build();
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+
+        // 7. Build and return response
+        return MyPastRideDetailResponseDto.Builder.myPastRideDetailResponseDto()
+            .withRideId(ride.getRideId())
+            .withUserStatus(userStatus)
+            .withDepartureTime(ride.getDepartureTime())
+            .withSourceHubName(sourceHub.getName())
+            .withSourceHubLatitude(sourceHub.getLatitude())
+            .withSourceHubLongitude(sourceHub.getLongitude())
+            .withDestinationHubName(destHub.getName())
+            .withDestinationHubLatitude(destHub.getLatitude())
+            .withDestinationHubLongitude(destHub.getLongitude())
+            .withPoolPrice(ride.getPoolPrice())
+            .withTotalSeats(ride.getTotalSeats())
+            .withParticipants(participants)
+            .build();
+    }
+
+
     public MyRideDetailResponseDto getMyRideDetail(String rideId) {
         log.info("Fetching my ride detail for rideId={}", rideId);
         // 1. Fetch common generic ride detail
