@@ -835,4 +835,73 @@ public class RideService {
         rideRepository.save(ride);
         log.info("Pool price updated successfully for rideId={}", rideId);
     }
+
+    @Transactional
+    public int markRidesAsCompleted() {
+        log.info("Starting markRidesAsCompleted logic");
+        LocalDateTime thresholdTime = LocalDateTime.now().minusHours(6);
+        
+        List<Ride> ridesToComplete = rideRepository.findByStatusAndDepartureTimeBefore(RideStatus.ONGOING,
+                thresholdTime
+        );
+
+        if (ridesToComplete.isEmpty()) {
+            log.info("No rides found to mark as completed.");
+            return 0;
+        }
+
+        log.info("Found {} rides to mark as COMPLETED", ridesToComplete.size());
+
+        for (Ride ride : ridesToComplete) {
+            ride.setStatus(RideStatus.COMPLETED);
+        }
+
+        rideRepository.saveAll(ridesToComplete);
+        log.info("Successfully marked {} rides as COMPLETED", ridesToComplete.size());
+        
+        return ridesToComplete.size();
+    }
+
+    @Transactional
+    public int markRidesAsOngoing() {
+        log.info("Starting markRidesAsOngoing logic");
+        LocalDateTime thresholdTime = LocalDateTime.now();
+        
+        List<Ride> ridesToOngoing = rideRepository.findByStatusAndDepartureTimeBefore(RideStatus.SCHEDULED,
+                thresholdTime
+        );
+
+        if (ridesToOngoing.isEmpty()) {
+            log.info("No rides found to mark as ongoing.");
+            return 0;
+        }
+
+        log.info("Found {} rides to mark as ONGOING", ridesToOngoing.size());
+
+        Set<String> rideIds = ridesToOngoing.stream()
+                .map(Ride::getRideId)
+                .collect(Collectors.toSet());
+
+        for (Ride ride : ridesToOngoing) {
+            ride.setStatus(RideStatus.ONGOING);
+        }
+
+        rideRepository.saveAll(ridesToOngoing);
+        log.info("Successfully marked {} rides as ONGOING", ridesToOngoing.size());
+
+        // Reject pending requests for these rides
+        List<RideUserMapping> pendingMappings = rideUserMappingService.findByRideIdInAndStatusIn(
+                rideIds, Set.of(RideUserMappingStatus.PENDING));
+
+        if (!pendingMappings.isEmpty()) {
+            log.info("Found {} pending requests for ongoing rides to mark as REJECTED", pendingMappings.size());
+            for (RideUserMapping mapping : pendingMappings) {
+                mapping.setStatus(RideUserMappingStatus.REJECTED);
+            }
+            rideUserMappingService.saveAll(pendingMappings);
+            log.info("Successfully marked {} pending requests as REJECTED", pendingMappings.size());
+        }
+
+        return ridesToOngoing.size();
+    }
 }
