@@ -21,8 +21,9 @@ public class ReviewController extends BaseController {
     }
 
     @GetMapping("/co-passengers/listing")
-    public RestEntity<RideReviewRequestDto> getListOfCoPassengers(@RequestParam String rideId) {
-        return successResponse(reviewService.getListOfCoPassengers(rideId));
+    public RestEntity<RideReviewRequestDto> getListOfCoPassengers(@RequestParam String rideId,
+                                                                  @RequestParam String byUserId) {
+        return successResponse(reviewService.getListOfCoPassengers(rideId, byUserId));
     }
 
     @PostMapping("/submit")

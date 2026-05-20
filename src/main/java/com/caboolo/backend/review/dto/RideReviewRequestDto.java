@@ -12,7 +12,7 @@ public class RideReviewRequestDto {
     private String rideId;
     private String source;
     private String destination;
-    private List<MinProfileDto> riders;
+    private List<UserReviewDto> riders;
 
     public static interface RideIdStep {
         SourceStep withRideId(String rideId);
@@ -27,7 +27,7 @@ public class RideReviewRequestDto {
     }
 
     public static interface RidersStep {
-        BuildStep withRiders(List<MinProfileDto> riders);
+        BuildStep withRiders(List<UserReviewDto> riders);
     }
 
     public static interface BuildStep {
@@ -39,7 +39,7 @@ public class RideReviewRequestDto {
         private String rideId;
         private String source;
         private String destination;
-        private List<MinProfileDto> riders;
+        private List<UserReviewDto> riders;
 
         private Builder() {
         }
@@ -67,7 +67,7 @@ public class RideReviewRequestDto {
         }
 
         @Override
-        public BuildStep withRiders(List<MinProfileDto> riders) {
+        public BuildStep withRiders(List<UserReviewDto> riders) {
             this.riders = riders;
             return this;
         }

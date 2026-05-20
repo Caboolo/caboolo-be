@@ -59,24 +59,61 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public RideReviewRequestDto getListOfCoPassengers(String rideId) {
-        // Hardcoded ride details as requested
+    public RideReviewRequestDto getListOfCoPassengers(String rideId, String byUserId) {
+        log.info("Fetching co-passenger listing for rideId={}, byUserId={}", rideId, byUserId);
+
+        // Fetch reviews already submitted by this user for this ride and index by forUserId
+        Map<String, Review> existingReviewMap = reviewRepository
+                .findByRideIdAndByUserId(rideId, byUserId)
+                .stream()
+                .collect(Collectors.toMap(Review::getForUserId, r -> r));
+
+        // TODO: replace with real co-passenger fetch from ride participant service
+        // For now we derive the list from the users who have been reviewed or passed in
+        // This is a placeholder list — replace with actual ride participant lookup
+        List<String> coPassengerUserIds = new ArrayList<>(existingReviewMap.keySet());
+
+        List<UserReviewDto> riders = coPassengerUserIds.stream()
+                .map(toUserId -> {
+                    UserDetail userDetail = userDetailService.getUserDetailEntity(toUserId);
+
+                    MinProfileDto profile = MinProfileDto.Builder.minProfileDto()
+                            .withUserId(toUserId)
+                            .withName(userDetail.getName())
+                            .withAvgRating(userDetail.getAvgRating() != null ? userDetail.getAvgRating() : 0.0)
+                            .build();
+
+                    Review existing = existingReviewMap.get(toUserId);
+                    if (existing != null) {
+                        // Already rated — prefill all fields
+                        return UserReviewDto.Builder.builder()
+                                .withToUserId(toUserId)
+                                .withToUserProfile(profile)
+                                .withRating(existing.getRating())
+                                .withRideAgain(existing.getRideAgain())
+                                .withTags(existing.getTags())
+                                .withComment(existing.getComment())
+                                .build();
+                    } else {
+                        // Not yet rated — return only identity + profile, rest null
+                        return UserReviewDto.Builder.builder()
+                                .withToUserId(toUserId)
+                                .withToUserProfile(profile)
+                                .withRating(null)
+                                .withRideAgain(null)
+                                .withTags(null)
+                                .withComment(null)
+                                .build();
+                    }
+                })
+                .collect(Collectors.toList());
+
+        // TODO: replace hardcoded source/destination with real ride lookup
         return RideReviewRequestDto.Builder.rideReviewRequestDto()
-                .withRideId("1231")
-                .withSource("Indira Nagar")
-                .withDestination("Electronic City")
-                .withRiders(List.of(
-                        MinProfileDto.Builder.minProfileDto()
-                                .withUserId("user101")
-                                .withName("Rahul Sharma")
-                                .withAvgRating(4.5)
-                                .build(),
-                        MinProfileDto.Builder.minProfileDto()
-                                .withUserId("user102")
-                                .withName("Priya Singh")
-                                .withAvgRating(4.8)
-                                .build()
-                ))
+                .withRideId(rideId)
+                .withSource(null)
+                .withDestination(null)
+                .withRiders(riders)
                 .build();
     }
 
