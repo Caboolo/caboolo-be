@@ -10,14 +10,19 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserReviewDto {
-    private String toUserId;
+    private String toUserId; // userId of the rider we are rating
+    private MinProfileDto toUserProfile;
     private Integer rating;
     private Boolean rideAgain;
     private Set<ReviewTag> tags;
     private String comment;
 
     public static interface ToUserIdStep {
-        RatingStep withToUserId(String toUserId);
+        ToUserProfileStep withToUserId(String toUserId);
+    }
+
+    public static interface ToUserProfileStep {
+        RatingStep withToUserProfile(MinProfileDto toUserProfile);
     }
 
     public static interface RatingStep {
@@ -40,8 +45,9 @@ public class UserReviewDto {
         UserReviewDto build();
     }
 
-    public static class Builder implements ToUserIdStep, RatingStep, RideAgainStep, TagsStep, CommentStep, BuildStep {
+    public static class Builder implements ToUserIdStep, ToUserProfileStep, RatingStep, RideAgainStep, TagsStep, CommentStep, BuildStep {
         private String toUserId;
+        private MinProfileDto toUserProfile;
         private Integer rating;
         private Boolean rideAgain;
         private Set<ReviewTag> tags;
@@ -52,8 +58,14 @@ public class UserReviewDto {
         }
 
         @Override
-        public RatingStep withToUserId(String toUserId) {
+        public ToUserProfileStep withToUserId(String toUserId) {
             this.toUserId = toUserId;
+            return this;
+        }
+
+        @Override
+        public RatingStep withToUserProfile(MinProfileDto toUserProfile) {
+            this.toUserProfile = toUserProfile;
             return this;
         }
 
@@ -83,7 +95,7 @@ public class UserReviewDto {
 
         @Override
         public UserReviewDto build() {
-            return new UserReviewDto(toUserId, rating, rideAgain, tags, comment);
+            return new UserReviewDto(toUserId, toUserProfile, rating, rideAgain, tags, comment);
         }
     }
 }

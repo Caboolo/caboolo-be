@@ -7,7 +7,7 @@ public interface ReviewService {
 
     void submitReview(RideReviewResponseDto request);
 
-    RideReviewRequestDto getListOfCoPassengers(String rideId);
+    RideReviewRequestDto getListOfCoPassengers(String rideId, String byUserId);
 
     List<ReviewDto> getReviewDtoList(String userId);
 
