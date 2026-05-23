@@ -24,7 +24,7 @@ public class AeroDataBoxClient {
     @Value("${aerodatabox.api-key}")
     private String apiKey;
 
-    @Value("${aerodatabox.base-url:https://aerodatabox.p.rapidapi.com}")
+    @Value("${aerodatabox.base-url}")
     private String baseUrl;
 
     public List<AeroDataBoxResponse> getFlightInfo(String flightNumber, String flightDate) {
