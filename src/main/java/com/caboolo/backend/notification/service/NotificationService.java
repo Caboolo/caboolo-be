@@ -171,9 +171,9 @@ public class NotificationService {
                     
                     for (int j = 0; j < responses.size(); j++) {
                         if (!responses.get(j).isSuccessful() && responses.get(j).getException() != null) {
-                            String errorCode = responses.get(j).getException().getMessagingErrorCode().name();
+                            MessagingErrorCode errorCode = responses.get(j).getException().getMessagingErrorCode();
                             // Identify dead tokens
-                            if ("UNREGISTERED".equals(errorCode) || "INVALID_ARGUMENT".equals(errorCode)) {
+                            if (errorCode == MessagingErrorCode.UNREGISTERED || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
                                 failedTokens.add(batchTokens.get(j));
                             }
                         }

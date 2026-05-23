@@ -17,14 +17,6 @@ public interface UserFcmTokenRepository extends JpaRepository<UserFcmToken, Long
 
     List<UserFcmToken> findByUserId(String userId);
 
-    List<UserFcmToken> findByUserIdIn(Collection<String> userIds);
-
-    Optional<UserFcmToken> findByUserIdAndFcmToken(String userId, String fcmToken);
-
-    void deleteByUserIdAndFcmToken(String userId, String fcmToken);
-
-    void deleteByFcmToken(String fcmToken);
-
     List<UserFcmToken> findAllByUserIdAndStatus(String userId, FcmTokenStatus status);
     
     List<UserFcmToken> findAllByUserIdInAndStatus(Collection<String> userIds, FcmTokenStatus status);
