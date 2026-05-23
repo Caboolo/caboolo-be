@@ -1,8 +1,8 @@
 package com.caboolo.backend.flightverification.service;
 
 import com.caboolo.backend.core.idgen.SequenceGenerator;
-import com.caboolo.backend.flightverification.client.AviationStackClient;
-import com.caboolo.backend.flightverification.client.AviationStackResponse;
+import com.caboolo.backend.flightverification.client.AeroDataBoxClient;
+import com.caboolo.backend.flightverification.client.AeroDataBoxResponse;
 import com.caboolo.backend.flightverification.domain.FlightVerification;
 import com.caboolo.backend.flightverification.dto.FlightVerificationRequestDto;
 import com.caboolo.backend.flightverification.dto.FlightVerificationResponseDto;
@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -23,13 +24,13 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
 
     private final FlightVerificationRepository flightVerificationRepository;
     private final SequenceGenerator sequenceGenerator;
-    private final AviationStackClient aviationStackClient;
+    private final AeroDataBoxClient aeroDataBoxClient;
 
     public FlightVerificationServiceImpl(FlightVerificationRepository flightVerificationRepository,
-                                         SequenceGenerator sequenceGenerator, AviationStackClient aviationStackClient) {
+                                         SequenceGenerator sequenceGenerator, AeroDataBoxClient aeroDataBoxClient) {
         this.flightVerificationRepository = flightVerificationRepository;
         this.sequenceGenerator = sequenceGenerator;
-        this.aviationStackClient = aviationStackClient;
+        this.aeroDataBoxClient = aeroDataBoxClient;
     }
 
     @Override
@@ -41,7 +42,7 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
 
         // ── Step 1: Short-circuit cache check ─────────────────────────────────
         // If any VERIFIED record already exists for this flight+date (from any user),
-        // reuse its timings to avoid an unnecessary AviationStack API call.
+        // reuse its timings to avoid an unnecessary API call.
         Optional<FlightVerification> cachedVerification = flightVerificationRepository
                 .findByFlightNumberAndFlightDateAndStatus(flightNumber, flightDate, VerificationStatus.VERIFIED);
 
@@ -58,41 +59,43 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
             departureTime = cached.getDepartureTime();
             arrivalTime = cached.getArrivalTime();
         } else {
-            // ── Step 2: Call AviationStack API ────────────────────────────────
-            log.info("Cache miss: calling AviationStack API for flightNumber={}, flightDate={}", flightNumber, flightDate);
-            AviationStackResponse response = aviationStackClient.getFlightInfo(
-                    flightNumber, flightDate.toString());
+            // ── Step 2: Call AeroDataBox API ────────────────────────────────
+            log.info("Cache miss: calling AeroDataBox API for flightNumber={}, flightDate={}", flightNumber, flightDate);
+            List<AeroDataBoxResponse> flightList = aeroDataBoxClient.getFlightInfo(flightNumber, flightDate.toString());
 
-            if (response == null || response.getData() == null || response.getData().isEmpty()) {
-                log.error("Flight not found in AviationStack for flightNumber={}, flightDate={}", flightNumber, flightDate);
+            if (flightList == null || flightList.isEmpty()) {
+                log.error("Flight not found in AeroDataBox for flightNumber={}, flightDate={}", flightNumber, flightDate);
                 throw new IllegalArgumentException("Flight not found: " + flightNumber);
             }
 
-            AviationStackResponse.FlightData flightData = response.getData().get(0);
+            AeroDataBoxResponse flightData = flightList.get(0);
 
             // ── Step 3: Validate flight date ──────────────────────────────────
-            LocalDate apiFlightDate = LocalDate.parse(flightData.getFlightDate());
-            if (!apiFlightDate.equals(flightDate)) {
-                log.error("Flight date mismatch for flightNumber={}: provided={}, actual={}", flightNumber, flightDate, apiFlightDate);
-                throw new IllegalArgumentException(
-                        "Flight date mismatch: provided " + flightDate + " but flight is on " + apiFlightDate);
+            String scheduledLocal = flightData.getDeparture() != null && flightData.getDeparture().getScheduledTime() != null ? flightData.getDeparture().getScheduledTime().getLocal() : null;
+            if (scheduledLocal != null) {
+                LocalDate apiFlightDate = LocalDate.parse(scheduledLocal.substring(0, 10));
+                if (!apiFlightDate.equals(flightDate)) {
+                    log.error("Flight date mismatch for flightNumber={}: provided={}, actual={}", flightNumber, flightDate, apiFlightDate);
+                    throw new IllegalArgumentException(
+                            "Flight date mismatch: provided " + flightDate + " but flight is on " + apiFlightDate);
+                }
             }
 
-            departureAirport = flightData.getDeparture() != null ? flightData.getDeparture().getIata() : null;
-            arrivalAirport   = flightData.getArrival()   != null ? flightData.getArrival().getIata()   : null;
-            departureTime    = parseScheduled(flightData.getDeparture() != null ? flightData.getDeparture().getScheduled() : null);
-            arrivalTime      = parseScheduled(flightData.getArrival()   != null ? flightData.getArrival().getScheduled()   : null);
-    }
+            departureAirport = flightData.getDeparture() != null && flightData.getDeparture().getAirport() != null ? flightData.getDeparture().getAirport().getIata() : null;
+            arrivalAirport   = flightData.getArrival()   != null && flightData.getArrival().getAirport()   != null ? flightData.getArrival().getAirport().getIata()   : null;
+            departureTime    = parseScheduled(scheduledLocal);
+            arrivalTime      = parseScheduled(flightData.getArrival() != null && flightData.getArrival().getScheduledTime() != null ? flightData.getArrival().getScheduledTime().getLocal() : null);
+        }
 
-    // ── Step 4: Delete any existing record for this user ──────────────────
+        // ── Step 4: Delete any existing record for this user ──────────────────
         flightVerificationRepository.findByUserId(userId)
                 .ifPresent(existing -> {
                     log.info("Deleting previous flight verification record for userId={}", userId);
                     flightVerificationRepository.delete(existing);
                 });
 
-    // ── Step 5: Save new VERIFIED record ──────────────────────────────────
-    FlightVerification newVerification = FlightVerification.Builder.flightVerification()
+        // ── Step 5: Save new VERIFIED record ──────────────────────────────────
+        FlightVerification newVerification = FlightVerification.Builder.flightVerification()
                 .withFlightVerificationId(sequenceGenerator.nextId())
                 .withUserId(userId)
                 .withFlightNumber(flightNumber)
@@ -104,11 +107,11 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
                 .withStatus(VerificationStatus.VERIFIED)
                 .build();
 
-    FlightVerification saved = flightVerificationRepository.save(newVerification);
-    log.info("Saved flight verification record for userId={}, flightNumber={}, verificationId={}",
-            userId, flightNumber, saved.getFlightVerificationId());
+        FlightVerification saved = flightVerificationRepository.save(newVerification);
+        log.info("Saved flight verification record for userId={}, flightNumber={}, verificationId={}",
+                userId, flightNumber, saved.getFlightVerificationId());
 
-    // ── Step 6: Build and return response ─────────────────────────────────
+        // ── Step 6: Build and return response ─────────────────────────────────
         return FlightVerificationResponseDto.Builder.flightVerificationResponseDto()
                 .withFlightVerificationId(saved.getFlightVerificationId())
                 .withUserId(saved.getUserId())
@@ -120,16 +123,18 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
                 .withArrivalTime(saved.getArrivalTime())
                 .withStatus(saved.getStatus())
                 .build();
-}
+    }
 
     /**
-     * Parses an ISO-8601 offset datetime string (e.g. "2026-04-01T08:00:00+00:00")
+     * Parses an ISO-8601 offset datetime string (e.g. "2026-05-23 06:10+05:30")
      * into a LocalDateTime, or returns null if the input is blank.
      */
     private LocalDateTime parseScheduled(String scheduled) {
         if (scheduled == null || scheduled.isBlank()) {
             return null;
         }
-        return OffsetDateTime.parse(scheduled).toLocalDateTime();
+        // Normalize space to 'T' for OffsetDateTime parsing: "2026-05-23 06:10+05:30" -> "2026-05-23T06:10+05:30"
+        String normalized = scheduled.replace(" ", "T");
+        return OffsetDateTime.parse(normalized).toLocalDateTime();
     }
 }
