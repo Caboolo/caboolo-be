@@ -4,10 +4,13 @@ import com.caboolo.backend.core.idgen.SequenceGenerator;
 import com.caboolo.backend.notification.domain.Notification;
 import com.caboolo.backend.notification.domain.UserFcmToken;
 import com.caboolo.backend.notification.dto.FcmTokenRequestDto;
+import com.caboolo.backend.notification.dto.NotificationResponseDto;
+import com.caboolo.backend.notification.converter.NotificationConverter;
 import com.caboolo.backend.notification.enums.FcmTokenStatus;
 import com.caboolo.backend.notification.repository.NotificationRepository;
 import com.caboolo.backend.notification.repository.UserFcmTokenRepository;
 import com.google.firebase.messaging.*;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +26,17 @@ public class NotificationService {
     private final UserFcmTokenRepository fcmTokenRepository;
     private final NotificationRepository notificationRepository;
     private final SequenceGenerator sequenceGenerator;
+    private final NotificationConverter notificationConverter;
 
-    public NotificationService(UserFcmTokenRepository fcmTokenRepository, NotificationRepository notificationRepository, SequenceGenerator sequenceGenerator) {
+    public NotificationService(
+            UserFcmTokenRepository fcmTokenRepository,
+            NotificationRepository notificationRepository,
+            SequenceGenerator sequenceGenerator,
+            NotificationConverter notificationConverter) {
         this.fcmTokenRepository = fcmTokenRepository;
         this.notificationRepository = notificationRepository;
         this.sequenceGenerator = sequenceGenerator;
+        this.notificationConverter = notificationConverter;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -131,6 +140,37 @@ public class NotificationService {
                 .collect(Collectors.toList());
 
         sendToTokens(fcmTokens, title, body, data);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Notification Listing & Read State
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public List<NotificationResponseDto> getNotificationsForUser(String userId) {
+        return notificationRepository.findByUserIdOrderByDateCreatedDesc(userId)
+                .stream()
+                .map(notificationConverter::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void markAsRead(String notificationId, String userId) {
+        Notification notification = notificationRepository
+                .findByNotificationIdAndUserId(notificationId, userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Notification not found: " + notificationId));
+        if (!notification.isRead()) {
+            notification.setRead(true);
+            notificationRepository.save(notification);
+            log.info("Marked notification {} as read for user {}", notificationId, userId);
+        }
+    }
+
+    @Transactional
+    public void markAllAsRead(String userId) {
+        int updated = notificationRepository.markAllReadByUserId(userId);
+        log.info("Marked {} notifications as read for user {}", updated, userId);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

@@ -3,10 +3,13 @@ package com.caboolo.backend.notification.controller;
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
 import com.caboolo.backend.notification.dto.FcmTokenRequestDto;
+import com.caboolo.backend.notification.dto.NotificationResponseDto;
 import com.caboolo.backend.notification.service.NotificationService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -47,4 +50,46 @@ public class NotificationController extends BaseController {
         notificationService.removeToken(userId, deviceId);
         return successResponse("FCM token removed successfully");
     }
+
+    /**
+     * GET /api/v1/notification/list?userId=...
+     *
+     * Fetch all in-app notifications for a user, newest first.
+     */
+    @GetMapping("/list")
+    public RestEntity<List<NotificationResponseDto>> getNotifications(
+            @RequestParam String userId) {
+        log.info("Fetching notifications for user: {}", userId);
+        List<NotificationResponseDto> notifications = notificationService.getNotificationsForUser(userId);
+        return successResponse(notifications, "Notifications fetched successfully");
+    }
+
+    /**
+     * PATCH /api/v1/notification/{notificationId}/read?userId=...
+     *
+     * Mark a single notification as read. Returns 404 if the notification
+     * does not exist or does not belong to the given user.
+     */
+    @PatchMapping("/{notificationId}/read")
+    public RestEntity<Void> markAsRead(
+            @PathVariable String notificationId,
+            @RequestParam String userId) {
+        log.info("Marking notification {} as read for user: {}", notificationId, userId);
+        notificationService.markAsRead(notificationId, userId);
+        return successResponse("Notification marked as read");
+    }
+
+    /**
+     * PATCH /api/v1/notification/read-all?userId=...
+     *
+     * Mark all of a user's unread notifications as read.
+     */
+    @PatchMapping("/read-all")
+    public RestEntity<Void> markAllAsRead(
+            @RequestParam String userId) {
+        log.info("Marking all notifications as read for user: {}", userId);
+        notificationService.markAllAsRead(userId);
+        return successResponse("All notifications marked as read");
+    }
 }
+
