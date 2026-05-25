@@ -24,9 +24,9 @@ public class RideUserMappingService {
     private final SequenceGenerator sequenceGenerator;
 
     @Transactional
-    public RideUserMapping createMapping(String rideId, String userId, RideUserMappingStatus status, String comments) {
+    public RideUserMapping createMapping(String rideId, String userId, RideUserMappingStatus status, String comments, boolean isFlightVerified) {
         String mappingId = sequenceGenerator.nextId();
-        log.info("Creating RideUserMapping: mappingId={}, rideId={}, userId={}, status={}", mappingId, rideId, userId, status);
+        log.info("Creating RideUserMapping: mappingId={}, rideId={}, userId={}, status={}, isFlightVerified={}", mappingId, rideId, userId, status, isFlightVerified);
         
         RideUserMapping mapping = RideUserMapping.Builder.rideUserMapping()
                 .withRideUserMappingId(mappingId)
@@ -34,10 +34,11 @@ public class RideUserMappingService {
                 .withUserId(userId)
                 .withStatus(status)
                 .withComment(comments)
+                .withIsFlightVerified(isFlightVerified)
                 .build();
         
         rideUserMappingRepository.save(mapping);
-        log.info("RideUserMapping created successfully: mappingId={}, rideId={}, userId={}", mappingId, rideId, userId);
+        log.info("RideUserMapping created successfully: mappingId={}, rideId={}, userId={}, isFlightVerified={}", mappingId, rideId, userId, isFlightVerified);
         return mapping;
     }
 

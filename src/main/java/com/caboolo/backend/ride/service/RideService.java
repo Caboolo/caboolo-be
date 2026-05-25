@@ -73,7 +73,7 @@ public class RideService {
         rideRepository.save(ride);
 
         // 2. Create and Save RideUserMapping for the creator via the specialized service
-        rideUserMappingService.createMapping(rideId, request.getUserId(), RideUserMappingStatus.CREATED, null);
+        rideUserMappingService.createMapping(rideId, request.getUserId(), RideUserMappingStatus.CREATED, null, false);
         log.info("Ride created successfully: rideId={}", rideId);
 
         return rideId;
@@ -397,6 +397,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
+                    .withIsFlightVerified(m.isFlightVerified())
                     .build();
             })
             .filter(Objects::nonNull)
@@ -454,6 +455,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
+                    .withIsFlightVerified(m.isFlightVerified())
                     .build();
             })
             .filter(Objects::nonNull)
@@ -472,6 +474,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
+                    .withIsFlightVerified(m.isFlightVerified())
                     .build();
             })
             .filter(Objects::nonNull)
@@ -528,6 +531,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
+                    .withIsFlightVerified(m.isFlightVerified())
                     .build();
             })
             .filter(Objects::nonNull)
@@ -591,6 +595,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
+                    .withIsFlightVerified(m.isFlightVerified())
                     .build();
             })
             .filter(Objects::nonNull)
@@ -677,6 +682,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(m.getUserId()))
+                    .withIsFlightVerified(m.isFlightVerified())
                     .build();
             })
             .filter(Objects::nonNull)

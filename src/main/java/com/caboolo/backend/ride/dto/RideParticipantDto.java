@@ -16,6 +16,7 @@ public class RideParticipantDto {
     private Integer totalRides;
     private RideUserMappingStatus status;
     private String comment;
+    private boolean isFlightVerified;
 
     public static interface UserIdStep {
         NameStep withUserId(String userId);
@@ -42,7 +43,11 @@ public class RideParticipantDto {
     }
 
     public static interface CommentStep {
-        BuildStep withComment(String comment);
+        IsFlightVerifiedStep withComment(String comment);
+    }
+
+    public static interface IsFlightVerifiedStep {
+        BuildStep withIsFlightVerified(boolean isFlightVerified);
     }
 
     public static interface BuildStep {
@@ -50,7 +55,7 @@ public class RideParticipantDto {
     }
 
 
-    public static class Builder implements UserIdStep, NameStep, ImageUrlStep, AvgRatingStep, TotalRidesStep, StatusStep, CommentStep, BuildStep {
+    public static class Builder implements UserIdStep, NameStep, ImageUrlStep, AvgRatingStep, TotalRidesStep, StatusStep, CommentStep, IsFlightVerifiedStep, BuildStep {
         private String userId;
         private String name;
         private String imageUrl;
@@ -58,6 +63,7 @@ public class RideParticipantDto {
         private Integer totalRides;
         private RideUserMappingStatus status;
         private String comment;
+        private boolean isFlightVerified;
 
         private Builder() {
         }
@@ -103,8 +109,14 @@ public class RideParticipantDto {
         }
 
         @Override
-        public BuildStep withComment(String comment) {
+        public IsFlightVerifiedStep withComment(String comment) {
             this.comment = comment;
+            return this;
+        }
+
+        @Override
+        public BuildStep withIsFlightVerified(boolean isFlightVerified) {
+            this.isFlightVerified = isFlightVerified;
             return this;
         }
 
@@ -117,7 +129,8 @@ public class RideParticipantDto {
                     this.avgRating,
                     this.totalRides,
                     this.status,
-                    this.comment
+                    this.comment,
+                    this.isFlightVerified
             );
         }
     }

@@ -8,6 +8,7 @@ import com.caboolo.backend.flightverification.dto.FlightVerificationRequestDto;
 import com.caboolo.backend.flightverification.dto.FlightVerificationResponseDto;
 import com.caboolo.backend.flightverification.enums.VerificationStatus;
 import com.caboolo.backend.flightverification.repository.FlightVerificationRepository;
+import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,12 +26,15 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
     private final FlightVerificationRepository flightVerificationRepository;
     private final SequenceGenerator sequenceGenerator;
     private final AeroDataBoxClient aeroDataBoxClient;
+    private final RideUserMappingRepository rideUserMappingRepository;
 
     public FlightVerificationServiceImpl(FlightVerificationRepository flightVerificationRepository,
-                                         SequenceGenerator sequenceGenerator, AeroDataBoxClient aeroDataBoxClient) {
+                                         SequenceGenerator sequenceGenerator, AeroDataBoxClient aeroDataBoxClient,
+                                         RideUserMappingRepository rideUserMappingRepository) {
         this.flightVerificationRepository = flightVerificationRepository;
         this.sequenceGenerator = sequenceGenerator;
         this.aeroDataBoxClient = aeroDataBoxClient;
+        this.rideUserMappingRepository = rideUserMappingRepository;
     }
 
     @Override
@@ -44,7 +48,7 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
         // If any VERIFIED record already exists for this flight+date (from any user),
         // reuse its timings to avoid an unnecessary API call.
         Optional<FlightVerification> cachedVerification = flightVerificationRepository
-                .findByFlightNumberAndFlightDateAndStatus(flightNumber, flightDate, VerificationStatus.VERIFIED);
+                .findByFlightNumberAndFlightDateAndStatusAndIsDeleted(flightNumber, flightDate, VerificationStatus.VERIFIED, false);
 
         String departureAirport;
         String arrivalAirport;
@@ -88,10 +92,19 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
         }
 
         // ── Step 4: Delete any existing record for this user ──────────────────
-        flightVerificationRepository.findByUserId(userId)
+        flightVerificationRepository.findByUserIdAndIsDeleted(userId, false)
                 .ifPresent(existing -> {
-                    log.info("Deleting previous flight verification record for userId={}", userId);
-                    flightVerificationRepository.delete(existing);
+                    log.info("Soft-deleting previous flight verification record for userId={}", userId);
+                    existing.setDeleted(true);
+                    flightVerificationRepository.save(existing);
+                });
+
+        // ── Step 4a: Unverify the user's ride mapping ────────────────────────
+        rideUserMappingRepository.findByRideIdAndUserId(request.getRideId(), userId)
+                .ifPresent(mapping -> {
+                    log.info("Unmarking flight verified for rideId={}, userId={}", request.getRideId(), userId);
+                    mapping.setFlightVerified(false);
+                    rideUserMappingRepository.save(mapping);
                 });
 
         // ── Step 5: Save new VERIFIED record ──────────────────────────────────
@@ -111,7 +124,15 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
         log.info("Saved flight verification record for userId={}, flightNumber={}, verificationId={}",
                 userId, flightNumber, saved.getFlightVerificationId());
 
-        // ── Step 6: Build and return response ─────────────────────────────────
+        // ── Step 6: Mark ride user mapping as flight verified ─────────────────
+        rideUserMappingRepository.findByRideIdAndUserId(request.getRideId(), userId)
+                .ifPresent(mapping -> {
+                    log.info("Marking flight verified for rideId={}, userId={}", request.getRideId(), userId);
+                    mapping.setFlightVerified(true);
+                    rideUserMappingRepository.save(mapping);
+                });
+
+        // ── Step 7: Build and return response ─────────────────────────────────
         return FlightVerificationResponseDto.Builder.flightVerificationResponseDto()
                 .withFlightVerificationId(saved.getFlightVerificationId())
                 .withUserId(saved.getUserId())

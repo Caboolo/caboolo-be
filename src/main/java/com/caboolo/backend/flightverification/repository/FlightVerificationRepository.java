@@ -25,4 +25,13 @@ public interface FlightVerificationRepository extends JpaRepository<FlightVerifi
             VerificationStatus status,
             LocalDateTime cutoff
     );
+
+    Optional<FlightVerification> findByFlightNumberAndFlightDateAndStatusAndIsDeleted(
+            String flightNumber,
+            LocalDate flightDate,
+            VerificationStatus status,
+            boolean isDeleted
+    );
+
+    Optional<FlightVerification> findByUserIdAndIsDeleted(String userId, boolean isDeleted);
 }
