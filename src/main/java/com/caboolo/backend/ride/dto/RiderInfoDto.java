@@ -10,6 +10,7 @@ public class RiderInfoDto {
     private String name;
     private String imageUrl;
     private Double avgRating;
+    private boolean isFlightVerified;
 
     public static interface UserIdStep {
         NameStep withUserId(String userId);
@@ -24,7 +25,11 @@ public class RiderInfoDto {
     }
 
     public static interface AvgRatingStep {
-        BuildStep withAvgRating(Double avgRating);
+        IsFlightVerifiedStep withAvgRating(Double avgRating);
+    }
+
+    public static interface IsFlightVerifiedStep {
+        BuildStep withIsFlightVerified(boolean isFlightVerified);
     }
 
     public static interface BuildStep {
@@ -32,11 +37,12 @@ public class RiderInfoDto {
     }
 
 
-    public static class Builder implements UserIdStep, NameStep, ImageUrlStep, AvgRatingStep, BuildStep {
+    public static class Builder implements UserIdStep, NameStep, ImageUrlStep, AvgRatingStep, IsFlightVerifiedStep, BuildStep {
         private String userId;
         private String name;
         private String imageUrl;
         private Double avgRating;
+        private boolean isFlightVerified;
 
         private Builder() {
         }
@@ -64,8 +70,14 @@ public class RiderInfoDto {
         }
 
         @Override
-        public BuildStep withAvgRating(Double avgRating) {
+        public IsFlightVerifiedStep withAvgRating(Double avgRating) {
             this.avgRating = avgRating;
+            return this;
+        }
+
+        @Override
+        public BuildStep withIsFlightVerified(boolean isFlightVerified) {
+            this.isFlightVerified = isFlightVerified;
             return this;
         }
 
@@ -75,7 +87,8 @@ public class RiderInfoDto {
                     this.userId,
                     this.name,
                     this.imageUrl,
-                    this.avgRating
+                    this.avgRating,
+                    this.isFlightVerified
             );
         }
     }

@@ -8,7 +8,6 @@ import com.caboolo.backend.flightverification.dto.FlightVerificationRequestDto;
 import com.caboolo.backend.flightverification.dto.FlightVerificationResponseDto;
 import com.caboolo.backend.flightverification.enums.VerificationStatus;
 import com.caboolo.backend.flightverification.repository.FlightVerificationRepository;
-import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,15 +25,12 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
     private final FlightVerificationRepository flightVerificationRepository;
     private final SequenceGenerator sequenceGenerator;
     private final AeroDataBoxClient aeroDataBoxClient;
-    private final RideUserMappingRepository rideUserMappingRepository;
 
     public FlightVerificationServiceImpl(FlightVerificationRepository flightVerificationRepository,
-                                         SequenceGenerator sequenceGenerator, AeroDataBoxClient aeroDataBoxClient,
-                                         RideUserMappingRepository rideUserMappingRepository) {
+                                         SequenceGenerator sequenceGenerator, AeroDataBoxClient aeroDataBoxClient) {
         this.flightVerificationRepository = flightVerificationRepository;
         this.sequenceGenerator = sequenceGenerator;
         this.aeroDataBoxClient = aeroDataBoxClient;
-        this.rideUserMappingRepository = rideUserMappingRepository;
     }
 
     @Override
@@ -99,13 +95,9 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
                     flightVerificationRepository.save(existing);
                 });
 
-        // ── Step 4a: Unverify the user's ride mapping ────────────────────────
-        rideUserMappingRepository.findByRideIdAndUserId(request.getRideId(), userId)
-                .ifPresent(mapping -> {
-                    log.info("Unmarking flight verified for rideId={}, userId={}", request.getRideId(), userId);
-                    mapping.setFlightVerified(false);
-                    rideUserMappingRepository.save(mapping);
-                });
+        // ── Step 4a: Calculate Validity Window ───────────────────────────────
+        LocalDateTime validFrom = departureTime != null ? departureTime.minusHours(12) : flightDate.atStartOfDay().minusHours(12);
+        LocalDateTime validUntil = arrivalTime != null ? arrivalTime.plusHours(12) : (departureTime != null ? departureTime.plusHours(12) : flightDate.atStartOfDay().plusDays(1).plusHours(12));
 
         // ── Step 5: Save new VERIFIED record ──────────────────────────────────
         FlightVerification newVerification = FlightVerification.Builder.flightVerification()
@@ -118,21 +110,15 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
                 .withDepartureTime(departureTime)
                 .withArrivalTime(arrivalTime)
                 .withStatus(VerificationStatus.VERIFIED)
+                .withValidFrom(validFrom)
+                .withValidUntil(validUntil)
                 .build();
 
         FlightVerification saved = flightVerificationRepository.save(newVerification);
         log.info("Saved flight verification record for userId={}, flightNumber={}, verificationId={}",
                 userId, flightNumber, saved.getFlightVerificationId());
 
-        // ── Step 6: Mark ride user mapping as flight verified ─────────────────
-        rideUserMappingRepository.findByRideIdAndUserId(request.getRideId(), userId)
-                .ifPresent(mapping -> {
-                    log.info("Marking flight verified for rideId={}, userId={}", request.getRideId(), userId);
-                    mapping.setFlightVerified(true);
-                    rideUserMappingRepository.save(mapping);
-                });
-
-        // ── Step 7: Build and return response ─────────────────────────────────
+        // ── Step 6: Build and return response ─────────────────────────────────
         return FlightVerificationResponseDto.Builder.flightVerificationResponseDto()
                 .withFlightVerificationId(saved.getFlightVerificationId())
                 .withUserId(saved.getUserId())

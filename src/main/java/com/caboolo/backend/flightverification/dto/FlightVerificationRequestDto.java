@@ -19,6 +19,4 @@ public class FlightVerificationRequestDto {
     @NotNull(message = "flightDate cannot be null")
     private LocalDate flightDate;
 
-    @NotBlank(message = "rideId cannot be null or blank")
-    private String rideId;
 }

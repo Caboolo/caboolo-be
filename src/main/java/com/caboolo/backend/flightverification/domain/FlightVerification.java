@@ -47,6 +47,12 @@ public class FlightVerification extends GenericIdEntity {
     @Column(name = "status", nullable = false, length = 20)
     private VerificationStatus status;
 
+    @Column(name = "valid_from")
+    private LocalDateTime validFrom;
+
+    @Column(name = "valid_until")
+    private LocalDateTime validUntil;
+
     // ─── Step Builder ──────────────────────────────────────────────────────────
 
     public interface FlightVerificationIdStep {
@@ -82,7 +88,15 @@ public class FlightVerification extends GenericIdEntity {
     }
 
     public interface StatusStep {
-        BuildStep withStatus(VerificationStatus status);
+        ValidFromStep withStatus(VerificationStatus status);
+    }
+
+    public interface ValidFromStep {
+        ValidUntilStep withValidFrom(LocalDateTime validFrom);
+    }
+
+    public interface ValidUntilStep {
+        BuildStep withValidUntil(LocalDateTime validUntil);
     }
 
     public interface BuildStep {
@@ -91,7 +105,7 @@ public class FlightVerification extends GenericIdEntity {
 
     public static class Builder implements FlightVerificationIdStep, UserIdStep, FlightNumberStep,
             FlightDateStep, DepartureAirportStep, ArrivalAirportStep, DepartureTimeStep,
-            ArrivalTimeStep, StatusStep, BuildStep {
+            ArrivalTimeStep, StatusStep, ValidFromStep, ValidUntilStep, BuildStep {
 
         private String flightVerificationId;
         private String userId;
@@ -102,6 +116,8 @@ public class FlightVerification extends GenericIdEntity {
         private LocalDateTime departureTime;
         private LocalDateTime arrivalTime;
         private VerificationStatus status;
+        private LocalDateTime validFrom;
+        private LocalDateTime validUntil;
 
         private Builder() {
         }
@@ -159,8 +175,20 @@ public class FlightVerification extends GenericIdEntity {
         }
 
         @Override
-        public BuildStep withStatus(VerificationStatus status) {
+        public ValidFromStep withStatus(VerificationStatus status) {
             this.status = status;
+            return this;
+        }
+
+        @Override
+        public ValidUntilStep withValidFrom(LocalDateTime validFrom) {
+            this.validFrom = validFrom;
+            return this;
+        }
+
+        @Override
+        public BuildStep withValidUntil(LocalDateTime validUntil) {
+            this.validUntil = validUntil;
             return this;
         }
 
@@ -175,7 +203,9 @@ public class FlightVerification extends GenericIdEntity {
                     this.arrivalAirport,
                     this.departureTime,
                     this.arrivalTime,
-                    this.status
+                    this.status,
+                    this.validFrom,
+                    this.validUntil
             );
         }
     }

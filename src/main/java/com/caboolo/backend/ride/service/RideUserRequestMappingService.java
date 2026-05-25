@@ -67,7 +67,7 @@ public class RideUserRequestMappingService {
 
         // Create placeholder RideUserMapping for requester (PENDING)
         RideUserMapping placeholderMapping = rideUserMappingService.createMapping(rideId, requesterId,
-                RideUserMappingStatus.PENDING, joinRideRequestDto.getComment(), false);
+                RideUserMappingStatus.PENDING, joinRideRequestDto.getComment());
 
         String mappingId = placeholderMapping.getRideUserMappingId();
 

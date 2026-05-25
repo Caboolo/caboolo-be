@@ -34,4 +34,11 @@ public interface FlightVerificationRepository extends JpaRepository<FlightVerifi
     );
 
     Optional<FlightVerification> findByUserIdAndIsDeleted(String userId, boolean isDeleted);
+
+    @org.springframework.data.jpa.repository.Query("SELECT f FROM FlightVerification f WHERE f.userId IN :userIds AND f.status = :status AND f.isDeleted = false AND f.validFrom <= :currentTime AND f.validUntil >= :currentTime")
+    List<FlightVerification> findActiveVerificationsForUsers(
+            @org.springframework.data.repository.query.Param("userIds") java.util.Collection<String> userIds,
+            @org.springframework.data.repository.query.Param("status") VerificationStatus status,
+            @org.springframework.data.repository.query.Param("currentTime") LocalDateTime currentTime
+    );
 }

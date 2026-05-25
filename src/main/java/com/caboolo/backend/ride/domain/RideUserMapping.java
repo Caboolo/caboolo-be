@@ -26,11 +26,8 @@ public class RideUserMapping extends GenericIdEntity {
     @Column(name = "status", nullable = false)
     private RideUserMappingStatus status;
 
-    @Column(name = "comment")
+    @Column(name = "comment", length = 500)
     private String comment;
-
-    @Column(name = "is_flight_verified", nullable = false)
-    private boolean isFlightVerified = false;
 
     public static interface RideUserMappingIdStep {
         RideIdStep withRideUserMappingId(String rideUserMappingId);
@@ -49,11 +46,7 @@ public class RideUserMapping extends GenericIdEntity {
     }
 
     public static interface CommentStep {
-        IsFlightVerifiedStep withComment(String comment);
-    }
-
-    public static interface IsFlightVerifiedStep {
-        BuildStep withIsFlightVerified(boolean isFlightVerified);
+        BuildStep withComment(String comment);
     }
 
     public static interface BuildStep {
@@ -61,13 +54,12 @@ public class RideUserMapping extends GenericIdEntity {
     }
 
 
-    public static class Builder implements RideUserMappingIdStep, RideIdStep, UserIdStep, StatusStep, CommentStep, IsFlightVerifiedStep, BuildStep {
+    public static class Builder implements RideUserMappingIdStep, RideIdStep, UserIdStep, StatusStep, CommentStep, BuildStep {
         private String rideUserMappingId;
         private String rideId;
         private String userId;
         private RideUserMappingStatus status;
         private String comment;
-        private boolean isFlightVerified;
 
         private Builder() {
         }
@@ -101,14 +93,8 @@ public class RideUserMapping extends GenericIdEntity {
         }
 
         @Override
-        public IsFlightVerifiedStep withComment(String comment) {
+        public BuildStep withComment(String comment) {
             this.comment = comment;
-            return this;
-        }
-
-        @Override
-        public BuildStep withIsFlightVerified(boolean isFlightVerified) {
-            this.isFlightVerified = isFlightVerified;
             return this;
         }
 
@@ -119,8 +105,7 @@ public class RideUserMapping extends GenericIdEntity {
                     this.rideId,
                     this.userId,
                     this.status,
-                    this.comment,
-                    this.isFlightVerified
+                    this.comment
             );
         }
     }
