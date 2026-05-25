@@ -51,9 +51,10 @@ public class RideNotificationListener {
                 event.getTitle(),
                 body,
                 Map.of(
+                        "type", event.getType().name(),
+                        "screen", event.getType().getScreen(),
                         "rideId", String.valueOf(event.getRideId()),
-                        "requesterId", event.getSenderUserId(),
-                        "type", "RIDE_REQUEST_SENT"
+                        "requesterId", event.getSenderUserId()
                 )
         );
     }
@@ -65,8 +66,9 @@ public class RideNotificationListener {
                 event.getTitle(),
                 body,
                 Map.of(
-                        "rideId", String.valueOf(event.getRideId()),
-                        "type", "RIDE_CONFIRMED"
+                        "type", event.getType().name(),
+                        "screen", event.getType().getScreen(),
+                        "rideId", String.valueOf(event.getRideId())
                 )
         );
     }
@@ -78,9 +80,10 @@ public class RideNotificationListener {
                 event.getTitle(),
                 body,
                 Map.of(
+                        "type", event.getType().name(),
+                        "screen", event.getType().getScreen(),
                         "rideId", String.valueOf(event.getRideId()),
-                        "requesterId", event.getSenderUserId(),
-                        "type", "MATCH_FOUND"
+                        "requesterId", event.getSenderUserId()
                 )
         );
     }
@@ -92,9 +95,10 @@ public class RideNotificationListener {
                 event.getTitle(),
                 body,
                 Map.of(
+                        "type", event.getType().name(),
+                        "screen", event.getType().getScreen(),
                         "rideId", String.valueOf(event.getRideId()),
-                        "userId", event.getSenderUserId(),
-                        "type", "MEMBER_LEFT"
+                        "userId", event.getSenderUserId()
                 )
         );
     }
