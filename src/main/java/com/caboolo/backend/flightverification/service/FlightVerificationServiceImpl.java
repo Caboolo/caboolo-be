@@ -15,8 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -44,7 +47,7 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
         // If any VERIFIED record already exists for this flight+date (from any user),
         // reuse its timings to avoid an unnecessary API call.
         Optional<FlightVerification> cachedVerification = flightVerificationRepository
-                .findByFlightNumberAndFlightDateAndStatus(flightNumber, flightDate, VerificationStatus.VERIFIED);
+                .findByFlightNumberAndFlightDateAndStatusAndIsDeleted(flightNumber, flightDate, VerificationStatus.VERIFIED, false);
 
         String departureAirport;
         String arrivalAirport;
@@ -88,11 +91,16 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
         }
 
         // ── Step 4: Delete any existing record for this user ──────────────────
-        flightVerificationRepository.findByUserId(userId)
+        flightVerificationRepository.findByUserIdAndIsDeleted(userId, false)
                 .ifPresent(existing -> {
-                    log.info("Deleting previous flight verification record for userId={}", userId);
-                    flightVerificationRepository.delete(existing);
+                    log.info("Soft-deleting previous flight verification record for userId={}", userId);
+                    existing.setDeleted(true);
+                    flightVerificationRepository.save(existing);
                 });
+
+        // ── Step 4a: Calculate Validity Window ───────────────────────────────
+        LocalDateTime validFrom = departureTime != null ? departureTime.minusHours(12) : flightDate.atStartOfDay().minusHours(12);
+        LocalDateTime validUntil = arrivalTime != null ? arrivalTime.plusHours(12) : (departureTime != null ? departureTime.plusHours(12) : flightDate.atStartOfDay().plusDays(1).plusHours(12));
 
         // ── Step 5: Save new VERIFIED record ──────────────────────────────────
         FlightVerification newVerification = FlightVerification.Builder.flightVerification()
@@ -105,6 +113,8 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
                 .withDepartureTime(departureTime)
                 .withArrivalTime(arrivalTime)
                 .withStatus(VerificationStatus.VERIFIED)
+                .withValidFrom(validFrom)
+                .withValidUntil(validUntil)
                 .build();
 
         FlightVerification saved = flightVerificationRepository.save(newVerification);
@@ -136,5 +146,14 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
         // Normalize space to 'T' for OffsetDateTime parsing: "2026-05-23 06:10+05:30" -> "2026-05-23T06:10+05:30"
         String normalized = scheduled.replace(" ", "T");
         return OffsetDateTime.parse(normalized).toLocalDateTime();
+    }
+
+    @Override
+    public Set<String> getActiveVerifiedUserIds(Set<String> userIds) {
+        return flightVerificationRepository.findActiveVerificationsForUsers(
+                userIds == null || userIds.isEmpty() ? Collections.singleton("") : userIds,
+                VerificationStatus.VERIFIED,
+                LocalDateTime.now()
+        ).stream().map(FlightVerification::getUserId).collect(Collectors.toSet());
     }
 }

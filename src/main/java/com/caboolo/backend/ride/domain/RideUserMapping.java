@@ -26,7 +26,7 @@ public class RideUserMapping extends GenericIdEntity {
     @Column(name = "status", nullable = false)
     private RideUserMappingStatus status;
 
-    @Column(name = "comment")
+    @Column(name = "comment", length = 500)
     private String comment;
 
     public static interface RideUserMappingIdStep {

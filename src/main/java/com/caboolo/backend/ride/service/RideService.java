@@ -11,6 +11,7 @@ import com.caboolo.backend.ride.repository.RideRepository;
 import com.caboolo.backend.userdetails.domain.UserDetail;
 import com.caboolo.backend.hub.service.HubService;
 import com.caboolo.backend.userdetails.service.UserDetailService;
+import com.caboolo.backend.flightverification.service.FlightVerificationService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,15 +37,17 @@ public class RideService {
     private final UserDetailService userDetailService;
     private final HubService hubService;
     private final SequenceGenerator sequenceGenerator;
+    private final FlightVerificationService flightVerificationService;
 
     public RideService(RideRepository rideRepository, RideUserMappingService rideUserMappingService,
                        UserDetailService userDetailService, HubService hubService,
-                       SequenceGenerator sequenceGenerator) {
+                       SequenceGenerator sequenceGenerator, FlightVerificationService flightVerificationService) {
         this.rideRepository = rideRepository;
         this.rideUserMappingService = rideUserMappingService;
         this.userDetailService = userDetailService;
         this.hubService = hubService;
         this.sequenceGenerator = sequenceGenerator;
+        this.flightVerificationService = flightVerificationService;
     }
 
     @Transactional
@@ -128,6 +131,10 @@ public class RideService {
 
                 List<RideUserMapping> acceptedMappings = acceptedMappingsByRide.getOrDefault(um.getRideId(),
                     Collections.emptyList());
+                
+                Set<String> participantIds = acceptedMappings.stream().map(RideUserMapping::getUserId).collect(Collectors.toSet());
+                Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(participantIds);
+
                 List<RiderInfoDto> activePassengers = acceptedMappings.stream()
                     .map(m -> {
                         UserDetail ud = userDetailMap.get(m.getUserId());
@@ -136,6 +143,7 @@ public class RideService {
                             .withName(ud.getName())
                             .withImageUrl(ud.getImageUrl())
                             .withAvgRating(ud.getAvgRating())
+                            .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
                             .build();
                     })
                     .filter(Objects::nonNull)
@@ -205,12 +213,11 @@ public class RideService {
         Map<String, UserDetail> userDetailsMap =
             userDetailService.findByUserIdIn(participantUserIds)
                 .stream()
-                .collect(Collectors.toMap(
-                    UserDetail::getUserId,
-                    ud -> ud
-                ));
+                .collect(Collectors.toMap(UserDetail::getUserId, ud -> ud));
 
         Map<String, String> hubNamesMap = hubService.getHubNames(hubIds);
+
+        Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(participantUserIds);
 
         // 6. Construct the Response
         return activeRides.stream()
@@ -225,6 +232,7 @@ public class RideService {
                             .withName(detail.getName())
                             .withImageUrl(detail.getImageUrl())
                             .withAvgRating(detail.getAvgRating())
+                            .withIsFlightVerified(verifiedUserIds.contains(pm.getUserId()))
                             .build();
                     })
                     .collect(Collectors.toList());
@@ -293,12 +301,11 @@ public class RideService {
         Map<String, UserDetail> userDetailsMap =
             userDetailService.findByUserIdIn(participantUserIds)
                 .stream()
-                .collect(Collectors.toMap(
-                    UserDetail::getUserId,
-                    ud -> ud
-                ));
+                .collect(Collectors.toMap(UserDetail::getUserId, ud -> ud));
 
         Map<String, String> hubNamesMap = hubService.getHubNames(hubIds);
+
+        Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(participantUserIds);
 
         // 6. Construct the Response
         return completedRides.stream()
@@ -313,6 +320,7 @@ public class RideService {
                             .withName(detail.getName())
                             .withImageUrl(detail.getImageUrl())
                             .withAvgRating(detail.getAvgRating())
+                            .withIsFlightVerified(verifiedUserIds.contains(pm.getUserId()))
                             .build();
                     })
                     .collect(Collectors.toList());
@@ -384,6 +392,8 @@ public class RideService {
             throw new RuntimeException("Destination hub not found: " + ride.getDestinationHubId());
         }
 
+        Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(activeUserIds);
+
         // 6. Build participant DTOs
         List<RideParticipantDto> participants = activeMappings.stream()
             .map(m -> {
@@ -397,6 +407,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
+                    .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
                     .build();
             })
             .filter(Objects::nonNull)
@@ -440,6 +451,8 @@ public class RideService {
         Map<String, String> userIdToCommentsMap = new HashMap<>();
         allMappings.forEach(m -> userIdToCommentsMap.put(m.getUserId(), m.getComment()));
 
+        Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(allUserIds);
+
         // 4. Partition into crew (CREATED/ACCEPTED) and pending — status comes from DB
         List<RideParticipantDto> crewMembers = allMappings.stream()
             .filter(m -> RideUserMappingStatus.ACTIVE_STATUSES.contains(m.getStatus()))
@@ -454,6 +467,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
+                    .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
                     .build();
             })
             .filter(Objects::nonNull)
@@ -472,6 +486,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
+                    .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
                     .build();
             })
             .filter(Objects::nonNull)
@@ -516,6 +531,8 @@ public class RideService {
         Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(userIds).stream()
             .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
+        Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(userIds);
+
         return inactiveMappings.stream()
             .map(m -> {
                 UserDetail ud = userDetailMap.get(m.getUserId());
@@ -528,6 +545,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
+                    .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
                     .build();
             })
             .filter(Objects::nonNull)
@@ -578,6 +596,8 @@ public class RideService {
             throw new RuntimeException("Destination hub not found: " + destinationHubId);
         }
 
+        Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(activeUserIds);
+
         // 6. Build crew member DTOs
         List<RideParticipantDto> crewMembers = crewMappings.stream()
             .map(m -> {
@@ -591,6 +611,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
+                    .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
                     .build();
             })
             .filter(Objects::nonNull)
@@ -664,6 +685,8 @@ public class RideService {
         if (sourceHub == null || destHub == null) {
             throw new RuntimeException("Source Hub or Destination Hub not found");
         }
+        Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(crewUserIds);
+
         // 6. Build crew member DTOs
         List<RideParticipantDto> crewMembers = crewMappings.stream()
             .map(m -> {
@@ -677,6 +700,7 @@ public class RideService {
                     .withTotalRides(ud.getTotalReviews())
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(m.getUserId()))
+                    .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
                     .build();
             })
             .filter(Objects::nonNull)
@@ -772,6 +796,8 @@ public class RideService {
 
         Map<String, String> hubsMap = hubService.getHubsMap(hubIds);
 
+        Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(participantUserIds);
+
         // 5. Construct the Response
         List<MyRideResponseDto> dtoList = availableRides.stream()
             .map(ride -> {
@@ -789,6 +815,7 @@ public class RideService {
                             .withName(detail.getName())
                             .withImageUrl(detail.getImageUrl())
                             .withAvgRating(detail.getAvgRating())
+                            .withIsFlightVerified(verifiedUserIds.contains(pm.getUserId()))
                             .build();
                     })
                     .filter(Objects::nonNull)

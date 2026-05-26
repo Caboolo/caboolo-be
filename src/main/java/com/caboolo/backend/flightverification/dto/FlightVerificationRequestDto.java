@@ -18,4 +18,5 @@ public class FlightVerificationRequestDto {
 
     @NotNull(message = "flightDate cannot be null")
     private LocalDate flightDate;
+
 }
