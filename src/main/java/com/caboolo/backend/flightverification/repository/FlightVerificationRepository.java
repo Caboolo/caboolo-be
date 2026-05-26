@@ -4,6 +4,7 @@ import com.caboolo.backend.flightverification.domain.FlightVerification;
 import com.caboolo.backend.flightverification.enums.VerificationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,8 +38,8 @@ public interface FlightVerificationRepository extends JpaRepository<FlightVerifi
 
     @org.springframework.data.jpa.repository.Query("SELECT f FROM FlightVerification f WHERE f.userId IN :userIds AND f.status = :status AND f.isDeleted = false AND f.validFrom <= :currentTime AND f.validUntil >= :currentTime")
     List<FlightVerification> findActiveVerificationsForUsers(
-            @org.springframework.data.repository.query.Param("userIds") java.util.Collection<String> userIds,
-            @org.springframework.data.repository.query.Param("status") VerificationStatus status,
-            @org.springframework.data.repository.query.Param("currentTime") LocalDateTime currentTime
+            @Param("userIds") java.util.Collection<String> userIds,
+            @Param("status") VerificationStatus status,
+            @Param("currentTime") LocalDateTime currentTime
     );
 }

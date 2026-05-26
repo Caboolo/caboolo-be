@@ -15,8 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -143,5 +146,14 @@ public class FlightVerificationServiceImpl implements FlightVerificationService 
         // Normalize space to 'T' for OffsetDateTime parsing: "2026-05-23 06:10+05:30" -> "2026-05-23T06:10+05:30"
         String normalized = scheduled.replace(" ", "T");
         return OffsetDateTime.parse(normalized).toLocalDateTime();
+    }
+
+    @Override
+    public Set<String> getActiveVerifiedUserIds(Set<String> userIds) {
+        return flightVerificationRepository.findActiveVerificationsForUsers(
+                userIds == null || userIds.isEmpty() ? Collections.singleton("") : userIds,
+                VerificationStatus.VERIFIED,
+                LocalDateTime.now()
+        ).stream().map(FlightVerification::getUserId).collect(Collectors.toSet());
     }
 }
