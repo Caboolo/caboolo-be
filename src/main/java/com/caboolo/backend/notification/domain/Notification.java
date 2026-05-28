@@ -3,6 +3,10 @@ package com.caboolo.backend.notification.domain;
 import com.caboolo.backend.core.domain.GenericIdEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.Map;
 
 @Entity
 @Table(name = "notification")
@@ -36,9 +40,10 @@ public class Notification extends GenericIdEntity {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
-    /** JSON representation of the FCM data map (type, screen, rideId, requesterId, etc.) */
-    @Column(name = "metadata", columnDefinition = "TEXT")
-    private String metadata;
+    /** FCM data map (type, screen, rideId, requesterId, …) persisted as a native MySQL JSON column */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata", columnDefinition = "JSON")
+    private Map<String, String> metadata;
 
     public static interface NotificationIdStep {
         UserIdStep withNotificationId(String notificationId);
@@ -64,7 +69,7 @@ public class Notification extends GenericIdEntity {
         BuildStep withSenderUserId(String senderUserId);
         BuildStep withRideId(String rideId);
         BuildStep withIsRead(boolean isRead);
-        BuildStep withMetadata(String metadata);
+        BuildStep withMetadata(Map<String, String> metadata);
         Notification build();
     }
 
@@ -77,7 +82,7 @@ public class Notification extends GenericIdEntity {
         private String type;
         private String rideId;
         private boolean isRead = false;
-        private String metadata;
+        private Map<String, String> metadata;
 
         private Builder() {
         }
@@ -135,7 +140,7 @@ public class Notification extends GenericIdEntity {
         }
 
         @Override
-        public BuildStep withMetadata(String metadata) {
+        public BuildStep withMetadata(Map<String, String> metadata) {
             this.metadata = metadata;
             return this;
         }

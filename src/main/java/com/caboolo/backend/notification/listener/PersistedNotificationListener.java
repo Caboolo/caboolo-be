@@ -5,8 +5,6 @@ import com.caboolo.backend.notification.domain.Notification;
 import com.caboolo.backend.notification.event.RideNotificationEvent;
 import com.caboolo.backend.notification.service.NotificationService;
 import com.caboolo.backend.userdetails.service.UserDetailService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -33,7 +31,6 @@ public class PersistedNotificationListener {
     private final NotificationService notificationService;
     private final UserDetailService userDetailService;
     private final SequenceGenerator sequenceGenerator;
-    private final ObjectMapper objectMapper;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -62,7 +59,7 @@ public class PersistedNotificationListener {
             body = String.format(body, actorName);
         }
 
-        String metadataJson = buildMetadataJson(event);
+        Map<String, String> metadata = buildMetadataMap(event);
 
         List<Notification> notifications = new ArrayList<>();
         for (String recipientId : event.getRecipientUserIds()) {
@@ -75,7 +72,7 @@ public class PersistedNotificationListener {
                     .withSenderUserId(event.getSenderUserId())
                     .withRideId(event.getRideId())
                     .withIsRead(false)
-                    .withMetadata(metadataJson)
+                    .withMetadata(metadata)
                     .build();
             notifications.add(notification);
         }
@@ -84,10 +81,11 @@ public class PersistedNotificationListener {
     }
 
     /**
-     * Builds the same data map that {@link RideNotificationListener} sends via FCM,
-     * then serializes it to a JSON string for DB storage.
+     * Builds the same data map that {@link RideNotificationListener} sends via FCM.
+     * The {@link com.caboolo.backend.core.converter.StringMapConverter} handles
+     * JSON serialization to the DB column transparently.
      */
-    private String buildMetadataJson(RideNotificationEvent event) {
+    private Map<String, String> buildMetadataMap(RideNotificationEvent event) {
         Map<String, String> meta = new HashMap<>();
         meta.put("type", event.getType().name());
         meta.put("screen", event.getType().getScreen());
@@ -107,13 +105,7 @@ public class PersistedNotificationListener {
             }
             default -> { /* no extra fields */ }
         }
-        try {
-            return objectMapper.writeValueAsString(meta);
-        } catch (JsonProcessingException e) {
-            log.warn("Failed to serialize notification metadata for type={}: {}",
-                    event.getType(), e.getMessage());
-            return null;
-        }
+        return meta;
     }
 
     private String resolveUserName(String userId, String fallback) {
