@@ -5,6 +5,8 @@ import com.caboolo.backend.notification.domain.Notification;
 import com.caboolo.backend.notification.event.RideNotificationEvent;
 import com.caboolo.backend.notification.service.NotificationService;
 import com.caboolo.backend.userdetails.service.UserDetailService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -13,7 +15,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.event.TransactionPhase;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Listens for {@link RideNotificationEvent}s and saves notifications to the database.
@@ -29,6 +33,7 @@ public class PersistedNotificationListener {
     private final NotificationService notificationService;
     private final UserDetailService userDetailService;
     private final SequenceGenerator sequenceGenerator;
+    private final ObjectMapper objectMapper;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -57,6 +62,8 @@ public class PersistedNotificationListener {
             body = String.format(body, actorName);
         }
 
+        String metadataJson = buildMetadataJson(event);
+
         List<Notification> notifications = new ArrayList<>();
         for (String recipientId : event.getRecipientUserIds()) {
             Notification notification = Notification.Builder.notification()
@@ -68,11 +75,45 @@ public class PersistedNotificationListener {
                     .withSenderUserId(event.getSenderUserId())
                     .withRideId(event.getRideId())
                     .withIsRead(false)
+                    .withMetadata(metadataJson)
                     .build();
             notifications.add(notification);
         }
 
         notificationService.saveInAppNotifications(notifications);
+    }
+
+    /**
+     * Builds the same data map that {@link RideNotificationListener} sends via FCM,
+     * then serializes it to a JSON string for DB storage.
+     */
+    private String buildMetadataJson(RideNotificationEvent event) {
+        Map<String, String> meta = new HashMap<>();
+        meta.put("type", event.getType().name());
+        meta.put("screen", event.getType().getScreen());
+        if (event.getRideId() != null) {
+            meta.put("rideId", event.getRideId());
+        }
+        switch (event.getType()) {
+            case RIDE_REQUEST_SENT, MATCH_FOUND -> {
+                if (event.getSenderUserId() != null) {
+                    meta.put("requesterId", event.getSenderUserId());
+                }
+            }
+            case MEMBER_LEFT -> {
+                if (event.getSenderUserId() != null) {
+                    meta.put("userId", event.getSenderUserId());
+                }
+            }
+            default -> { /* no extra fields */ }
+        }
+        try {
+            return objectMapper.writeValueAsString(meta);
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to serialize notification metadata for type={}: {}",
+                    event.getType(), e.getMessage());
+            return null;
+        }
     }
 
     private String resolveUserName(String userId, String fallback) {

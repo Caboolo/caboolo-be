@@ -29,10 +29,10 @@ public class NotificationService {
     private final NotificationConverter notificationConverter;
 
     public NotificationService(
-            UserFcmTokenRepository fcmTokenRepository,
-            NotificationRepository notificationRepository,
-            SequenceGenerator sequenceGenerator,
-            NotificationConverter notificationConverter) {
+        UserFcmTokenRepository fcmTokenRepository,
+        NotificationRepository notificationRepository,
+        SequenceGenerator sequenceGenerator,
+        NotificationConverter notificationConverter) {
         this.fcmTokenRepository = fcmTokenRepository;
         this.notificationRepository = notificationRepository;
         this.sequenceGenerator = sequenceGenerator;
@@ -58,7 +58,7 @@ public class NotificationService {
 
         // 2. Upsert for the current user & device
         Optional<UserFcmToken> existingDeviceToken = fcmTokenRepository.findByUserIdAndDeviceId(userId, deviceId);
-        
+
         if (existingDeviceToken.isPresent()) {
             UserFcmToken fcmToken = existingDeviceToken.get();
             fcmToken.setFcmToken(token);
@@ -69,15 +69,15 @@ public class NotificationService {
             fcmTokenRepository.save(fcmToken);
         } else {
             UserFcmToken newToken = UserFcmToken.Builder.userFcmToken()
-                    .withUserFcmTokenId(sequenceGenerator.nextId())
-                    .withUserId(userId)
-                    .withDeviceId(deviceId)
-                    .withFcmToken(token)
-                    .withDeviceType(request.getDeviceType())
-                    .withStatus(FcmTokenStatus.ACTIVE)
-                    .withAppVersion(request.getAppVersion())
-                    .withLastUsedAt(LocalDateTime.now())
-                    .build();
+                .withUserFcmTokenId(sequenceGenerator.nextId())
+                .withUserId(userId)
+                .withDeviceId(deviceId)
+                .withFcmToken(token)
+                .withDeviceType(request.getDeviceType())
+                .withStatus(FcmTokenStatus.ACTIVE)
+                .withAppVersion(request.getAppVersion())
+                .withLastUsedAt(LocalDateTime.now())
+                .build();
             fcmTokenRepository.save(newToken);
         }
         log.info("Registered FCM token for user: {}, deviceId: {}", userId, deviceId);
@@ -118,8 +118,8 @@ public class NotificationService {
         }
 
         List<String> fcmTokens = tokens.stream()
-                .map(UserFcmToken::getFcmToken)
-                .collect(Collectors.toList());
+            .map(UserFcmToken::getFcmToken)
+            .collect(Collectors.toList());
 
         sendToTokens(fcmTokens, title, body, data);
     }
@@ -136,8 +136,8 @@ public class NotificationService {
         }
 
         List<String> fcmTokens = tokens.stream()
-                .map(UserFcmToken::getFcmToken)
-                .collect(Collectors.toList());
+            .map(UserFcmToken::getFcmToken)
+            .collect(Collectors.toList());
 
         sendToTokens(fcmTokens, title, body, data);
     }
@@ -149,17 +149,17 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public List<NotificationResponseDto> getNotificationsForUser(String userId) {
         return notificationRepository.findByUserIdOrderByDateCreatedDesc(userId)
-                .stream()
-                .map(notificationConverter::toResponseDto)
-                .collect(Collectors.toList());
+            .stream()
+            .map(notificationConverter::toResponseDto)
+            .collect(Collectors.toList());
     }
 
     @Transactional
     public void markAsRead(String notificationId, String userId) {
         Notification notification = notificationRepository
-                .findByNotificationIdAndUserId(notificationId, userId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Notification not found: " + notificationId));
+            .findByNotificationIdAndUserId(notificationId, userId)
+            .orElseThrow(() -> new EntityNotFoundException(
+                "Notification not found: " + notificationId));
         if (!notification.isRead()) {
             notification.setRead(true);
             notificationRepository.save(notification);
@@ -188,37 +188,38 @@ public class NotificationService {
 
     private void sendToTokens(List<String> fcmTokens, String title, String body, Map<String, String> data) {
         com.google.firebase.messaging.Notification notification = com.google.firebase.messaging.Notification.builder()
-                .setTitle(title)
-                .setBody(body)
-                .build();
+            .setTitle(title)
+            .setBody(body)
+            .build();
 
         // FCM multicast limit is 500, so we partition if necessary
         for (int i = 0; i < fcmTokens.size(); i += 500) {
             List<String> batchTokens = fcmTokens.subList(i, Math.min(fcmTokens.size(), i + 500));
-            
+
             MulticastMessage message = MulticastMessage.builder()
-                    .addAllTokens(batchTokens)
-                    .setNotification(notification)
-                    .putAllData(data != null ? data : Map.of())
-                    .build();
+                .addAllTokens(batchTokens)
+                .setNotification(notification)
+                .putAllData(data != null ? data : Map.of())
+                .build();
 
             try {
                 BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
-                
+
                 if (response.getFailureCount() > 0) {
                     List<SendResponse> responses = response.getResponses();
                     List<String> failedTokens = new ArrayList<>();
-                    
+
                     for (int j = 0; j < responses.size(); j++) {
                         if (!responses.get(j).isSuccessful() && responses.get(j).getException() != null) {
                             MessagingErrorCode errorCode = responses.get(j).getException().getMessagingErrorCode();
                             // Identify dead tokens
-                            if (errorCode == MessagingErrorCode.UNREGISTERED || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
+                            if (errorCode == MessagingErrorCode.UNREGISTERED
+                                || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
                                 failedTokens.add(batchTokens.get(j));
                             }
                         }
                     }
-                    
+
                     // Mark dead tokens as EXPIRED immediately
                     if (!failedTokens.isEmpty()) {
                         markTokensAsExpired(failedTokens);

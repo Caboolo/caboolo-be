@@ -3,6 +3,7 @@ package com.caboolo.backend.notification.dto;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Getter
 public class NotificationResponseDto {
@@ -15,6 +16,7 @@ public class NotificationResponseDto {
     private final String senderUserId;
     private final boolean isRead;
     private final LocalDateTime createdAt;
+    private final Map<String, String> metadata;
 
     private NotificationResponseDto(Builder builder) {
         this.notificationId = builder.notificationId;
@@ -25,6 +27,7 @@ public class NotificationResponseDto {
         this.senderUserId = builder.senderUserId;
         this.isRead = builder.isRead;
         this.createdAt = builder.createdAt;
+        this.metadata = builder.metadata;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -52,6 +55,7 @@ public class NotificationResponseDto {
         BuildStep withSenderUserId(String senderUserId);
         BuildStep withIsRead(boolean isRead);
         BuildStep withCreatedAt(LocalDateTime createdAt);
+        BuildStep withMetadata(Map<String, String> metadata);
         NotificationResponseDto build();
     }
 
@@ -65,6 +69,7 @@ public class NotificationResponseDto {
         private String senderUserId;
         private boolean isRead;
         private LocalDateTime createdAt;
+        private Map<String, String> metadata;
 
         private Builder() {
         }
@@ -118,6 +123,12 @@ public class NotificationResponseDto {
         @Override
         public BuildStep withCreatedAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
+            return this;
+        }
+
+        @Override
+        public BuildStep withMetadata(Map<String, String> metadata) {
+            this.metadata = metadata;
             return this;
         }
 

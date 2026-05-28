@@ -36,6 +36,10 @@ public class Notification extends GenericIdEntity {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
+    /** JSON representation of the FCM data map (type, screen, rideId, requesterId, etc.) */
+    @Column(name = "metadata", columnDefinition = "TEXT")
+    private String metadata;
+
     public static interface NotificationIdStep {
         UserIdStep withNotificationId(String notificationId);
     }
@@ -60,6 +64,7 @@ public class Notification extends GenericIdEntity {
         BuildStep withSenderUserId(String senderUserId);
         BuildStep withRideId(String rideId);
         BuildStep withIsRead(boolean isRead);
+        BuildStep withMetadata(String metadata);
         Notification build();
     }
 
@@ -72,6 +77,7 @@ public class Notification extends GenericIdEntity {
         private String type;
         private String rideId;
         private boolean isRead = false;
+        private String metadata;
 
         private Builder() {
         }
@@ -129,6 +135,12 @@ public class Notification extends GenericIdEntity {
         }
 
         @Override
+        public BuildStep withMetadata(String metadata) {
+            this.metadata = metadata;
+            return this;
+        }
+
+        @Override
         public Notification build() {
             return new Notification(
                     this.notificationId,
@@ -138,7 +150,8 @@ public class Notification extends GenericIdEntity {
                     this.body,
                     this.type,
                     this.rideId,
-                    this.isRead
+                    this.isRead,
+                    this.metadata
             );
         }
     }
