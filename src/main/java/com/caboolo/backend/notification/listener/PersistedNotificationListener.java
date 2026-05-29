@@ -13,7 +13,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.event.TransactionPhase;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Listens for {@link RideNotificationEvent}s and saves notifications to the database.
@@ -57,6 +59,8 @@ public class PersistedNotificationListener {
             body = String.format(body, actorName);
         }
 
+        Map<String, String> metadata = buildMetadataMap(event);
+
         List<Notification> notifications = new ArrayList<>();
         for (String recipientId : event.getRecipientUserIds()) {
             Notification notification = Notification.Builder.notification()
@@ -68,11 +72,40 @@ public class PersistedNotificationListener {
                     .withSenderUserId(event.getSenderUserId())
                     .withRideId(event.getRideId())
                     .withIsRead(false)
+                    .withMetadata(metadata)
                     .build();
             notifications.add(notification);
         }
 
         notificationService.saveInAppNotifications(notifications);
+    }
+
+    /**
+     * Builds the same data map that {@link RideNotificationListener} sends via FCM.
+     * The {@link com.caboolo.backend.core.converter.StringMapConverter} handles
+     * JSON serialization to the DB column transparently.
+     */
+    private Map<String, String> buildMetadataMap(RideNotificationEvent event) {
+        Map<String, String> meta = new HashMap<>();
+        meta.put("type", event.getType().name());
+        meta.put("screen", event.getType().getScreen());
+        if (event.getRideId() != null) {
+            meta.put("rideId", event.getRideId());
+        }
+        switch (event.getType()) {
+            case RIDE_REQUEST_SENT, MATCH_FOUND -> {
+                if (event.getSenderUserId() != null) {
+                    meta.put("requesterId", event.getSenderUserId());
+                }
+            }
+            case MEMBER_LEFT -> {
+                if (event.getSenderUserId() != null) {
+                    meta.put("userId", event.getSenderUserId());
+                }
+            }
+            default -> { /* no extra fields */ }
+        }
+        return meta;
     }
 
     private String resolveUserName(String userId, String fallback) {

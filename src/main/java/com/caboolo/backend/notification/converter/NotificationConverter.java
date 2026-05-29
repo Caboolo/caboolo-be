@@ -10,13 +10,6 @@ import org.springframework.stereotype.Component;
 @Component
 public final class NotificationConverter {
 
-    private NotificationConverter() {
-        // utility class
-    }
-
-    /**
-     * Converts a Notification domain entity to a NotificationResponseDto.
-     */
     public NotificationResponseDto toResponseDto(Notification notification) {
         if (notification == null) {
             return null;
@@ -30,6 +23,7 @@ public final class NotificationConverter {
                 .withSenderUserId(notification.getSenderUserId())
                 .withIsRead(notification.isRead())
                 .withCreatedAt(notification.getDateCreated())
+                .withMetadata(notification.getMetadata())
                 .build();
     }
 }

@@ -3,6 +3,10 @@ package com.caboolo.backend.notification.domain;
 import com.caboolo.backend.core.domain.GenericIdEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.Map;
 
 @Entity
 @Table(name = "notification")
@@ -36,6 +40,11 @@ public class Notification extends GenericIdEntity {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
+    /** FCM data map (type, screen, rideId, requesterId, …) persisted as a native MySQL JSON column */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata", columnDefinition = "JSON")
+    private Map<String, String> metadata;
+
     public static interface NotificationIdStep {
         UserIdStep withNotificationId(String notificationId);
     }
@@ -60,6 +69,7 @@ public class Notification extends GenericIdEntity {
         BuildStep withSenderUserId(String senderUserId);
         BuildStep withRideId(String rideId);
         BuildStep withIsRead(boolean isRead);
+        BuildStep withMetadata(Map<String, String> metadata);
         Notification build();
     }
 
@@ -72,6 +82,7 @@ public class Notification extends GenericIdEntity {
         private String type;
         private String rideId;
         private boolean isRead = false;
+        private Map<String, String> metadata;
 
         private Builder() {
         }
@@ -129,6 +140,12 @@ public class Notification extends GenericIdEntity {
         }
 
         @Override
+        public BuildStep withMetadata(Map<String, String> metadata) {
+            this.metadata = metadata;
+            return this;
+        }
+
+        @Override
         public Notification build() {
             return new Notification(
                     this.notificationId,
@@ -138,7 +155,8 @@ public class Notification extends GenericIdEntity {
                     this.body,
                     this.type,
                     this.rideId,
-                    this.isRead
+                    this.isRead,
+                    this.metadata
             );
         }
     }
