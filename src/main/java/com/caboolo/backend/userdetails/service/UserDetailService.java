@@ -340,7 +340,10 @@ public class UserDetailService {
     }
 
     public String getNameByUserId(String userId) {
-        return userDetailRepository.findNameByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("User profile not found: " + userId));
+        String name = userDetailRepository.findNameByUserId(userId);
+        if(name == null) {
+            throw new RuntimeException("User profile not found: " + userId);
+        }
+        return name;
     }
 }
