@@ -115,8 +115,7 @@ public class RideNotificationListener {
     private String resolveUserName(String userId, String fallback) {
         if (userId == null) return fallback;
         try {
-            UserDetail user = userDetailService.getUserDetailEntity(userId);
-            return user.getName() != null ? user.getName() : fallback;
+            return userDetailService.getNameByUserId(userId);
         } catch (Exception e) {
             log.warn("Could not resolve user name for {}: {}", userId, e.getMessage());
             return fallback;
