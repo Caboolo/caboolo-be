@@ -431,6 +431,41 @@ public class RideService {
     }
 
 
+    public MyPastRideDetailResponseDto getLastRide(String userId) {
+        log.info("Fetching last ride for userId={}", userId);
+        
+        List<RideUserMapping> activeMappings = rideUserMappingService.findByUserIdAndStatusIn(userId, RideUserMappingStatus.ACTIVE_STATUSES);
+        if (activeMappings.isEmpty()) {
+            return null;
+        }
+
+        List<String> rideIds = activeMappings.stream().map(RideUserMapping::getRideId).collect(Collectors.toList());
+        List<Ride> rides = rideRepository.findByRideIdIn(rideIds);
+
+        // Sort rides by departure time DESC
+        rides.sort((r1, r2) -> r2.getDepartureTime().compareTo(r1.getDepartureTime()));
+
+        Ride lastRide = null;
+        // Prefer completed rides
+        for (Ride ride : rides) {
+            if (ride.getStatus() == RideStatus.COMPLETED) {
+                lastRide = ride;
+                break;
+            }
+        }
+
+        // If no completed ride, take the most recent one (SCHEDULED or ONGOING)
+        if (lastRide == null && !rides.isEmpty()) {
+            lastRide = rides.get(0);
+        }
+
+        if (lastRide == null) {
+            return null;
+        }
+
+        return getMyPastRideDetail(lastRide.getRideId(), userId);
+    }
+
     public MyRideDetailResponseDto getMyRideDetail(String rideId) {
         log.info("Fetching my ride detail for rideId={}", rideId);
         // 1. Fetch common generic ride detail
