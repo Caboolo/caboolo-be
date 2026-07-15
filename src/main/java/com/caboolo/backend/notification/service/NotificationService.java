@@ -9,7 +9,7 @@ import com.caboolo.backend.notification.converter.NotificationConverter;
 import com.caboolo.backend.notification.enums.FcmTokenStatus;
 import com.caboolo.backend.notification.repository.NotificationRepository;
 import com.caboolo.backend.notification.repository.UserFcmTokenRepository;
-import com.google.firebase.messaging.*;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -187,47 +187,6 @@ public class NotificationService {
     }
 
     private void sendToTokens(List<String> fcmTokens, String title, String body, Map<String, String> data) {
-        com.google.firebase.messaging.Notification notification = com.google.firebase.messaging.Notification.builder()
-            .setTitle(title)
-            .setBody(body)
-            .build();
-
-        // FCM multicast limit is 500, so we partition if necessary
-        for (int i = 0; i < fcmTokens.size(); i += 500) {
-            List<String> batchTokens = fcmTokens.subList(i, Math.min(fcmTokens.size(), i + 500));
-
-            MulticastMessage message = MulticastMessage.builder()
-                .addAllTokens(batchTokens)
-                .setNotification(notification)
-                .putAllData(data != null ? data : Map.of())
-                .build();
-
-            try {
-                BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
-
-                if (response.getFailureCount() > 0) {
-                    List<SendResponse> responses = response.getResponses();
-                    List<String> failedTokens = new ArrayList<>();
-
-                    for (int j = 0; j < responses.size(); j++) {
-                        if (!responses.get(j).isSuccessful() && responses.get(j).getException() != null) {
-                            MessagingErrorCode errorCode = responses.get(j).getException().getMessagingErrorCode();
-                            // Identify dead tokens
-                            if (errorCode == MessagingErrorCode.UNREGISTERED
-                                || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
-                                failedTokens.add(batchTokens.get(j));
-                            }
-                        }
-                    }
-
-                    // Mark dead tokens as EXPIRED immediately
-                    if (!failedTokens.isEmpty()) {
-                        markTokensAsExpired(failedTokens);
-                    }
-                }
-            } catch (FirebaseMessagingException e) {
-                log.error("Failed to send FCM message via multicast", e);
-            }
-        }
+        log.warn("Push notifications are disabled because Firebase SDK was removed. Title: {}, Tokens: {}", title, fcmTokens.size());
     }
 }
