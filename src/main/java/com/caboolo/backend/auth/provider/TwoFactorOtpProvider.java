@@ -21,7 +21,7 @@ public class TwoFactorOtpProvider implements OtpProvider {
     private final RestTemplate restTemplate;
 
     public TwoFactorOtpProvider(
-            @Value("${twofactor.api-key:}") String apiKey,
+            @Value("${twofactor.api-key}") String apiKey,
             @Value("${twofactor.otp-template-name:OTP1}") String otpTemplateName) {
         this.apiKey = apiKey;
         this.otpTemplateName = otpTemplateName;

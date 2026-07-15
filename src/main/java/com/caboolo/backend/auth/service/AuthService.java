@@ -25,7 +25,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    @Value("${jwt.refresh-token-expiry:2592000000}")
+    @Value("${jwt.refresh-token-expiry}")
     private long refreshTokenExpiry;
 
     public AuthService(OtpProvider otpProvider,
