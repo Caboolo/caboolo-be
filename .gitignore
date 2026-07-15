@@ -31,4 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Firebase credentials — NEVER commit service account keys
+# ─────────────────────────────────────────────────────────────────────────────
 /src/main/resources/firebase-service-account.json
+/src/main/resources/config/firebase-service-account.json
+/config/firebase-service-account.json
+**/firebase-service-account.json
+*-service-account.json

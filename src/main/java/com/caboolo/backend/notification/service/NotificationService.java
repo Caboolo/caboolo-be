@@ -12,6 +12,7 @@ import com.caboolo.backend.notification.repository.UserFcmTokenRepository;
 import com.google.firebase.messaging.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,9 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final SequenceGenerator sequenceGenerator;
     private final NotificationConverter notificationConverter;
+
+    @Autowired(required = false)
+    private FirebaseMessaging firebaseMessaging;
 
     public NotificationService(
         UserFcmTokenRepository fcmTokenRepository,
@@ -187,12 +191,17 @@ public class NotificationService {
     }
 
     private void sendToTokens(List<String> fcmTokens, String title, String body, Map<String, String> data) {
+        if (firebaseMessaging == null) {
+            log.warn("FirebaseMessaging is not initialized. Skipping push notifications for title: {}", title);
+            return;
+        }
+
         com.google.firebase.messaging.Notification notification = com.google.firebase.messaging.Notification.builder()
             .setTitle(title)
             .setBody(body)
             .build();
 
-        // FCM multicast limit is 500, so we partition if necessary
+        // FCM multicast limit is 500 tokens per batch
         for (int i = 0; i < fcmTokens.size(); i += 500) {
             List<String> batchTokens = fcmTokens.subList(i, Math.min(fcmTokens.size(), i + 500));
 
@@ -203,7 +212,8 @@ public class NotificationService {
                 .build();
 
             try {
-                BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
+                BatchResponse response = firebaseMessaging.sendEachForMulticast(message);
+                log.info("FCM batch sent. Success: {}, Failure: {}", response.getSuccessCount(), response.getFailureCount());
 
                 if (response.getFailureCount() > 0) {
                     List<SendResponse> responses = response.getResponses();
@@ -212,7 +222,6 @@ public class NotificationService {
                     for (int j = 0; j < responses.size(); j++) {
                         if (!responses.get(j).isSuccessful() && responses.get(j).getException() != null) {
                             MessagingErrorCode errorCode = responses.get(j).getException().getMessagingErrorCode();
-                            // Identify dead tokens
                             if (errorCode == MessagingErrorCode.UNREGISTERED
                                 || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
                                 failedTokens.add(batchTokens.get(j));
@@ -220,13 +229,13 @@ public class NotificationService {
                         }
                     }
 
-                    // Mark dead tokens as EXPIRED immediately
                     if (!failedTokens.isEmpty()) {
+                        log.warn("Marking {} dead FCM tokens as EXPIRED", failedTokens.size());
                         markTokensAsExpired(failedTokens);
                     }
                 }
             } catch (FirebaseMessagingException e) {
-                log.error("Failed to send FCM message via multicast", e);
+                log.error("Failed to send FCM multicast message batch", e);
             }
         }
     }

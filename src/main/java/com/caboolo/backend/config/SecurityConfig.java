@@ -1,6 +1,6 @@
 package com.caboolo.backend.config;
 
-import com.caboolo.backend.security.FirebaseTokenFilter;
+import com.caboolo.backend.security.JwtAuthenticationFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,10 +16,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final FirebaseTokenFilter firebaseTokenFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(FirebaseTokenFilter firebaseTokenFilter) {
-        this.firebaseTokenFilter = firebaseTokenFilter;
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
@@ -29,6 +29,9 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/v1/auth/send-otp").permitAll()
+                    .requestMatchers("/api/v1/auth/verify-otp").permitAll()
+                    .requestMatchers("/api/v1/auth/refresh").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/actuator/**").permitAll()
                     .requestMatchers("/api/waitlist/**").permitAll()
@@ -39,11 +42,10 @@ public class SecurityConfig {
                     .requestMatchers("/swagger-ui/**").permitAll()
                     .requestMatchers("/swagger-ui/index.html").permitAll()
                     .requestMatchers("/swagger-ui/swagger-initializer.js").permitAll()
-                    .requestMatchers("/api/v1/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/userdetails/*/photo").permitAll()
+                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/userdetails/*/photo").permitAll()
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

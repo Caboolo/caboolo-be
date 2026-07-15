@@ -29,6 +29,8 @@ public class UserLoginConverter {
             .withMessage("Login successful")
             .withPhoneNumber(userLogin.getPhoneNumber())
             .withIsProfileCreated(userDetailService.existsByPhoneNumber(userLogin.getPhoneNumber()))
+            .withAccessToken(null)
+            .withRefreshToken(null)
             .build();
     }
 

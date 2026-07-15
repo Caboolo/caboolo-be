@@ -12,6 +12,8 @@ public class AuthResponse {
     private String message;
     private String phoneNumber;
     private boolean isProfileCreated;
+    private String accessToken;
+    private String refreshToken;
 
     public static interface UserIdStep {
         MessageStep withUserId(String userId);
@@ -26,18 +28,28 @@ public class AuthResponse {
     }
 
     public static interface IsProfileCreatedStep {
-        BuildStep withIsProfileCreated(boolean isProfileCreated);
+        AccessTokenStep withIsProfileCreated(boolean isProfileCreated);
+    }
+
+    public static interface AccessTokenStep {
+        RefreshTokenStep withAccessToken(String accessToken);
+    }
+
+    public static interface RefreshTokenStep {
+        BuildStep withRefreshToken(String refreshToken);
     }
 
     public static interface BuildStep {
         AuthResponse build();
     }
 
-    public static class Builder implements UserIdStep, MessageStep, PhoneNumberStep, IsProfileCreatedStep, BuildStep {
+    public static class Builder implements UserIdStep, MessageStep, PhoneNumberStep, IsProfileCreatedStep, AccessTokenStep, RefreshTokenStep, BuildStep {
         private String userId;
         private String message;
         private String phoneNumber;
         private boolean isProfileCreated;
+        private String accessToken;
+        private String refreshToken;
 
         private Builder() {
         }
@@ -65,8 +77,20 @@ public class AuthResponse {
         }
 
         @Override
-        public BuildStep withIsProfileCreated(boolean isProfileCreated) {
+        public AccessTokenStep withIsProfileCreated(boolean isProfileCreated) {
             this.isProfileCreated = isProfileCreated;
+            return this;
+        }
+
+        @Override
+        public RefreshTokenStep withAccessToken(String accessToken) {
+            this.accessToken = accessToken;
+            return this;
+        }
+
+        @Override
+        public BuildStep withRefreshToken(String refreshToken) {
+            this.refreshToken = refreshToken;
             return this;
         }
 
@@ -76,7 +100,9 @@ public class AuthResponse {
                 this.userId,
                 this.message,
                 this.phoneNumber,
-                this.isProfileCreated
+                this.isProfileCreated,
+                this.accessToken,
+                this.refreshToken
             );
         }
     }
