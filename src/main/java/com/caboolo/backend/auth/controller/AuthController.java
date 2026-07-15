@@ -7,6 +7,7 @@ import com.caboolo.backend.auth.dto.VerifyOtpRequest;
 import com.caboolo.backend.auth.service.AuthService;
 import com.caboolo.backend.core.controller.BaseController;
 import com.caboolo.backend.core.dto.RestEntity;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ public class AuthController extends BaseController {
         this.authService = authService;
     }
 
+    @Operation(summary = "Send OTP", description = "Sends a 6-digit OTP to the user's phone number via 2Factor.")
     @PostMapping("/send-otp")
     public RestEntity<String> sendOtp(@Valid @RequestBody SendOtpRequest request) {
         log.info("Received send-otp request for phone: {}", request.getPhoneNumber());
@@ -34,6 +36,7 @@ public class AuthController extends BaseController {
         }
     }
 
+    @Operation(summary = "Verify OTP", description = "Verifies the 6-digit OTP using 2Factor and returns JWT tokens.")
     @PostMapping("/verify-otp")
     public RestEntity<AuthResponse> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
         log.info("Received verify-otp request for phone: {}", request.getPhoneNumber());
