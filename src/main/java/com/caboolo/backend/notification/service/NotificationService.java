@@ -117,10 +117,11 @@ public class NotificationService {
     public void sendToUser(String userId, String title, String body, Map<String, String> data) {
         List<UserFcmToken> tokens = fcmTokenRepository.findAllByUserIdAndStatus(userId, FcmTokenStatus.ACTIVE);
         if (tokens.isEmpty()) {
-            log.debug("No active FCM tokens for user: {} — skipping notification", userId);
+            log.warn("[FCM] No active FCM tokens for user: {} — notification '{}' will NOT be delivered", userId, title);
             return;
         }
 
+        log.info("[FCM] Sending notification '{}' to user: {} ({} active token(s))", title, userId, tokens.size());
         List<String> fcmTokens = tokens.stream()
             .map(UserFcmToken::getFcmToken)
             .collect(Collectors.toList());
@@ -192,7 +193,8 @@ public class NotificationService {
 
     private void sendToTokens(List<String> fcmTokens, String title, String body, Map<String, String> data) {
         if (firebaseMessaging == null) {
-            log.warn("FirebaseMessaging is not initialized. Skipping push notifications for title: {}", title);
+            log.error("[FCM] ✗ FirebaseMessaging bean is NULL — Firebase Admin SDK was not initialised correctly.");
+            log.error("[FCM]   Notification '{}' will NOT be delivered. Check startup logs for Firebase diagnostic output.", title);
             return;
         }
 
@@ -201,9 +203,14 @@ public class NotificationService {
             .setBody(body)
             .build();
 
+        int totalBatches = (int) Math.ceil((double) fcmTokens.size() / 500);
+        log.info("[FCM] Sending '{}' to {} token(s) in {} batch(es)", title, fcmTokens.size(), totalBatches);
+
         // FCM multicast limit is 500 tokens per batch
         for (int i = 0; i < fcmTokens.size(); i += 500) {
+            int batchNumber = (i / 500) + 1;
             List<String> batchTokens = fcmTokens.subList(i, Math.min(fcmTokens.size(), i + 500));
+            log.debug("[FCM] Dispatching batch {}/{} ({} tokens)", batchNumber, totalBatches, batchTokens.size());
 
             MulticastMessage message = MulticastMessage.builder()
                 .addAllTokens(batchTokens)
@@ -213,30 +220,97 @@ public class NotificationService {
 
             try {
                 BatchResponse response = firebaseMessaging.sendEachForMulticast(message);
-                log.info("FCM batch sent. Success: {}, Failure: {}", response.getSuccessCount(), response.getFailureCount());
+                log.info("[FCM] Batch {}/{} result — Success: {}, Failure: {}",
+                    batchNumber, totalBatches, response.getSuccessCount(), response.getFailureCount());
 
                 if (response.getFailureCount() > 0) {
                     List<SendResponse> responses = response.getResponses();
-                    List<String> failedTokens = new ArrayList<>();
+                    List<String> deadTokens = new ArrayList<>();
 
                     for (int j = 0; j < responses.size(); j++) {
-                        if (!responses.get(j).isSuccessful() && responses.get(j).getException() != null) {
-                            MessagingErrorCode errorCode = responses.get(j).getException().getMessagingErrorCode();
-                            if (errorCode == MessagingErrorCode.UNREGISTERED
-                                || errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
-                                failedTokens.add(batchTokens.get(j));
+                        SendResponse sr = responses.get(j);
+                        if (!sr.isSuccessful() && sr.getException() != null) {
+                            FirebaseMessagingException ex = sr.getException();
+                            MessagingErrorCode errorCode = ex.getMessagingErrorCode();
+                            String tokenSnippet = maskToken(batchTokens.get(j));
+
+                            // ── Categorise & log the root cause ──────────────
+                            if (errorCode == MessagingErrorCode.UNREGISTERED) {
+                                log.warn("[FCM] Token {} → UNREGISTERED: app was uninstalled or token expired. Marking EXPIRED.",
+                                    tokenSnippet);
+                                deadTokens.add(batchTokens.get(j));
+
+                            } else if (errorCode == MessagingErrorCode.INVALID_ARGUMENT) {
+                                log.warn("[FCM] Token {} → INVALID_ARGUMENT: the FCM token itself is malformed. " +
+                                         "Root cause: invalid/corrupt token. Marking EXPIRED.", tokenSnippet);
+                                deadTokens.add(batchTokens.get(j));
+
+                            } else if (errorCode == MessagingErrorCode.SENDER_ID_MISMATCH) {
+                                log.error("[FCM] Token {} → SENDER_ID_MISMATCH: the FCM token was issued by a " +
+                                          "DIFFERENT Firebase project / sender ID than the one in your service account. " +
+                                          "Verify that the app and the service account belong to the same Firebase project.",
+                                    tokenSnippet);
+
+                            } else if (errorCode == MessagingErrorCode.QUOTA_EXCEEDED) {
+                                log.error("[FCM] Token {} → QUOTA_EXCEEDED: FCM rate limit hit. " +
+                                          "Reduce send frequency or request a quota increase in Firebase Console.",
+                                    tokenSnippet);
+
+                            } else if (errorCode == MessagingErrorCode.UNAVAILABLE) {
+                                log.warn("[FCM] Token {} → UNAVAILABLE: FCM service temporarily unavailable. " +
+                                         "Retry with exponential back-off.", tokenSnippet);
+
+                            } else if (errorCode == MessagingErrorCode.INTERNAL) {
+                                log.error("[FCM] Token {} → INTERNAL: unexpected Firebase server error. " +
+                                          "This is a Firebase-side issue; retry later.", tokenSnippet);
+
+                            } else {
+                                log.error("[FCM] Token {} → {} (HTTP {}) — {}",
+                                    tokenSnippet,
+                                    errorCode,
+                                    ex.getHttpResponse() != null ? ex.getHttpResponse().getStatusCode() : "N/A",
+                                    ex.getMessage());
                             }
                         }
                     }
 
-                    if (!failedTokens.isEmpty()) {
-                        log.warn("Marking {} dead FCM tokens as EXPIRED", failedTokens.size());
-                        markTokensAsExpired(failedTokens);
+                    if (!deadTokens.isEmpty()) {
+                        log.warn("[FCM] Marking {} dead/invalid FCM token(s) as EXPIRED", deadTokens.size());
+                        markTokensAsExpired(deadTokens);
                     }
                 }
             } catch (FirebaseMessagingException e) {
-                log.error("Failed to send FCM multicast message batch", e);
+                MessagingErrorCode topLevelCode = e.getMessagingErrorCode();
+                log.error("[FCM] ✗ Multicast batch {}/{} failed entirely.", batchNumber, totalBatches);
+                log.error("[FCM]   Error code : {}", topLevelCode);
+                log.error("[FCM]   HTTP status : {}",
+                    e.getHttpResponse() != null ? e.getHttpResponse().getStatusCode() : "N/A");
+                log.error("[FCM]   Message     : {}", e.getMessage());
+
+                if (topLevelCode == MessagingErrorCode.SENDER_ID_MISMATCH) {
+                    log.error("[FCM]   ROOT CAUSE: Firebase project mismatch. " +
+                              "The service account and the mobile app belong to different Firebase projects.");
+                } else if (topLevelCode == MessagingErrorCode.INVALID_ARGUMENT) {
+                    log.error("[FCM]   ROOT CAUSE: All tokens in this batch are invalid/malformed.");
+                } else if (topLevelCode == MessagingErrorCode.UNAVAILABLE) {
+                    log.error("[FCM]   ROOT CAUSE: FCM service temporarily unavailable — retry with back-off.");
+                } else if (topLevelCode == MessagingErrorCode.INTERNAL) {
+                    log.error("[FCM]   ROOT CAUSE: Firebase internal error — this is a Firebase-side problem.");
+                }
+
+                log.error("[FCM]   Full exception:", e);
             }
         }
+    }
+
+    /**
+     * Masks an FCM token for safe logging — shows only the first 8 and last 6 chars.
+     * Example: "abc12345...xyz789"
+     */
+    private static String maskToken(String token) {
+        if (token == null || token.length() < 20) {
+            return "[short-token]";
+        }
+        return token.substring(0, 8) + "..." + token.substring(token.length() - 6);
     }
 }
