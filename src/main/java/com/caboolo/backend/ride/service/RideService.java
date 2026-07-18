@@ -202,6 +202,13 @@ public class RideService {
         Map<String, List<RideUserMapping>> mappingsByRideId = allParticipantMappings.stream()
             .collect(Collectors.groupingBy(RideUserMapping::getRideId));
 
+        // 3b. Bulk Fetch PENDING mappings to compute pending approvals count per ride
+        List<RideUserMapping> pendingMappings = rideUserMappingService.findByRideIdInAndStatusIn(
+            activeRideIds, Set.of(RideUserMappingStatus.PENDING));
+
+        Map<String, Long> pendingCountByRideId = pendingMappings.stream()
+            .collect(Collectors.groupingBy(RideUserMapping::getRideId, Collectors.counting()));
+
         // 4. Collect all User IDs and Hub IDs for bulk lookup
         Set<String> participantUserIds = allParticipantMappings.stream()
             .map(RideUserMapping::getUserId)
@@ -252,6 +259,7 @@ public class RideService {
                     .withAvailableSeats(ride.getTotalSeats() - rideParticipantCount)
                     .withPoolPrice(ride.getPoolPrice())
                     .withUserStatus(statusByRideId.get(ride.getRideId()))
+                    .withPendingApprovalsCount(pendingCountByRideId.getOrDefault(ride.getRideId(), 0L).intValue())
                     .build();
             })
             .collect(Collectors.toList());
