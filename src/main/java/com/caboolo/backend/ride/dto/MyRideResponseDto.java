@@ -20,6 +20,7 @@ public class MyRideResponseDto {
     private Integer availableSeats;
     private BigDecimal poolPrice;
     private RideUserMappingStatus userStatus;
+    private Integer pendingApprovalsCount;
 
     public static interface RideIdStep {
         DepartureTimeStep withRideId(String rideId);
@@ -51,6 +52,7 @@ public class MyRideResponseDto {
 
     public static interface BuildStep {
         BuildStep withUserStatus(RideUserMappingStatus userStatus);
+        BuildStep withPendingApprovalsCount(Integer pendingApprovalsCount);
         MyRideResponseDto build();
     }
 
@@ -64,6 +66,7 @@ public class MyRideResponseDto {
         private Integer availableSeats;
         private BigDecimal poolPrice;
         private RideUserMappingStatus userStatus;
+        private Integer pendingApprovalsCount;
 
         private Builder() {
         }
@@ -121,6 +124,12 @@ public class MyRideResponseDto {
         }
 
         @Override
+        public BuildStep withPendingApprovalsCount(Integer pendingApprovalsCount) {
+            this.pendingApprovalsCount = pendingApprovalsCount;
+            return this;
+        }
+
+        @Override
         public MyRideResponseDto build() {
             return new MyRideResponseDto(
                     this.rideId,
@@ -130,7 +139,8 @@ public class MyRideResponseDto {
                     this.participants,
                     this.availableSeats,
                     this.poolPrice,
-                    this.userStatus
+                    this.userStatus,
+                    this.pendingApprovalsCount
             );
         }
     }

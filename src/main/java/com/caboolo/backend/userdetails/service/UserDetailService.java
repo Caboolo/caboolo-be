@@ -80,7 +80,7 @@ public class UserDetailService {
                 .withEmail(requestDto.getEmail())
                 .withPhoneNumber(requestDto.getPhoneNumber())
                 .withPhotoPublicId(null)
-                .withAvgRating(null)
+                .withAvgRating(5.0)
                 .withTotalReviews(null)
                 .withRideAgainCount(null)
                 .withTagCounts(null)
