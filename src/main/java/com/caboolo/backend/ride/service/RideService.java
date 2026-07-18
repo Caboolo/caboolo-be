@@ -61,6 +61,10 @@ public class RideService {
             throw new Exception("Ride cannot be created as source and destination hubs are same.");
         }
 
+        if (request.getDepartureTime().isBefore(LocalDateTime.now())) {
+            throw new Exception("Please select a future departure time.");
+        }
+
         // 1. Create and Save Ride
         Ride ride = Ride.Builder.ride()
             .withRideId(rideId)
