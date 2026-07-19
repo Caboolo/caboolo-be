@@ -2,9 +2,7 @@ package com.caboolo.backend.ride.repository;
 
 import com.caboolo.backend.ride.domain.RideUserRequestMapping;
 import com.caboolo.backend.ride.enums.RideUserRequestStatus;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,23 +14,13 @@ import java.util.Optional;
 @Repository
 public interface RideUserRequestMappingRepository extends JpaRepository<RideUserRequestMapping, Long> {
 
-    Optional<RideUserRequestMapping> findByRideIdAndRequestorIdAndApproverId(
-            String rideId, String requestorId, String approverId);
+    Optional<RideUserRequestMapping> findByRideIdAndRequestorIdAndApproverIdAndStatus(
+            String rideId, String requestorId, String approverId, RideUserRequestStatus status);
 
     List<RideUserRequestMapping> findByRideIdAndRequestorIdAndStatus(
             String rideId, String requestorId, RideUserRequestStatus status);
 
     List<RideUserRequestMapping> findByRideIdAndRequestorIdAndStatusIn(
             String rideId, String requestorId, Collection<RideUserRequestStatus> statuses);
-
-    /**
-     * Fetches all request rows for a (rideId, requestorId) pair with a pessimistic
-     * write lock to prevent concurrent accept/reject decisions from producing
-     * duplicate or inconsistent results.
-     */
-    @Query("SELECT r FROM RideUserRequestMapping r WHERE r.rideId = :rideId AND r.requestorId = :requestorId")
-    List<RideUserRequestMapping> findByRideIdAndRequestorIdWithLock(
-            @Param("rideId") String rideId,
-            @Param("requestorId") String requestorId);
 
 }
