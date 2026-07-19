@@ -19,7 +19,6 @@ public class MyRequestResponseDto {
     private List<RiderInfoDto> activePassengers;
     private Integer totalSeats;
     private Integer availableSeats;
-    private Integer pendingApprovalsCount;
     private BigDecimal poolPrice;
 
     public static interface RideIdStep {
@@ -51,11 +50,7 @@ public class MyRequestResponseDto {
     }
 
     public static interface AvailableSeatsStep {
-        PendingApprovalsCountStep withAvailableSeats(Integer availableSeats);
-    }
-
-    public static interface PendingApprovalsCountStep {
-        PoolPriceStep withPendingApprovalsCount(Integer pendingApprovalsCount);
+        PoolPriceStep withAvailableSeats(Integer availableSeats);
     }
 
     public static interface PoolPriceStep {
@@ -68,7 +63,7 @@ public class MyRequestResponseDto {
 
     public static class Builder
         implements RideIdStep, RequestStatusStep, SourceHubNameStep, DestinationHubNameStep, DepartureTimeStep,
-        ActivePassengersStep, TotalSeatsStep, AvailableSeatsStep, PendingApprovalsCountStep, PoolPriceStep, BuildStep {
+        ActivePassengersStep, TotalSeatsStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
         private String rideId;
         private RideUserMappingStatus requestStatus;
         private String sourceHubName;
@@ -77,7 +72,6 @@ public class MyRequestResponseDto {
         private List<RiderInfoDto> activePassengers;
         private Integer totalSeats;
         private Integer availableSeats;
-        private Integer pendingApprovalsCount;
         private BigDecimal poolPrice;
 
         private Builder() {
@@ -130,14 +124,8 @@ public class MyRequestResponseDto {
         }
 
         @Override
-        public PendingApprovalsCountStep withAvailableSeats(Integer availableSeats) {
+        public PoolPriceStep withAvailableSeats(Integer availableSeats) {
             this.availableSeats = availableSeats;
-            return this;
-        }
-
-        @Override
-        public PoolPriceStep withPendingApprovalsCount(Integer pendingApprovalsCount) {
-            this.pendingApprovalsCount = pendingApprovalsCount;
             return this;
         }
 
@@ -158,7 +146,6 @@ public class MyRequestResponseDto {
                 this.activePassengers,
                 this.totalSeats,
                 this.availableSeats,
-                this.pendingApprovalsCount,
                 this.poolPrice
             );
         }

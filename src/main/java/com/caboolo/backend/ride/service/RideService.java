@@ -111,13 +111,7 @@ public class RideService {
         Map<String, List<RideUserMapping>> activeMappingsByRide = activeMappings.stream()
             .collect(Collectors.groupingBy(RideUserMapping::getRideId));
 
-        // 3. Bulk-fetch pending mappings for all these rides to compute pending counts
-        List<RideUserMapping> pendingMappings = rideUserMappingService.findByRideIdInAndStatusIn(
-            rideIdSet, Set.of(RideUserMappingStatus.PENDING));
-        Map<String, Long> pendingCountByRideId = pendingMappings.stream()
-            .collect(Collectors.groupingBy(RideUserMapping::getRideId, Collectors.counting()));
-
-        // 4. Bulk-fetch user details for active crew
+        // 3. Bulk-fetch user details for active crew
         Set<String> allActiveUserIds = activeMappings.stream()
             .map(RideUserMapping::getUserId)
             .collect(Collectors.toSet());
@@ -157,7 +151,6 @@ public class RideService {
                     .collect(Collectors.toList());
 
                 int acceptedCount = crewMappings.size();
-                int pendingCount = pendingCountByRideId.getOrDefault(um.getRideId(), 0L).intValue();
 
                 return MyRequestResponseDto.Builder.myRequestResponseDto()
                     .withRideId(ride.getRideId())
@@ -168,7 +161,6 @@ public class RideService {
                     .withActivePassengers(activePassengers)
                     .withTotalSeats(ride.getTotalSeats())
                     .withAvailableSeats(ride.getTotalSeats() - acceptedCount)
-                    .withPendingApprovalsCount(pendingCount)
                     .withPoolPrice(ride.getPoolPrice())
                     .build();
             })
