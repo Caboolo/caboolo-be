@@ -87,18 +87,14 @@ public class RideService {
     }
 
     public List<MyRequestResponseDto> getMyRequests(String userId) {
-        List<RideUserMapping> allMappings = rideUserMappingService.findByUserIdAndStatus(userId,
+        // 1. Find all rides the user is requesting (PENDING status only for THIS user)
+        List<RideUserMapping> userPendingMappings = rideUserMappingService.findByUserIdAndStatus(userId,
             RideUserMappingStatus.PENDING);
-        if (allMappings.isEmpty()) {
+        if (userPendingMappings.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // Separate user's own pending requests from other participants
-        List<RideUserMapping> userMappings = allMappings.stream()
-            .filter(um -> um.getUserId().equals(userId) && um.getStatus() == RideUserMappingStatus.PENDING)
-            .toList();
-
-        List<String> rideIds = userMappings.stream()
+        List<String> rideIds = userPendingMappings.stream()
             .map(RideUserMapping::getRideId)
             .distinct()
             .collect(Collectors.toList());
@@ -107,20 +103,30 @@ public class RideService {
         Map<String, Ride> rideMap = rides.stream()
             .collect(Collectors.toMap(Ride::getRideId, ride -> ride));
 
-        // Group all accepted mappings by rideId for available seats and active passengers
-        Map<String, List<RideUserMapping>> acceptedMappingsByRide = allMappings.stream()
-            .filter(um -> um.getStatus() == RideUserMappingStatus.ACCEPTED)
+        Set<String> rideIdSet = new HashSet<>(rideIds);
+
+        // 2. Bulk-fetch active crew (CREATED + ACCEPTED) for all these rides to compute participants
+        List<RideUserMapping> activeMappings = rideUserMappingService.findByRideIdInAndStatusIn(
+            rideIdSet, RideUserMappingStatus.ACTIVE_STATUSES);
+        Map<String, List<RideUserMapping>> activeMappingsByRide = activeMappings.stream()
             .collect(Collectors.groupingBy(RideUserMapping::getRideId));
 
-        Set<String> allActiveUserIds = acceptedMappingsByRide.values().stream()
-            .flatMap(List::stream)
+        // 3. Bulk-fetch pending mappings for all these rides to compute pending counts
+        List<RideUserMapping> pendingMappings = rideUserMappingService.findByRideIdInAndStatusIn(
+            rideIdSet, Set.of(RideUserMappingStatus.PENDING));
+        Map<String, Long> pendingCountByRideId = pendingMappings.stream()
+            .collect(Collectors.groupingBy(RideUserMapping::getRideId, Collectors.counting()));
+
+        // 4. Bulk-fetch user details for active crew
+        Set<String> allActiveUserIds = activeMappings.stream()
             .map(RideUserMapping::getUserId)
             .collect(Collectors.toSet());
-
         Map<String, UserDetail> userDetailMap = userDetailService.findByUserIdIn(allActiveUserIds).stream()
             .collect(Collectors.toMap(UserDetail::getUserId, u -> u));
 
-        // Bulk fetch hub names for all rides
+        Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(allActiveUserIds);
+
+        // 5. Bulk fetch hub names for all rides
         Set<String> hubIds = new HashSet<>();
         rides.forEach(ride -> {
             hubIds.add(ride.getSourceHubId());
@@ -128,18 +134,15 @@ public class RideService {
         });
         Map<String, String> hubNamesMap = hubService.getHubNames(hubIds);
 
-        return userMappings.stream()
+        return userPendingMappings.stream()
             .map(um -> {
                 Ride ride = rideMap.get(um.getRideId());
                 if (ride == null) return null;
 
-                List<RideUserMapping> acceptedMappings = acceptedMappingsByRide.getOrDefault(um.getRideId(),
+                List<RideUserMapping> crewMappings = activeMappingsByRide.getOrDefault(um.getRideId(),
                     Collections.emptyList());
-                
-                Set<String> participantIds = acceptedMappings.stream().map(RideUserMapping::getUserId).collect(Collectors.toSet());
-                Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(participantIds);
 
-                List<RiderInfoDto> activePassengers = acceptedMappings.stream()
+                List<RiderInfoDto> activePassengers = crewMappings.stream()
                     .map(m -> {
                         UserDetail ud = userDetailMap.get(m.getUserId());
                         return ud == null ? null : RiderInfoDto.Builder.passengerInfoDto()
@@ -153,7 +156,8 @@ public class RideService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
-                int acceptedCount = acceptedMappings.size();
+                int acceptedCount = crewMappings.size();
+                int pendingCount = pendingCountByRideId.getOrDefault(um.getRideId(), 0L).intValue();
 
                 return MyRequestResponseDto.Builder.myRequestResponseDto()
                     .withRideId(ride.getRideId())
@@ -162,13 +166,16 @@ public class RideService {
                     .withDestinationHubName(hubNamesMap.getOrDefault(ride.getDestinationHubId(), "Unknown Hub"))
                     .withDepartureTime(ride.getDepartureTime())
                     .withActivePassengers(activePassengers)
+                    .withTotalSeats(ride.getTotalSeats())
                     .withAvailableSeats(ride.getTotalSeats() - acceptedCount)
+                    .withPendingApprovalsCount(pendingCount)
                     .withPoolPrice(ride.getPoolPrice())
                     .build();
             })
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
     }
+
 
     public List<MyRideResponseDto> getMyRides(String userId) {
         // 1. Find all rides where the user is actively involved (CREATED or ACCEPTED)
@@ -422,6 +429,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(null)
                     .build();
             })
             .filter(Objects::nonNull)
@@ -482,6 +490,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(null)
                     .build();
             })
             .filter(Objects::nonNull)
@@ -501,6 +510,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(null)
                     .build();
             })
             .filter(Objects::nonNull)
@@ -560,6 +570,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(null)
                     .build();
             })
             .filter(Objects::nonNull)
@@ -626,6 +637,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(null)
                     .build();
             })
             .filter(Objects::nonNull)
@@ -658,9 +670,11 @@ public class RideService {
                 return new RuntimeException("Ride not found: " + rideId);
             });
 
-        // 2. Fetch only relevant mappings: current user's mapping + active crew (CREATED/ACCEPTED)
+        // 2. Fetch the user's own mapping + all ACTIVE crew (CREATED/ACCEPTED)
+        //    Previously this was passing PENDING as the "OR" set, which meant it fetched
+        //    the requester's row + anyone pending — crew members were never included.
         List<RideUserMapping> relevantMappings = rideUserMappingService.findByRideIdAndUserIdOrStatusIn(
-            rideId, userId, EnumSet.of(RideUserMappingStatus.PENDING));
+            rideId, userId, RideUserMappingStatus.ACTIVE_STATUSES);
 
         // 3. Find the current user's request status
         RideUserMappingStatus requestStatus = relevantMappings.stream()
@@ -701,7 +715,7 @@ public class RideService {
         }
         Set<String> verifiedUserIds = flightVerificationService.getActiveVerifiedUserIds(crewUserIds);
 
-        // 6. Build crew member DTOs
+        // 6. Build crew member DTOs — includes phoneNumber for the requester to contact them
         List<RideParticipantDto> crewMembers = crewMappings.stream()
             .map(m -> {
                 UserDetail ud = userDetailMap.get(m.getUserId());
@@ -715,6 +729,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(m.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(ud.getPhoneNumber())
                     .build();
             })
             .filter(Objects::nonNull)
@@ -738,6 +753,7 @@ public class RideService {
             .withParticipants(crewMembers)
             .build();
     }
+
 
     public Page<MyRideResponseDto> getAvailableRides(String userId, LocalDateTime time, Integer timeWindow,
                                                      Double latitude, Double longitude, String airportHubId,

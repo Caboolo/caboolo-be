@@ -17,6 +17,7 @@ public class RideParticipantDto {
     private RideUserMappingStatus status;
     private String comment;
     private boolean isFlightVerified;
+    private String phoneNumber;
 
     public static interface UserIdStep {
         NameStep withUserId(String userId);
@@ -47,7 +48,11 @@ public class RideParticipantDto {
     }
 
     public static interface IsFlightVerifiedStep {
-        BuildStep withIsFlightVerified(boolean isFlightVerified);
+        PhoneNumberStep withIsFlightVerified(boolean isFlightVerified);
+    }
+
+    public static interface PhoneNumberStep {
+        BuildStep withPhoneNumber(String phoneNumber);
     }
 
     public static interface BuildStep {
@@ -55,7 +60,7 @@ public class RideParticipantDto {
     }
 
 
-    public static class Builder implements UserIdStep, NameStep, ImageUrlStep, AvgRatingStep, TotalRidesStep, StatusStep, CommentStep, IsFlightVerifiedStep, BuildStep {
+    public static class Builder implements UserIdStep, NameStep, ImageUrlStep, AvgRatingStep, TotalRidesStep, StatusStep, CommentStep, IsFlightVerifiedStep, PhoneNumberStep, BuildStep {
         private String userId;
         private String name;
         private String imageUrl;
@@ -64,6 +69,7 @@ public class RideParticipantDto {
         private RideUserMappingStatus status;
         private String comment;
         private boolean isFlightVerified;
+        private String phoneNumber;
 
         private Builder() {
         }
@@ -115,8 +121,14 @@ public class RideParticipantDto {
         }
 
         @Override
-        public BuildStep withIsFlightVerified(boolean isFlightVerified) {
+        public PhoneNumberStep withIsFlightVerified(boolean isFlightVerified) {
             this.isFlightVerified = isFlightVerified;
+            return this;
+        }
+
+        @Override
+        public BuildStep withPhoneNumber(String phoneNumber) {
+            this.phoneNumber = phoneNumber;
             return this;
         }
 
@@ -130,7 +142,8 @@ public class RideParticipantDto {
                     this.totalRides,
                     this.status,
                     this.comment,
-                    this.isFlightVerified
+                    this.isFlightVerified,
+                    this.phoneNumber
             );
         }
     }

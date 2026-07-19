@@ -17,7 +17,9 @@ public class MyRequestResponseDto {
     private String destinationHubName;
     private LocalDateTime departureTime;
     private List<RiderInfoDto> activePassengers;
+    private Integer totalSeats;
     private Integer availableSeats;
+    private Integer pendingApprovalsCount;
     private BigDecimal poolPrice;
 
     public static interface RideIdStep {
@@ -41,11 +43,19 @@ public class MyRequestResponseDto {
     }
 
     public static interface ActivePassengersStep {
-        AvailableSeatsStep withActivePassengers(List<RiderInfoDto> activePassengers);
+        TotalSeatsStep withActivePassengers(List<RiderInfoDto> activePassengers);
+    }
+
+    public static interface TotalSeatsStep {
+        AvailableSeatsStep withTotalSeats(Integer totalSeats);
     }
 
     public static interface AvailableSeatsStep {
-        PoolPriceStep withAvailableSeats(Integer availableSeats);
+        PendingApprovalsCountStep withAvailableSeats(Integer availableSeats);
+    }
+
+    public static interface PendingApprovalsCountStep {
+        PoolPriceStep withPendingApprovalsCount(Integer pendingApprovalsCount);
     }
 
     public static interface PoolPriceStep {
@@ -58,14 +68,16 @@ public class MyRequestResponseDto {
 
     public static class Builder
         implements RideIdStep, RequestStatusStep, SourceHubNameStep, DestinationHubNameStep, DepartureTimeStep,
-        ActivePassengersStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
+        ActivePassengersStep, TotalSeatsStep, AvailableSeatsStep, PendingApprovalsCountStep, PoolPriceStep, BuildStep {
         private String rideId;
         private RideUserMappingStatus requestStatus;
         private String sourceHubName;
         private String destinationHubName;
         private LocalDateTime departureTime;
         private List<RiderInfoDto> activePassengers;
+        private Integer totalSeats;
         private Integer availableSeats;
+        private Integer pendingApprovalsCount;
         private BigDecimal poolPrice;
 
         private Builder() {
@@ -106,14 +118,26 @@ public class MyRequestResponseDto {
         }
 
         @Override
-        public AvailableSeatsStep withActivePassengers(List<RiderInfoDto> activePassengers) {
+        public TotalSeatsStep withActivePassengers(List<RiderInfoDto> activePassengers) {
             this.activePassengers = activePassengers;
             return this;
         }
 
         @Override
-        public PoolPriceStep withAvailableSeats(Integer availableSeats) {
+        public AvailableSeatsStep withTotalSeats(Integer totalSeats) {
+            this.totalSeats = totalSeats;
+            return this;
+        }
+
+        @Override
+        public PendingApprovalsCountStep withAvailableSeats(Integer availableSeats) {
             this.availableSeats = availableSeats;
+            return this;
+        }
+
+        @Override
+        public PoolPriceStep withPendingApprovalsCount(Integer pendingApprovalsCount) {
+            this.pendingApprovalsCount = pendingApprovalsCount;
             return this;
         }
 
@@ -132,7 +156,9 @@ public class MyRequestResponseDto {
                 this.destinationHubName,
                 this.departureTime,
                 this.activePassengers,
+                this.totalSeats,
                 this.availableSeats,
+                this.pendingApprovalsCount,
                 this.poolPrice
             );
         }
