@@ -30,7 +30,6 @@ public class RideUserRequestMappingService {
     private final SequenceGenerator sequenceGenerator;
     private final ApplicationEventPublisher eventPublisher;
     private final RideUserMappingService rideUserMappingService;
-
     // ─────────────────────────────────────────────────────────────────────────
     // 1. Request to Join Ride
     // ─────────────────────────────────────────────────────────────────────────
@@ -47,7 +46,8 @@ public class RideUserRequestMappingService {
         String requesterId = joinRideRequestDto.getRequesterId();
         log.info("User requesterId={} is requesting to join rideId={}", requesterId, rideId);
         // Guard: user must not already be an active member
-        Optional<RideUserMapping> existingActive = rideUserMappingRepository.findByRideIdAndUserId(rideId, requesterId);
+        Optional<RideUserMapping> existingActive = rideUserMappingRepository.findByRideIdAndUserIdAndStatusIn(rideId,
+                requesterId, RideUserMappingStatus.ACTIVE_STATUSES);
         if (existingActive.isPresent()) {
             RideUserMappingStatus status = existingActive.get().getStatus();
             if (!RideUserMappingStatus.PENDING.equals(status)) {
@@ -292,22 +292,27 @@ public class RideUserRequestMappingService {
     @Transactional
     public void leaveRide(String rideId, String userId) {
         log.info("User userId={} is leaving rideId={}", userId, rideId);
-        RideUserMapping mapping = rideUserMappingRepository
-                .findByRideIdAndUserId(rideId, userId)
-                .orElseThrow(() -> {
-                    log.error("User userId={} is not a member of rideId={}", userId, rideId);
-                    return new RuntimeException("User is not a member of this ride");
-                });
+        Optional<RideUserMapping> mappingOpt = rideUserMappingRepository
+                .findByRideIdAndUserIdAndStatusIn(rideId, userId, RideUserMappingStatus.ACTIVE_STATUSES);
 
-        if (!RideUserMappingStatus.ACTIVE_STATUSES.contains(mapping.getStatus())) {
-            log.error("User userId={} cannot leave rideId={}: not in active status, current status={}",
-                    userId, rideId, mapping.getStatus());
-            throw new RuntimeException("Only active members can leave a ride");
+        if(mappingOpt.isEmpty()) {
+            log.error("User userId={} is not a member of rideId={}", userId, rideId);
+            throw new RuntimeException("User is not a member of this ride");
         }
 
+        RideUserMapping mapping = mappingOpt.get();
         mapping.setStatus(RideUserMappingStatus.LEFT);
         rideUserMappingRepository.save(mapping);
         log.info("User userId={} left rideId={} successfully", userId, rideId);
+
+        List<RideUserRequestMapping> rideUserRequestMappingList = requestMappingRepository
+                .findByRideIdAndRequestorIdAndStatus(rideId, userId, RideUserRequestStatus.ACCEPTED);
+
+        rideUserRequestMappingList.forEach(
+                t -> t.setStatus(RideUserRequestStatus.WITHDRAWN)
+        );
+
+        requestMappingRepository.saveAll(rideUserRequestMappingList);
 
         // Publish event → notify remaining crew
         List<RideUserMapping> remainingCrew = rideUserMappingRepository
