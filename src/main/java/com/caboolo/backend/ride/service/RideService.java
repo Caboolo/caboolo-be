@@ -171,8 +171,10 @@ public class RideService {
     }
 
     public List<MyRideResponseDto> getMyRides(String userId) {
-        // 1. Find all rides where the user is involved
-        List<RideUserMapping> userMappings = rideUserMappingService.findByUserId(userId);
+        // 1. Find all rides where the user is actively involved (CREATED or ACCEPTED)
+        // Exclude LEFT, REJECTED, WITHDRAWN so those rides don't appear in the listing
+        List<RideUserMapping> userMappings = rideUserMappingService.findByUserIdAndStatusIn(
+            userId, RideUserMappingStatus.ACTIVE_STATUSES);
         if (userMappings.isEmpty()) {
             return new ArrayList<>();
         }
