@@ -13,6 +13,7 @@ import com.caboolo.backend.ride.repository.RideUserRequestMappingRepository;
 import com.caboolo.backend.ride.repository.RideUserRequestMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.SetUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -306,7 +307,8 @@ public class RideUserRequestMappingService {
         log.info("User userId={} left rideId={} successfully", userId, rideId);
 
         List<RideUserRequestMapping> rideUserRequestMappingList = requestMappingRepository
-                .findByRideIdAndRequestorIdAndStatus(rideId, userId, RideUserRequestStatus.ACCEPTED);
+                .findByRideIdAndRequestorIdAndStatusIn(rideId, userId,
+                        EnumSet.of(RideUserRequestStatus.ACCEPTED, RideUserRequestStatus.PENDING));
 
         rideUserRequestMappingList.forEach(
                 t -> t.setStatus(RideUserRequestStatus.WITHDRAWN)

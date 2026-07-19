@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,9 @@ public interface RideUserRequestMappingRepository extends JpaRepository<RideUser
 
     List<RideUserRequestMapping> findByRideIdAndRequestorIdAndStatus(
             String rideId, String requestorId, RideUserRequestStatus status);
+
+    List<RideUserRequestMapping> findByRideIdAndRequestorIdAndStatusIn(
+            String rideId, String requestorId, Collection<RideUserRequestStatus> statuses);
 
     /**
      * Fetches all request rows for a (rideId, requestorId) pair with a pessimistic
