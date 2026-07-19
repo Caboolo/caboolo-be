@@ -15,6 +15,7 @@ import java.util.Optional;
 public interface RideUserMappingRepository extends JpaRepository<RideUserMapping, Long> {
 
     Optional<RideUserMapping> findByRideIdAndUserId(String rideId, String userId);
+    Optional<RideUserMapping> findByRideIdAndUserIdAndStatusIn(String rideId, String userId, Collection<RideUserMappingStatus> statuses);
     List<RideUserMapping> findByUserIdAndStatus(String userId, RideUserMappingStatus status);
     List<RideUserMapping> findByUserIdAndStatusIn(String userId, Collection<RideUserMappingStatus> statuses);
     List<RideUserMapping> findByUserId(String userId);
