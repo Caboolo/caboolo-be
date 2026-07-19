@@ -10,10 +10,8 @@ import com.caboolo.backend.ride.enums.RideUserMappingStatus;
 import com.caboolo.backend.ride.enums.RideUserRequestStatus;
 import com.caboolo.backend.ride.repository.RideUserMappingRepository;
 import com.caboolo.backend.ride.repository.RideUserRequestMappingRepository;
-import com.caboolo.backend.ride.repository.RideUserRequestMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.SetUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,37 +118,27 @@ public class RideUserRequestMappingService {
                 acceptingUserId, requesterId, rideId);
         // Guard: parent mapping must still be PENDING
         RideUserMapping requesterMapping = rideUserMappingRepository
-                .findByRideIdAndUserId(rideId, requesterId)
+                .findByRideIdAndUserIdAndStatusIn(rideId, requesterId, EnumSet.of(RideUserMappingStatus.PENDING))
                 .orElseThrow(() -> {
-                    log.error("Requester RideUserMapping not found for rideId={}, requesterId={}", rideId, requesterId);
-                    return new RuntimeException("Requester's RideUserMapping not found");
+                    log.error("Join request row not found for rideId={}, requesterId={}, acceptingUserId={}",
+                            rideId, requesterId, acceptingUserId);
+                    return new RuntimeException("Join request row not found");
                 });
-        if (requesterMapping.getStatus() != RideUserMappingStatus.PENDING) {
-            log.error("Cannot accept: request is no longer pending for requesterId={}, rideId={}, status={}",
-                    requesterId, rideId, requesterMapping.getStatus());
-            throw new RuntimeException("Request is no longer pending — cannot accept");
-        }
 
         RideUserRequestMapping requestRow = requestMappingRepository
-                .findByRideIdAndRequestorIdAndApproverId(rideId, requesterId, acceptingUserId)
+                .findByRideIdAndRequestorIdAndApproverIdAndStatus(rideId, requesterId, acceptingUserId, RideUserRequestStatus.PENDING)
                 .orElseThrow(() -> {
                     log.error("Join request row not found for rideId={}, requesterId={}, approverId={}",
                             rideId, requesterId, acceptingUserId);
                     return new RuntimeException("Join request row not found");
                 });
 
-        // Idempotency: skip if already handled
-        if (requestRow.getStatus() != RideUserRequestStatus.PENDING) {
-            log.warn("Request already handled for rideId={}, requesterId={}, approverId={}, status={}",
-                    rideId, requesterId, acceptingUserId, requestRow.getStatus());
-            return;
-        }
-
         requestRow.setStatus(RideUserRequestStatus.ACCEPTED);
         requestMappingRepository.save(requestRow);
 
         List<RideUserRequestMapping> allRows =
-                requestMappingRepository.findByRideIdAndRequestorIdWithLock(rideId, requesterId);
+                requestMappingRepository.findByRideIdAndRequestorIdAndStatusIn(rideId, requesterId,
+                        EnumSet.of(RideUserRequestStatus.PENDING, RideUserRequestStatus.ACCEPTED, RideUserRequestStatus.REJECTED));
 
         long totalVoters = allRows.size();
         long acceptedCount = allRows.stream()
@@ -162,11 +150,9 @@ public class RideUserRequestMappingService {
             log.info("Majority accepted ({}/{}) — promoting requesterId={} to ACCEPTED for rideId={}",
                     acceptedCount, totalVoters, requesterId, rideId);
             RideUserMapping userMapping = rideUserMappingRepository
-                    .findByRideIdAndUserId(rideId, requesterId)
+                    .findByRideIdAndUserIdAndStatusIn(rideId, requesterId, EnumSet.of(RideUserMappingStatus.PENDING))
                     .orElseThrow(() -> new RuntimeException("Requester's RideUserMapping not found"));
-            if (userMapping.getStatus() != RideUserMappingStatus.PENDING) {
-                throw new RuntimeException("Request is no longer pending");
-            }
+
             userMapping.setStatus(RideUserMappingStatus.ACCEPTED);
             rideUserMappingRepository.save(userMapping);
 
@@ -207,30 +193,20 @@ public class RideUserRequestMappingService {
                 rejectingUserId, requesterId, rideId);
         // Guard: parent mapping must still be PENDING
         RideUserMapping requesterMapping = rideUserMappingRepository
-                .findByRideIdAndUserId(rideId, requesterId)
-                .orElseThrow(() -> {
-                    log.error("Requester RideUserMapping not found for rideId={}, requesterId={}", rideId, requesterId);
-                    return new RuntimeException("Requester's RideUserMapping not found");
-                });
-        if (requesterMapping.getStatus() != RideUserMappingStatus.PENDING) {
-            log.error("Cannot reject: request is no longer pending for requesterId={}, rideId={}", requesterId, rideId);
-            throw new RuntimeException("Request is no longer pending — cannot reject");
-        }
-
-        RideUserRequestMapping requestRow = requestMappingRepository
-                .findByRideIdAndRequestorIdAndApproverId(rideId, requesterId, rejectingUserId)
+                .findByRideIdAndUserIdAndStatusIn(rideId, requesterId, EnumSet.of(RideUserMappingStatus.PENDING))
                 .orElseThrow(() -> {
                     log.error("Join request row not found for rideId={}, requesterId={}, rejectingUserId={}",
                             rideId, requesterId, rejectingUserId);
                     return new RuntimeException("Join request row not found");
                 });
 
-        // Idempotency: skip if already in a terminal state
-        if (requestRow.getStatus() != RideUserRequestStatus.PENDING) {
-            log.warn("Request already in terminal state for rideId={}, requesterId={}, rejectingUserId={}, status={}",
-                    rideId, requesterId, rejectingUserId, requestRow.getStatus());
-            return;
-        }
+        RideUserRequestMapping requestRow = requestMappingRepository
+                .findByRideIdAndRequestorIdAndApproverIdAndStatus(rideId, requesterId, rejectingUserId, RideUserRequestStatus.PENDING)
+                .orElseThrow(() -> {
+                    log.error("Join request row not found for rideId={}, requesterId={}, rejectingUserId={}",
+                            rideId, requesterId, rejectingUserId);
+                    return new RuntimeException("Join request row not found");
+                });
 
         requestRow.setStatus(RideUserRequestStatus.REJECTED);
         requestMappingRepository.save(requestRow);
