@@ -422,6 +422,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(ud.getPhoneNumber())
                     .build();
             })
             .filter(Objects::nonNull)
@@ -482,6 +483,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(ud.getPhoneNumber())
                     .build();
             })
             .filter(Objects::nonNull)
@@ -501,6 +503,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(ud.getPhoneNumber())
                     .build();
             })
             .filter(Objects::nonNull)
@@ -560,6 +563,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(ud.getPhoneNumber())
                     .build();
             })
             .filter(Objects::nonNull)
@@ -626,6 +630,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(ud.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(ud.getPhoneNumber())
                     .build();
             })
             .filter(Objects::nonNull)
@@ -715,6 +720,7 @@ public class RideService {
                     .withStatus(m.getStatus())
                     .withComment(userIdToCommentsMap.get(m.getUserId()))
                     .withIsFlightVerified(verifiedUserIds.contains(ud.getUserId()))
+                    .withPhoneNumber(ud.getPhoneNumber())
                     .build();
             })
             .filter(Objects::nonNull)
