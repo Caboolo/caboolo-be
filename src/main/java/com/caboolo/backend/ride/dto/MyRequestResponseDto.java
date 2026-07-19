@@ -17,6 +17,7 @@ public class MyRequestResponseDto {
     private String destinationHubName;
     private LocalDateTime departureTime;
     private List<RiderInfoDto> activePassengers;
+    private Integer totalSeats;
     private Integer availableSeats;
     private BigDecimal poolPrice;
 
@@ -41,7 +42,11 @@ public class MyRequestResponseDto {
     }
 
     public static interface ActivePassengersStep {
-        AvailableSeatsStep withActivePassengers(List<RiderInfoDto> activePassengers);
+        TotalSeatsStep withActivePassengers(List<RiderInfoDto> activePassengers);
+    }
+
+    public static interface TotalSeatsStep {
+        AvailableSeatsStep withTotalSeats(Integer totalSeats);
     }
 
     public static interface AvailableSeatsStep {
@@ -58,13 +63,14 @@ public class MyRequestResponseDto {
 
     public static class Builder
         implements RideIdStep, RequestStatusStep, SourceHubNameStep, DestinationHubNameStep, DepartureTimeStep,
-        ActivePassengersStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
+        ActivePassengersStep, TotalSeatsStep, AvailableSeatsStep, PoolPriceStep, BuildStep {
         private String rideId;
         private RideUserMappingStatus requestStatus;
         private String sourceHubName;
         private String destinationHubName;
         private LocalDateTime departureTime;
         private List<RiderInfoDto> activePassengers;
+        private Integer totalSeats;
         private Integer availableSeats;
         private BigDecimal poolPrice;
 
@@ -106,8 +112,14 @@ public class MyRequestResponseDto {
         }
 
         @Override
-        public AvailableSeatsStep withActivePassengers(List<RiderInfoDto> activePassengers) {
+        public TotalSeatsStep withActivePassengers(List<RiderInfoDto> activePassengers) {
             this.activePassengers = activePassengers;
+            return this;
+        }
+
+        @Override
+        public AvailableSeatsStep withTotalSeats(Integer totalSeats) {
+            this.totalSeats = totalSeats;
             return this;
         }
 
@@ -132,6 +144,7 @@ public class MyRequestResponseDto {
                 this.destinationHubName,
                 this.departureTime,
                 this.activePassengers,
+                this.totalSeats,
                 this.availableSeats,
                 this.poolPrice
             );
