@@ -71,6 +71,12 @@ public class RideController extends BaseController {
         return successResponse(rideService.getMyRides(userId), "My rides retrieved successfully");
     }
 
+    @GetMapping("/last-ride")
+    public RestEntity<MyPastRideDetailResponseDto> getLastRide(@RequestParam String userId) {
+        log.info("Fetching last ride for userId: {}", userId);
+        return successResponse(rideService.getLastRide(userId), "Last ride retrieved successfully");
+    }
+
     @GetMapping("/my-past-rides")
     public RestEntity<List<MyRideResponseDto>> getMyPastRides(@RequestParam String userId) {
         return successResponse(rideService.getMyPastRides(userId), "My past rides retrieved successfully");
