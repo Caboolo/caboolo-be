@@ -271,15 +271,16 @@ public class RideService {
         List<RideUserMapping> userMappings = rideUserMappingService.findByUserIdAndStatusIn(
             userId, RideUserMappingStatus.PAST_RIDE_STATUSES);
         if (userMappings.isEmpty()) {
+            log.info("No past rides found for user {}", userId);
             return new ArrayList<>();
         }
 
         Map<String, RideUserMappingStatus> statusByRideId = userMappings.stream()
             .collect(Collectors.toMap(RideUserMapping::getRideId, RideUserMapping::getStatus));
 
-        List<String> rideIds = userMappings.stream()
+        Set<String> rideIds = userMappings.stream()
             .map(RideUserMapping::getRideId)
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
         // 2. Bulk Fetch Ride Details with status COMPLETED
         List<Ride> completedRides = rideRepository.findByStatusAndRideIdIn(RideStatus.COMPLETED, rideIds);
@@ -291,6 +292,8 @@ public class RideService {
         Set<String> completedRideIds = completedRides.stream()
             .map(Ride::getRideId)
             .collect(Collectors.toSet());
+
+        log.info("{} past rides found for the user {}", completedRides.size(), userId);
 
         // 3. Bulk Fetch all active participant mappings for these rides
         List<RideUserMapping> allParticipantMappings = rideUserMappingService.findByRideIdInAndStatusIn(

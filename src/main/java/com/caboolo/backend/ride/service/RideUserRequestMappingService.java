@@ -166,7 +166,7 @@ public class RideUserRequestMappingService {
                     .distinct()
                     .collect(Collectors.toList());
 
-            String title = "New Crew Member";
+            String title = "New Cabool";
             String body = "%s has joined your ride";
 
             eventPublisher.publishEvent(
@@ -302,7 +302,7 @@ public class RideUserRequestMappingService {
                 .distinct()
                 .collect(Collectors.toList());
 
-        String title = "Member Left";
+        String title = "Cabool Left";
         String body = "%s has left the ride";
 
         eventPublisher.publishEvent(
